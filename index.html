@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sal's Dashboards</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --text: #ffffff;
+  --t2: #d4d4dc;
+  --t3: #b0b0b8;
+  --t4: #6c6c74;
+  --border: rgba(255,255,255,0.07);
+  --accent: #ff6b35;
+  --bday: #ef4444;
+  --mship: #3b82f6;
+  --green: #22c55e;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (font-variation-settings: normal) { html { font-family: "Inter var", sans-serif; } }
+html,body{height:100%;background:var(--bg);color:var(--t2);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"cv02","cv03","cv11"}
+body{display:flex;align-items:center;justify-content:center;padding:60px 24px;background:radial-gradient(ellipse at top,rgba(255,107,53,0.05),transparent 60%),var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.wrap{width:100%;max-width:760px}
+
+.header{margin-bottom:48px}
+.brand{display:inline-flex;align-items:center;gap:12px;margin-bottom:24px}
+.mark{width:42px;height:42px;background:var(--accent);border-radius:10px;display:grid;place-items:center;color:white;font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--t4);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;margin-top:2px}
+h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:10px;color:var(--text)}
+.lead{color:var(--t3);font-size:16px;max-width:540px;line-height:1.55}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:32px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:22px 24px;cursor:pointer;
+  transition:all 0.2s;display:block;color:inherit;
+  position:relative;
+}
+.card:hover{background:var(--hover);border-color:rgba(255,255,255,0.14);transform:translateY(-1px)}
+.card.disabled{cursor:default;opacity:0.6}
+.card.disabled:hover{transform:none;background:var(--card)}
+
+.card-track{
+  font-size:10.5px;font-weight:600;
+  padding:3px 9px;border-radius:999px;
+  letter-spacing:0.05em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:5px;
+  margin-bottom:12px;
+}
+.card-track.bday{background:rgba(239,68,68,0.12);color:var(--bday)}
+.card-track.live{background:rgba(34,197,94,0.12);color:var(--green)}
+.card-track.soon{background:rgba(255,255,255,0.06);color:var(--t3)}
+
+.card-title{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin-bottom:6px;color:var(--text)}
+.card-desc{font-size:13.5px;color:var(--t3);line-height:1.55}
+
+.foot{margin-top:48px;color:var(--t4);font-size:12px;line-height:1.6}
+.foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="brand-name">Sal's Dashboards</div>
+        <div class="brand-sub">Internal tools</div>
+      </div>
+    </div>
+    <h1>Dashboards, on demand.</h1>
+    <p class="lead">Built from real data. Refreshed regularly. Open any dashboard for the operating playbook.</p>
+  </div>
+
+  <div class="grid">
+    <a href="./runrec-sales/" class="card">
+      <span class="card-track live">● Live</span>
+      <div class="card-title">RunRec Sales</div>
+      <div class="card-desc">Birthday + membership sales playbook. Built from 379 real Quo calls. Two-track structure: scripts, objections, math, closes.</div>
+    </a>
+
+    <div class="card disabled">
+      <span class="card-track soon">Slot open</span>
+      <div class="card-title">More dashboards</div>
+      <div class="card-desc">When you need a new dashboard, drop a folder here and it shows up automatically.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>Hosted on GitHub Pages · auto-deploys on push to <code>main</code></p>
+    <p style="margin-top:6px">github.com/saldader/dashboards</p>
+  </div>
+</div>
+</body>
+</html>

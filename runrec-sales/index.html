@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunRec Sales</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root {
+  /* Single design system — Linear-grade clean */
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+
+  /* Text — high contrast, single ramp */
+  --text: #ffffff;
+  --text-2: #d4d4dc;       /* readable body */
+  --text-3: #b0b0b8;       /* secondary readable (was too dim before) */
+  --text-4: #6c6c74;       /* metadata only */
+
+  /* Two track colors — only these distinguish birthday vs membership */
+  --bday: #ef4444;         /* red */
+  --bday-soft: rgba(239,68,68,0.12);
+  --mship: #3b82f6;        /* blue */
+  --mship-soft: rgba(59,130,246,0.12);
+
+  /* System accent — used sparingly */
+  --accent: #ff6b35;
+
+  /* Status only */
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text-2);
+  font-family:var(--font);
+  font-size:14.5px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"cv02","cv03","cv04","cv11";
+}
+@supports (font-variation-settings: normal) {
+  html { font-family: "Inter var", -apple-system, sans-serif; }
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+
+/* ============ LAYOUT ============ */
+.app{display:flex;min-height:100vh}
+
+.side{
+  width:240px;background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:18px 12px;position:sticky;top:0;
+  height:100vh;overflow-y:auto;flex-shrink:0;
+}
+
+.brand{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 10px 18px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:14px;
+}
+.brand-mark{
+  width:30px;height:30px;
+  background:var(--accent);border-radius:7px;
+  display:grid;place-items:center;
+  color:white;font-weight:700;font-size:14px;
+  letter-spacing:-0.02em;
+}
+.brand-text{font-weight:600;font-size:14px;color:var(--text);letter-spacing:-0.01em}
+.brand-sub{font-size:11px;color:var(--text-4);letter-spacing:0.04em;text-transform:uppercase;font-weight:500;margin-top:2px}
+
+.nav-group{margin-bottom:6px}
+.nav-label{
+  font-size:10px;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text-4);
+  font-weight:600;padding:14px 10px 6px;
+  display:flex;align-items:center;gap:6px;
+}
+.nav-dot{width:6px;height:6px;border-radius:999px;display:inline-block}
+.nav-dot.bday{background:var(--bday)}
+.nav-dot.mship{background:var(--mship)}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 10px;border-radius:6px;
+  color:var(--text-3);font-size:13.5px;
+  cursor:pointer;transition:all 0.12s;
+  user-select:none;font-weight:500;margin-bottom:1px;
+}
+.nav-item:hover{background:var(--hover);color:var(--text)}
+.nav-item.active{background:var(--hover);color:var(--text)}
+.nav-item.active.bday{box-shadow:inset 2px 0 0 var(--bday)}
+.nav-item.active.mship{box-shadow:inset 2px 0 0 var(--mship)}
+.nav-item.active.shared{box-shadow:inset 2px 0 0 var(--accent)}
+.nav-emoji{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:0.85}
+
+.side-foot{
+  margin-top:18px;padding:14px 10px;
+  border-top:1px solid var(--border);
+  font-size:11.5px;color:var(--text-4);line-height:1.55;
+}
+.side-foot strong{color:var(--text-3);font-weight:600}
+
+/* ============ MAIN ============ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+
+.topbar{
+  padding:14px 32px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  background:var(--panel);
+  position:sticky;top:0;z-index:10;
+  border-top:3px solid transparent;
+  transition:border-top-color 0.2s;
+}
+.topbar.bday{border-top-color:var(--bday)}
+.topbar.mship{border-top-color:var(--mship)}
+.topbar.shared{border-top-color:var(--accent)}
+
+.crumb{font-size:13px;color:var(--text-3);font-weight:500}
+.crumb b{color:var(--text);font-weight:600}
+.spacer{flex:1}
+
+.pill{
+  display:inline-flex;gap:6px;align-items:center;
+  background:var(--card);padding:5px 11px;
+  border-radius:999px;font-size:12px;
+  color:var(--text-3);border:1px solid var(--border);
+  font-weight:500;
+}
+.pill strong{color:var(--text)}
+
+.content{padding:36px 40px;max-width:880px;flex:1}
+
+/* ============ TYPE ============ */
+.section{display:none}
+.section.active{display:block}
+
+.section h1{
+  font-size:30px;font-weight:700;
+  letter-spacing:-0.025em;margin-bottom:8px;
+  color:var(--text);display:flex;align-items:center;gap:12px;
+}
+
+.section .lead{
+  color:var(--text-3);font-size:15.5px;
+  margin-bottom:32px;max-width:680px;line-height:1.6;
+}
+
+.section h2{
+  font-size:18px;font-weight:600;
+  margin:36px 0 14px;letter-spacing:-0.01em;
+  color:var(--text);
+}
+
+.section h3{
+  font-size:14px;font-weight:600;
+  margin:20px 0 8px;color:var(--text-2);
+  text-transform:uppercase;letter-spacing:0.05em;
+}
+
+p{color:var(--text-2)}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin:5px 0;color:var(--text-2)}
+li strong{color:var(--text)}
+strong{color:var(--text);font-weight:600}
+em{color:var(--text-2);font-style:italic}
+
+code{
+  font-family:var(--mono);font-size:12.5px;
+  background:var(--panel);padding:2px 6px;
+  border-radius:4px;color:var(--text-2);
+  border:1px solid var(--border);
+}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+
+/* ============ TRACK BADGES ============ */
+.track-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;padding:4px 10px;border-radius:999px;
+  font-weight:600;letter-spacing:0.02em;
+  text-transform:uppercase;
+}
+.track-tag.bday{background:var(--bday-soft);color:var(--bday)}
+.track-tag.mship{background:var(--mship-soft);color:var(--mship)}
+.track-tag.shared{background:rgba(255,255,255,0.06);color:var(--text-3)}
+
+/* ============ CARD (single style) ============ */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;margin-bottom:12px;
+}
+.card-title{
+  font-weight:600;font-size:14.5px;
+  margin-bottom:6px;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.card-meta{
+  font-size:12.5px;color:var(--text-3);
+  margin-bottom:10px;line-height:1.55;
+}
+
+/* ============ SCRIPT ============ */
+.script{
+  background:#08080a;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:18px 20px;
+  font-size:14.5px;line-height:1.7;
+  color:var(--text);white-space:pre-wrap;
+  margin:10px 0;font-family:var(--font);
+  position:relative;
+}
+.script-head{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:12px;
+  padding-bottom:10px;border-bottom:1px solid var(--border);
+}
+.script-label{
+  font-size:10.5px;color:var(--text-3);
+  letter-spacing:0.1em;text-transform:uppercase;
+  font-weight:700;
+}
+.script.bday .script-label{color:var(--bday)}
+.script.mship .script-label{color:var(--mship)}
+.copy{
+  font-size:11px;font-weight:600;
+  cursor:pointer;padding:5px 12px;
+  border-radius:5px;background:var(--card);
+  border:1px solid var(--border-strong);
+  color:var(--text);
+  transition:all 0.15s;font-family:var(--font);
+}
+.copy:hover{background:var(--hover);border-color:var(--text-3)}
+.copy.copied{background:var(--green);border-color:var(--green);color:white}
+
+/* ============ QUOTE ============ */
+.quote{
+  background:var(--panel);
+  border-left:3px solid var(--accent);
+  padding:14px 18px;margin:12px 0;
+  font-style:italic;color:var(--text-2);
+  border-radius:0 6px 6px 0;line-height:1.6;
+}
+.quote.bday{border-left-color:var(--bday)}
+.quote.mship{border-left-color:var(--mship)}
+.quote .who{
+  display:block;font-style:normal;
+  font-size:11.5px;color:var(--text-4);
+  margin-top:8px;font-weight:500;
+}
+
+/* ============ CALLOUT ============ */
+.callout{
+  padding:14px 18px;border-radius:8px;
+  margin:14px 0;font-size:14px;line-height:1.55;
+  border:1px solid;
+}
+.callout.danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2);color:#fca5a5}
+.callout.warn{background:rgba(234,179,8,0.06);border-color:rgba(234,179,8,0.2);color:#fde68a}
+.callout.good{background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.2);color:#bbf7d0}
+.callout.info{background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.2);color:#bfdbfe}
+.callout strong{color:white}
+
+/* ============ TABLE ============ */
+table{
+  width:100%;border-collapse:collapse;
+  font-size:13.5px;margin:14px 0;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
+th{
+  background:var(--panel);text-align:left;
+  padding:10px 14px;font-weight:600;
+  color:var(--text-2);font-size:11.5px;
+  text-transform:uppercase;letter-spacing:0.05em;
+  border-bottom:1px solid var(--border);
+}
+td{
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;color:var(--text-2);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ============ GRID ============ */
+.grid{display:grid;gap:12px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:760px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ============ ANCHOR PILLS (jump to section) ============ */
+.anchors{
+  display:flex;gap:6px;flex-wrap:wrap;
+  padding:10px 0;margin-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.anchor{
+  font-size:12px;font-weight:500;
+  padding:5px 11px;border-radius:6px;
+  color:var(--text-3);background:var(--card);
+  border:1px solid var(--border);
+  cursor:pointer;transition:all 0.12s;
+}
+.anchor:hover{color:var(--text);background:var(--hover);border-color:var(--border-strong)}
+
+/* ============ OBJECTIONS — fully expanded inline ============ */
+.obj{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:20px 22px;margin-bottom:14px;
+}
+.obj.bday{border-left:3px solid var(--bday)}
+.obj.mship{border-left:3px solid var(--mship)}
+
+.obj-head{
+  display:flex;align-items:flex-start;
+  justify-content:space-between;gap:12px;
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.obj-num{
+  font-size:11px;font-weight:700;
+  letter-spacing:0.05em;color:var(--text-4);
+  text-transform:uppercase;
+}
+.obj-num.bday{color:var(--bday)}
+.obj-num.mship{color:var(--mship)}
+.obj-quote{
+  font-size:15.5px;font-weight:500;
+  color:var(--text);margin-top:4px;
+  line-height:1.4;
+}
+.obj-who{
+  font-size:11.5px;color:var(--text-4);
+  margin-top:6px;font-style:italic;
+}
+.obj-tag{
+  font-size:10.5px;font-weight:600;
+  padding:3px 9px;border-radius:999px;
+  background:rgba(255,255,255,0.06);
+  color:var(--text-3);text-transform:uppercase;
+  letter-spacing:0.04em;flex-shrink:0;
+}
+
+.tier{margin:10px 0}
+.tier-num{
+  font-size:10.5px;font-weight:700;
+  letter-spacing:0.08em;color:var(--text-4);
+  text-transform:uppercase;margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;
+}
+.tier-num::before{
+  content:"";display:inline-block;
+  width:18px;height:1px;background:var(--text-4);
+}
+.tier-text{
+  color:var(--text-2);font-size:14px;
+  line-height:1.6;font-style:italic;
+}
+
+/* ============ STATS ============ */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;margin:16px 0;
+}
+.stat{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:16px 18px;
+}
+.stat-num{
+  font-size:28px;font-weight:700;
+  letter-spacing:-0.02em;color:var(--text);
+}
+.stat-num.bday{color:var(--bday)}
+.stat-num.mship{color:var(--mship)}
+.stat-num.green{color:var(--green)}
+.stat-label{
+  font-size:11px;color:var(--text-4);
+  text-transform:uppercase;letter-spacing:0.05em;
+  margin-top:4px;font-weight:500;
+}
+
+/* ============ KV ROWS (tighter alternative to tables) ============ */
+.kv{display:grid;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.kv-row{display:grid;grid-template-columns:200px 1fr;background:var(--card)}
+.kv-row .k{padding:11px 14px;color:var(--text-3);font-size:13px;font-weight:500;background:var(--panel)}
+.kv-row .v{padding:11px 14px;color:var(--text-2);font-size:13.5px}
+
+/* ============ INPUT (for trackers) ============ */
+.field{
+  background:var(--bg);border:1px solid var(--border-strong);
+  color:var(--text);padding:7px 11px;border-radius:6px;
+  width:90px;font-family:var(--font);font-size:13.5px;
+}
+.field:focus{outline:none;border-color:var(--accent)}
+
+/* ============ CHECKBOX LIST ============ */
+.check{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.check:last-child{border-bottom:none}
+.check input[type=checkbox]{
+  margin-top:3px;cursor:pointer;
+  width:16px;height:16px;accent-color:var(--accent);
+  flex-shrink:0;
+}
+.check label{cursor:pointer;font-size:14px;color:var(--text-2)}
+
+/* ============ MOBILE ============ */
+@media(max-width:760px){
+  .app{flex-direction:column}
+  .side{width:100%;height:auto;position:relative;padding:14px}
+  .content{padding:24px 18px}
+  .topbar{padding:14px 20px}
+  .section h1{font-size:24px}
+  .kv-row{grid-template-columns:1fr}
+  .kv-row .k{font-weight:600}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div>
+        <div class="brand-text">RunRec Sales</div>
+        <div class="brand-sub">v4 · live</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Start</div>
+      <div class="nav-item shared active" data-section="home" data-track="shared"><span class="nav-emoji">🏠</span> Home</div>
+      <div class="nav-item shared" data-section="fixes" data-track="shared"><span class="nav-emoji">🔧</span> The 3 Fixes</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label"><span class="nav-dot bday"></span> Birthday</div>
+      <div class="nav-item bday" data-section="bday-overview" data-track="bday"><span class="nav-emoji">🏠</span> Overview</div>
+      <div class="nav-item bday" data-section="bday-inbound" data-track="bday"><span class="nav-emoji">📥</span> Inbound Call</div>
+      <div class="nav-item bday" data-section="bday-outbound" data-track="bday"><span class="nav-emoji">📞</span> Outbound Renewal</div>
+      <div class="nav-item bday" data-section="bday-objections" data-track="bday"><span class="nav-emoji">🗣️</span> Objections</div>
+      <div class="nav-item bday" data-section="bday-math" data-track="bday"><span class="nav-emoji">🧮</span> Math &amp; Closes</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label"><span class="nav-dot mship"></span> Membership</div>
+      <div class="nav-item mship" data-section="mship-overview" data-track="mship"><span class="nav-emoji">🏠</span> Overview</div>
+      <div class="nav-item mship" data-section="mship-outbound" data-track="mship"><span class="nav-emoji">📞</span> Booking-History Out</div>
+      <div class="nav-item mship" data-section="mship-qualify" data-track="mship"><span class="nav-emoji">✅</span> Qualifier</div>
+      <div class="nav-item mship" data-section="mship-objections" data-track="mship"><span class="nav-emoji">🗣️</span> Objections</div>
+      <div class="nav-item mship" data-section="mship-math" data-track="mship"><span class="nav-emoji">🧮</span> Math &amp; Closes</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">System</div>
+      <div class="nav-item shared" data-section="pivot" data-track="shared"><span class="nav-emoji">🔄</span> The Pivot</div>
+      <div class="nav-item shared" data-section="numbers" data-track="shared"><span class="nav-emoji">📊</span> My Numbers</div>
+      <div class="nav-item shared" data-section="reference" data-track="shared"><span class="nav-emoji">📚</span> Reference</div>
+    </div>
+
+    <div class="side-foot">
+      <strong>Source:</strong> 379 real Quo calls<br>
+      36 birthday · 17 membership<br>
+      32 mixed · 90-day window
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar shared" id="topbar">
+      <div class="crumb">You're viewing: <b id="crumb">Home</b></div>
+      <div class="spacer"></div>
+      <div class="pill">Today's pace · <strong>~2 mship · ~3 bday/wk</strong></div>
+      <div class="pill">30-day target · <strong>5 + 5 / wk</strong></div>
+    </div>
+
+    <div class="content">
+
+<!-- ====================== HOME ====================== -->
+<section class="section active" id="home">
+  <h1>RunRec Sales</h1>
+  <p class="lead">Every script, objection, and number in this dashboard is from real RunRec calls. Two sales tracks: <strong style="color:var(--bday)">Birthday</strong> (red) and <strong style="color:var(--mship)">Membership</strong> (blue). Each is fully separate.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num">379</div><div class="stat-label">Calls analyzed</div></div>
+    <div class="stat"><div class="stat-num bday">36</div><div class="stat-label">Birthday calls</div></div>
+    <div class="stat"><div class="stat-num mship">17</div><div class="stat-label">Membership calls</div></div>
+    <div class="stat"><div class="stat-num">32</div><div class="stat-label">Mixed calls</div></div>
+  </div>
+
+  <h2>How to use this</h2>
+  <ul>
+    <li><strong>Before a birthday call:</strong> open <a href="#" data-section="bday-inbound">Birthday → Inbound</a> or <a href="#" data-section="bday-outbound">Outbound</a></li>
+    <li><strong>Before a membership call:</strong> open <a href="#" data-section="mship-outbound">Membership → Booking-History Outbound</a></li>
+    <li><strong>Hit an objection:</strong> open the matching Objections tab — all responses visible at once, no clicking</li>
+    <li><strong>End of day:</strong> open <a href="#" data-section="numbers">My Numbers</a> to log activity</li>
+  </ul>
+
+  <h2>The 3 critical fixes</h2>
+  <p class="lead" style="margin-bottom:16px">If you only do three things differently this week, do these:</p>
+  <ol>
+    <li><strong>Email handoff</strong> — spell back letter-by-letter, send within 5 min, SMS confirm receipt</li>
+    <li><strong>Membership qualifier</strong> — 4 questions before any membership pitch (the Damien fix)</li>
+    <li><strong>Drop fake scarcity</strong> — never say "extremely limited" or "only 1–2 spots." Use real calendar data instead</li>
+  </ol>
+  <p style="margin-top:12px"><a href="#" data-section="fixes">Open The 3 Fixes →</a></p>
+
+  <h2>Realistic ramp</h2>
+  <table>
+    <thead><tr><th>Timeframe</th><th>Birthday</th><th>Membership</th><th>What it requires</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Today</strong></td><td>~3–4 / wk</td><td>~2 / wk</td><td>Current pace</td></tr>
+      <tr><td><strong>30 days</strong></td><td>5 / wk</td><td>5 / wk</td><td>Fix the 3 compliance issues + 20 dials/day</td></tr>
+      <tr><td><strong>90 days</strong></td><td>8–10 / wk</td><td>10–15 / wk</td><td>+ booking-history outbound list daily</td></tr>
+      <tr><td><strong>6 months</strong></td><td>15+ / wk</td><td>20–25 / wk</td><td>+ 2nd closer + lead engine</td></tr>
+      <tr><td><strong>12 months</strong></td><td>20+ / wk</td><td>30–35 / wk</td><td>All of the above at maturity</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ====================== FIXES ====================== -->
+<section class="section" id="fixes">
+  <h1>The 3 Fixes <span class="track-tag shared">System</span></h1>
+  <p class="lead">Most of what's in this dashboard is correct. The reason you're not hitting target yet is compliance — these three habits fix it.</p>
+
+  <div class="card">
+    <div class="card-title">1 · Email handoff is broken</div>
+    <div class="card-meta">Confirmed cases: Paul (wrong email), Armando (never received), HVAC vendor (lost).</div>
+    <ol>
+      <li><strong>Spell back letter-by-letter</strong> — <em>"i-g-l-o-o, p-i-z-z-a, c-a-t — at — n-e-w-l-i-f-e-y-o-u-t-h dot com. Got it?"</em></li>
+      <li><strong>Send within 5 minutes</strong> of call end. Not "the hour."</li>
+      <li><strong>SMS within 30 minutes:</strong> <em>"Just sent the email — sometimes it lands in promotions. Got it?"</em></li>
+      <li><strong>Daily checklist</strong> — every promised email logged. End of day: zero unsent.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2 · Membership qualifier missing</div>
+    <div class="card-meta">Damien wrong-fit refund. Membership track only.</div>
+    <p>Run BEFORE every membership pitch. <a href="#" data-section="mship-qualify">→ Open Qualifier</a></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3 · Drop fake scarcity</div>
+    <div class="card-meta">"Extremely limited" / "only 1–2 spots" — these break trust. Membership track + general.</div>
+    <p>Replace with real urgency: specific Friday slots booked, real cap numbers, named bookings on the calendar. The Calendar Reality Close lives in <a href="#" data-section="bday-math">Birthday Math &amp; Closes</a>.</p>
+  </div>
+
+  <div class="callout warn">
+    <strong>The honest truth:</strong> The lift to your target comes from running this consistently — not from more docs. Sal listens to 3 won + 3 lost calls every Monday with Izzy. Score against the framework. Compliance issues surface in 30 minutes. That's the lever.
+  </div>
+</section>
+
+<!-- ====================== BIRTHDAY OVERVIEW ====================== -->
+<section class="section" id="bday-overview">
+  <h1>Birthday <span class="track-tag bday">Birthday Track</span></h1>
+  <p class="lead">Birthday is the bigger sales motion (36 pure birthday calls + 32 mixed). Parents, ~$499–$899 packages, weekend-driven urgency, restaurant-anchor pricing.</p>
+
+  <div class="callout info" style="text-align:center;font-size:15.5px;font-style:italic;line-height:1.5">
+    "The birthday party your kid actually wants — with nothing for you to do."<br><span style="font-style:normal;font-size:11.5px;color:var(--text-4);letter-spacing:0.04em;text-transform:uppercase;display:block;margin-top:8px">★ The hero claim — anchor every birthday call to this</span>
+  </div>
+
+  <h2>Real package tiers</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>Price</th><th>Length</th><th>What's in it</th></tr></thead>
+    <tbody>
+      <tr><td><strong>HERO</strong></td><td>$499</td><td>2 hr</td><td>Basic — 1 coordinator, equipment, party space, courts</td></tr>
+      <tr><td><strong style="color:var(--bday)">SUPER HERO ★</strong></td><td><strong>$599</strong></td><td>2 hr</td><td>+ extra activities, goodie bags · MOST POPULAR — pitch this first</td></tr>
+      <tr><td><strong>SUPER HERO FUN</strong></td><td>$899</td><td>3 hr</td><td>+ bouncy castle (verify vendor)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Competitive gap:</strong> RunRec is the highest entry price in K-W AND the only major venue without food included. Bingemans, Sky Zone, Splitsville, Mini Playtown all include food. Handle this proactively (Move 4 below).
+  </div>
+
+  <h2>The 5 sales moves (in order)</h2>
+
+  <div class="card">
+    <div class="card-title">Move 1 · Open with a story, not a pitch</div>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Move 1 · open</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"We just did Liam's 9th birthday last weekend — 20 kids, full court, they didn't want to leave. What age is your little one turning?"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Move 2 · Pitch SUPER HERO ($599) FIRST</div>
+    <p>Never lead with HERO ($499). State this is "what most families go with." Starting at $499 and selling up is harder than starting at $599 and holding.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Move 3 · Anchor against restaurant parties</div>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Move 3 · anchor</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"A private room at a restaurant for 15 kids — food, tables, managing the space — you're at $600–$800. And the kids are sitting at a table."
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Move 4 · Handle food objection PROACTIVELY</div>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Move 4 · food</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"One thing people often ask — food isn't included, which keeps the price competitive. Most families bring pizza or order in. You pick exactly what the kids want."
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Move 5 · Close with calendar reality</div>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Move 5 · close</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"What date are you thinking?"
+[check calendar live]
+"Okay — that's open. Looking at the surrounding weekends though, the Saturday before and after are already booked. So if [date] is your target, today or tomorrow is when to lock it in."
+    </div>
+  </div>
+
+  <h2>Hard rules</h2>
+  <ul>
+    <li>❌ Don't pivot to membership during a birthday close (Sahar pattern — Izzy correctly didn't pivot)</li>
+    <li>❌ Don't tour the space verbally over phone (Pavin family did 43 min over 4 calls and still booked anxious)</li>
+    <li>❌ Don't promise the bouncy castle until vendor is confirmed</li>
+    <li>✅ DO bend on the 11-kid tier cliff within reason ("I'll make the exception")</li>
+    <li>✅ DO use the child's name on every outbound voicemail</li>
+  </ul>
+</section>
+
+<!-- ====================== BIRTHDAY INBOUND ====================== -->
+<section class="section" id="bday-inbound">
+  <h1>Inbound Parent Call <span class="track-tag bday">Birthday</span></h1>
+  <p class="lead">Parent calls about a birthday. Highest-volume sales motion. Real script structure built from Sahar (959s), Brie (567s), Pavin family arc, Leanne (745s).</p>
+
+  <div class="anchors">
+    <a class="anchor" href="#bday-in-1">1. Opener</a>
+    <a class="anchor" href="#bday-in-2">2. Discovery</a>
+    <a class="anchor" href="#bday-in-3">3. Value pitch</a>
+    <a class="anchor" href="#bday-in-4">4. Tier-fit</a>
+    <a class="anchor" href="#bday-in-5">5. Objections</a>
+    <a class="anchor" href="#bday-in-6">6. Close</a>
+  </div>
+
+  <h2 id="bday-in-1">1 · Opener (10–15s)</h2>
+  <p>Keep what works. Don't pre-qualify — let the parent lead.</p>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Opener</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Hi there. It's RunRec. How can I help you?"
+  </div>
+
+  <h2 id="bday-in-2">2 · Discovery (60–90s)</h2>
+  <p>After the parent explains, ask in this order. <strong>Do NOT ask budget.</strong> The package selection reveals it.</p>
+  <ol>
+    <li><strong>Name</strong> — "And your name was?"</li>
+    <li><strong>Familiarity</strong> — "Have you been to RunRec before, or do you know anyone who has?" <em>essential — changes everything</em></li>
+    <li><strong>Date / time slot</strong> — "When were you looking?"</li>
+    <li><strong>Birthday kid age</strong> — "How old is the birthday kid?"</li>
+    <li><strong>Total kids + age mix</strong> — "How many kids, all one age or mixed?"</li>
+    <li><strong>Active vs hangers-on</strong> — "Plus younger siblings or older cousins?"</li>
+    <li><strong>Sport affinity</strong> — "Is there a sport they love, or whatever's fun?"</li>
+  </ol>
+
+  <h2 id="bday-in-3">3 · Bundled-value pitch (180–240s)</h2>
+  <p>Lead with the reframe. Verbatim Izzy:</p>
+  <div class="quote bday">"The party price isn't about the court time. It's about everything that comes with it."<span class="who">— Izzy, repeated across every long inbound call</span></div>
+
+  <p>Then list (in this order — what closed in real calls):</p>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Bundled-value list</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+1. Coordinator(s) — "think of them as gym teachers running the day" (HERO has 1, SUPER HERO/FUN add a 2nd for 20+ kids)
+2. Exclusive use — "all three courts, no other groups will be there"
+3. Equipment — basketballs, dodgeball, floor hockey, soccer, jump ropes, cornhole
+4. Adjustments — "lower the basketball hoops because they're younger"
+5. Scoreboard — "they can use the scoreboard, be a referee"
+6. Party space — tables, custom-logo tablecloths, photo backdrop
+7. Food permission — "you can bring pizza, cake — only with the package"
+8. Goodie bags + birthday gift — "everybody walks away with a gift bag"
+9. Cleanup — "they're also the cleanup crew"
+10. Music — Bluetooth, free Wi-Fi
+
+End with: "We do parties every weekend. We've done a billion of these."
+  </div>
+
+  <h2 id="bday-in-4">4 · Tier-fit recommendation (60s)</h2>
+  <div class="callout danger">
+    <strong>Pre-empt the "I'm so confused" moment.</strong> Sahar literally said this on a 959s call. Don't make parents figure out which tier — STATE it.
+  </div>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Tier statement</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Based on what you told me — [X] active kids, age [Y], [date] — you'd be in our SUPER HERO tier at $599. Here's why: [12+ kids needs the upgraded package, OR the goodie bags matter for that age, OR the extra activities are worth it]."
+  </div>
+
+  <h2 id="bday-in-5">5 · Objections (90–180s)</h2>
+  <p>Memorized responses for the top 4. Full 12 in <a href="#" data-section="bday-objections">Objections</a>.</p>
+  <ul>
+    <li><strong>Pricing pushback</strong> — bend within 3-kid range, NOT a discount</li>
+    <li><strong>"Can we just rent the space?"</strong> — concrete math: $179/hr × 2 = $358 vs package value</li>
+    <li><strong>"I have to talk to my husband"</strong> — Saturday afternoon books up 2–3 weeks out</li>
+    <li><strong>"What about decorations / balloons?"</strong> — we provide tables, tablecloths, photo backdrop</li>
+  </ul>
+
+  <h2 id="bday-in-6">6 · Close (60s)</h2>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Close sequence</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+1. Date close: "What date are you thinking?"
+   [check calendar live — actually look at it]
+   "Okay — that's open. Quick reality check on the surrounding weekends though: [name dates that are booked]. So if [date] is your target, today or tomorrow is when to lock it in."
+
+2. Saturday context: "Saturday afternoons book 2-3 weeks out — that's just our pattern."
+
+3. Direct to website: "therunrec.com → Birthdays → pick your tier → pick your slot."
+
+4. Pre-call promise: "We'll call you 3-4 days before to nail down details."
+
+5. Shoes reminder: "Only thing on you: every kid needs indoor and outdoor shoes."
+  </div>
+</section>
+
+<!-- ====================== BIRTHDAY OUTBOUND ====================== -->
+<section class="section" id="bday-outbound">
+  <h1>Outbound Birthday Renewal <span class="track-tag bday">Birthday</span></h1>
+  <p class="lead">Calling past birthday hosts ~12 months later. The "we got notified people were starting to pry around that weekend" hook. Verbatim from May 6 batch.</p>
+
+  <div class="card">
+    <div class="card-title">Pre-call prep · 30s</div>
+    <ul>
+      <li>Pull last year's booking — date, who booked, who paid</li>
+      <li>Get the <strong>birthday kid's name</strong> — essential, won't work without it</li>
+      <li>Look up notes from last year</li>
+    </ul>
+  </div>
+
+  <h2>If voicemail · 50–70s, no pricing</h2>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Voicemail</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Hey [Parent]. This is Izzy from RunRec.
+
+You [recently / obviously] had [Child]'s birthday here last year.
+
+We got notified that people were starting to inquire about that time. Times are getting booked, and as soon as we got notified, we wanted to give you a ring and just give you an opportunity to see if you're thinking about any birthday parties with us again.
+
+Give us a call back at 519-800-9894. Thanks a lot."
+  </div>
+
+  <div class="callout info">
+    <strong>Why it works:</strong> Specific child's name = real-relationship recall (not blast). "Times are getting booked" is true. "We always tell you we'll call a year later" sets expectation.
+  </div>
+
+  <h2>If they pick up · live conversation</h2>
+  <p>Different motion. Don't read the voicemail script. Let THEM lead. From McKenna and Daniel/Alicia (both confirmed warm-yes).</p>
+
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Live pickup · 7-step</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+1. "Hey, is this [Parent]? It's Izzy from RunRec — how's everything been?"
+
+2. "You had [Child]'s birthday with us last year, right?"
+   [Pause. Let them remember.]
+
+3. "We always tell you guys we'll call back a year later just to see where you stand. Just wanted to check in."
+
+4. [LISTEN — they say one of three things]
+   • Still planning → continue, offer to help
+   • Already booked elsewhere → graceful exit, plant seed for next year
+   • Aged out / training instead → opens membership pivot (Daniel pattern)
+
+5. "I'll definitely keep you in the loop — if I sense we start getting closer to that time or people start booking, I'll let you know."
+
+6. "And it was [name from records] who made the booking last year, right?"
+
+7. "My name is Izzy here. We'll stay in touch — we got you. Cheers."
+  </div>
+
+  <h2>The training pivot · Daniel/Alicia win</h2>
+  <div class="quote bday">Alicia: "Oh, you know what? We went away. So that was kind of his birthday. But we are actually thinking of doing some training at your location there."<br><br>
+  Izzy: "That's really great. Has he been playing a lot of ball?"<br>
+  [conversation about son's team]<br>
+  Izzy: "There's actually gonna be an email going out to all current and ex players about some new promotions and things going on, just for families to even book if you wanted to..."<br><br>
+  Alicia: "We will be using your facility often in the next few weeks for sure."<span class="who">— Quo May 6 outbound · confirmed soft-yes</span></div>
+
+  <h2>Hard rules</h2>
+  <ul>
+    <li>❌ Never call a voicemail without the child's name</li>
+    <li>❌ Don't read the voicemail script to a live human — sounds canned</li>
+    <li>❌ Don't pitch membership in the voicemail</li>
+    <li>❌ Don't push the pivot if they're not signaling recurring use (Anna pattern)</li>
+  </ul>
+</section>
+
+<!-- ====================== BIRTHDAY OBJECTIONS — ALL EXPANDED ====================== -->
+<section class="section" id="bday-objections">
+  <h1>Birthday Objections <span class="track-tag bday">Birthday</span></h1>
+  <p class="lead">12 verbatim objections from real RunRec birthday calls. Each shows all 3-tier responses inline — no clicking needed.</p>
+
+  <div class="anchors" id="bday-obj-anchors"></div>
+  <div id="bday-obj-list"></div>
+</section>
+
+<!-- ====================== BIRTHDAY MATH & CLOSES ====================== -->
+<section class="section" id="bday-math">
+  <h1>Birthday Math &amp; Closes <span class="track-tag bday">Birthday</span></h1>
+  <p class="lead">Per-kid math, the stripping defense, the food math, and the 5 birthday closes — all in one place.</p>
+
+  <h2>Per-kid math by tier</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>Price</th><th>Active kids</th><th>Per-kid cost</th><th>Coordinators</th></tr></thead>
+    <tbody>
+      <tr><td>HERO</td><td>$499</td><td>3–11</td><td>$45–$166</td><td>1</td></tr>
+      <tr><td><strong style="color:var(--bday)">SUPER HERO ★</strong></td><td>$599</td><td>~12–20</td><td>$30–$50</td><td>1 (2nd: +$80)</td></tr>
+      <tr><td>SUPER HERO FUN</td><td>$899</td><td>20+</td><td>$30–$45</td><td>2 (required)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The stripping defense (verbatim from Sahar call)</h2>
+  <div class="callout info">When they say "can I just rent the space?" — do the math live.</div>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">"Rent only" defense</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"You could. Two hours of three courts is $179/hr × 2 = $358.
+
+But you'd lose:
+- The coordinator
+- Food permission
+- All the equipment
+- Ability to lower the hoops
+- The scoreboard
+
+For ~$140 more you're getting a service worth way more than that.
+
+Plus you have to bring everything yourself — and clean up at the end."
+  </div>
+
+  <h2>The restaurant-party anchor</h2>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Restaurant anchor</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"A private room at a restaurant for 15 kids — the food bill, the tables, managing the space — you're probably at $600–$800. And the kids are sitting at a table for two hours.
+
+Here, they're running, playing, burning it out. Way better experience for the same money."
+  </div>
+
+  <div class="callout warn">
+    <strong>What NOT to compare against:</strong> Don't lead with Chuck E Cheese / Sky Zone unless the parent mentions them first. They're cheaper venues — comparing makes RunRec look expensive. Restaurant party comparison wins because the dollar amounts match.
+  </div>
+
+  <h2>Food objection · proactive math</h2>
+  <div class="script bday">
+    <div class="script-head"><span class="script-label">Food handling</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"One thing people often ask — food isn't included.
+
+Most families bring pizza or order Domino's / Pizza Pizza directly to the venue. Roughly $80–$120 for 15 kids.
+
+Total all-in is ~$680–$720 (SUPER HERO + pizza). You pick exactly what the kids want, none of the venue markup. Cheaper than a restaurant party for a way better experience."
+  </div>
+
+  <h2>Hourly rates · for reference, NOT to lead with</h2>
+  <table>
+    <thead><tr><th>Type</th><th>Rate</th></tr></thead>
+    <tbody>
+      <tr><td>Full court (1 of 3)</td><td>$89/hr</td></tr>
+      <tr><td>Training court</td><td>$45/hr</td></tr>
+      <tr><td>All three courts</td><td>$179/hr</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <h2>The 5 birthday closes</h2>
+
+  <div class="card">
+    <div class="card-title">Close 1 · The Date Close · primary</div>
+    <p>Don't ask "want to book?" Ask the date. Assume the purchase is happening.</p>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Date close</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"What date are you thinking?"
+[check calendar live]
+"Okay — that's open. The Saturday before is already booked, and the Saturday after went last week. So this is the cleanest opening I have in that window."
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 2 · Calendar Reality · use when "let me think"</div>
+    <p>The honest version of "hold the date." We don't take deposits — but we DO show parents the real calendar so they can see for themselves.</p>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Calendar reality</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Look — I'll be straight with you. We don't take deposits to hold dates, so I can't lock it for you. But here's what I can do: I'll show you what the calendar actually looks like.
+
+[Pull up calendar live]
+
+[Date you want] is open. The Saturday before is taken — Khan family. The Saturday after went last week to a soccer team. The two slots before that are also gone.
+
+So this is genuinely the cleanest opening in your window. If your husband says yes tonight, the safe move is to book tomorrow morning. After that, it goes to whoever calls in next."
+    </div>
+    <div class="card-meta" style="margin-top:10px">Why it works: real data, not pressure. You're showing them the situation. Specific names of bookings make it real, not manufactured.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 3 · Saturday-Prime Urgency</div>
+    <p>Real urgency, not fake. Saturday afternoons fill.</p>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Saturday urgency</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Saturday is our prime time. The calendar fills 2-3 weeks out.
+
+If [date] works for you, the time to lock in is now — not after the family meeting. The calendar moves fast on weekends."
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 4 · Specific-Story</div>
+    <p>Use after pitch, before they decide. Plants the image.</p>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Story close</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Last weekend we did Liam's 9th birthday. 20 kids. They came in tentative, by the end they didn't want to leave. The mom texted me Sunday saying it was the best money she'd spent all year.
+
+I think your [Child]'s gonna have the same experience."
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 5 · Self-Serve</div>
+    <p>If they need to think with their partner — direct them to the website. Don't push.</p>
+    <div class="script bday">
+      <div class="script-head"><span class="script-label">Self-serve</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Totally fair — talk to [partner]. The booking is at therunrec.com → Birthdays → pick your slot. Takes 5 minutes.
+
+We'll call you 3-4 days before to nail down the details. If [date] disappears in the meantime, I'll text you so you can pick a backup."
+    </div>
+  </div>
+</section>
+
+<!-- ====================== MEMBERSHIP OVERVIEW ====================== -->
+<section class="section" id="mship-overview">
+  <h1>Membership <span class="track-tag mship">Membership Track</span></h1>
+  <p class="lead">Selling Core ($89), All-Star ($139), Legend ($359) lockers — 12-month commitments. Smaller volume than birthday but higher LTV.</p>
+
+  <h2>The 3 tiers</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>$/mo</th><th>$/yr</th><th>Free hrs/yr</th><th>Priority booking</th><th>Best fit</th></tr></thead>
+    <tbody>
+      <tr><td>Core</td><td>$89</td><td>$1,068</td><td>12</td><td>4 weeks ahead</td><td>Solo or 1–3 ppl</td></tr>
+      <tr><td><strong style="color:var(--mship)">All-Star ★</strong></td><td>$139</td><td>$1,668</td><td>18</td><td>8 weeks ahead</td><td>Groups 4–8, weekly</td></tr>
+      <tr><td>Legend</td><td>$359</td><td>$4,308</td><td>48</td><td>12 weeks ahead</td><td>Clubs, trainers, orgs</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The locker concept</h2>
+  <div class="callout info">
+    <strong>We don't sell gym memberships. We sell lockers.</strong> A locker is a personal bank of pre-paid court time + priority booking + community perks. It's stored value. Lead with this concept on every membership pitch.
+  </div>
+
+  <h2>Membership prospects come from 3 places</h2>
+  <ol>
+    <li><strong>Booking-history outbound (most likely)</strong> — spot a customer who's booked 3+ times in 8 weeks. Call them. <a href="#" data-section="mship-outbound">→ Script</a></li>
+    <li><strong>Inbound inquiry (rare)</strong> — someone calls asking specifically about memberships</li>
+    <li><strong>Birthday → membership pivot</strong> — during a birthday call they signal recurring use. Don't pitch immediately. <a href="#" data-section="pivot">→ The Pivot</a></li>
+  </ol>
+
+  <div class="callout danger">
+    <strong>Before any pitch — run the qualifier.</strong> 4 questions, 30 seconds. The Damien fix. <a href="#" data-section="mship-qualify">→ Open Qualifier</a>
+  </div>
+</section>
+
+<!-- ====================== MEMBERSHIP OUTBOUND ====================== -->
+<section class="section" id="mship-outbound">
+  <h1>Booking-History Outbound <span class="track-tag mship">Membership</span></h1>
+  <p class="lead">When you spot someone who's booked multiple times in the last 4–8 weeks → call them → "you'd save money on a membership." The primary membership-acquisition path.</p>
+
+  <div class="card">
+    <div class="card-title">Trigger criteria</div>
+    <p>Customer has booked the facility <strong>3+ times in the last 8 weeks</strong>. They're using us already — converting to a member is pure margin.</p>
+  </div>
+
+  <h2>Pre-call prep · 1 min</h2>
+  <ol>
+    <li>Pull their booking history — sessions, court size, time slots, group size</li>
+    <li>Calculate: at hourly rate, how much have they paid?</li>
+    <li>Compute: which tier fits them?</li>
+    <li>Mentally run the <a href="#" data-section="mship-qualify">qualifier</a></li>
+  </ol>
+
+  <h2>The script</h2>
+  <div class="script mship">
+    <div class="script-head"><span class="script-label">Booking outbound</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Hey [Name] — it's Izzy from RunRec. How's everything going?
+
+Listen — I was looking at your bookings the other day. You've been in [X] times in the last [Y] weeks, which is a lot. We love seeing you here.
+
+The reason I'm calling: based on how often you're coming, you'd actually save money on a membership rather than booking every time.
+
+Got 5 minutes? I'd love to walk you through what makes sense for someone using us as much as you are."
+  </div>
+
+  <h2>If they say yes</h2>
+  <ol>
+    <li>Run <a href="#" data-section="mship-qualify">the 4-Q qualifier</a> first (don't skip — this is the Damien fix)</li>
+    <li>Then run the All-Star pitch (default tier)</li>
+    <li>Frame the 12-month term yourself before they ask</li>
+    <li>Send the link <strong>WHILE on the call</strong> — never "I'll send it later"</li>
+  </ol>
+
+  <h2>The All-Star pitch</h2>
+  <div class="script mship">
+    <div class="script-head"><span class="script-label">All-Star pitch</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Based on what you've told me — group of [X], [Y] times a month — the All-Star locker is your fit.
+
+You get 18 hours loaded into your locker today — your bank, use it however.
+
+You're booking 8 weeks ahead of the public. Right now I can lock in your Fridays for the next 2 months before anyone else sees them.
+
+Once your hours run out, you keep booking at 10% off for the rest of the year.
+
+All in: $139 a month. For your group, that's less than $5 per person per session. Cheaper than coffee.
+
+You're already coming in regularly — the math says this is the cheaper option. Want me to walk you through getting locked in?"
+  </div>
+
+  <h2>If they push back</h2>
+  <p>Believe them. Don't push. Plant seed and exit warm:</p>
+  <div class="script mship">
+    <div class="script-head"><span class="script-label">Soft exit</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Totally fair — you're already a regular. Just wanted to make sure you knew the membership existed because at your rate, you'd be saving real money.
+
+If anything changes, you've got my direct number. Keep coming."
+  </div>
+</section>
+
+<!-- ====================== MEMBERSHIP QUALIFIER ====================== -->
+<section class="section" id="mship-qualify">
+  <h1>4-Question Qualifier <span class="track-tag mship">Membership</span></h1>
+  <p class="lead">Run BEFORE any membership pitch. 30 seconds. This exists because of the Damien refund — we sold him a membership that didn't fit, he refunded.</p>
+
+  <div class="callout danger">
+    <strong>Hard rule:</strong> if any answer disqualifies, do NOT pitch membership. Plant the seed and exit.
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q1 · Court type</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Q1</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Are you usually booking the full court or the training court?"
+    </div>
+    <p style="margin-top:10px"><strong>Full court</strong> → ✅ proceed · <strong>Training court</strong> → ❌ STOP, do not pitch</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q2 · Group size</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Q2</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"How many people in your typical session — solo, 2–3, group of 4–8, or larger?"
+    </div>
+    <p style="margin-top:10px"><strong>1–3</strong> → Core ($89) · <strong>4–8</strong> → All-Star ($139, default) · <strong>10+</strong> → Legend ($359)</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q3 · Frequency</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Q3</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"How often per month — once, weekly, multiple times a week?"
+    </div>
+    <p style="margin-top:10px"><strong>1×/mo</strong> → ❌ doesn't pay back · <strong>2×/mo</strong> → ✅ Core · <strong>Weekly</strong> → ✅ All-Star/Legend</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Q4 · Use case</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Q4</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"What are you using it for — pickup play, training, league, drills?"
+    </div>
+    <p style="margin-top:10px"><strong>Pickup/league</strong> → ✅ · <strong>Training/drills</strong> → ⚠️ likely training court — re-check Q1</p>
+  </div>
+
+  <div class="callout danger">
+    <strong>The Damien case:</strong> He signed up for membership expecting it to apply to the training court. Found out it's full-court only. Refunded. The qualifier exists so this never happens again.
+  </div>
+</section>
+
+<!-- ====================== MEMBERSHIP OBJECTIONS — ALL EXPANDED ====================== -->
+<section class="section" id="mship-objections">
+  <h1>Membership Objections <span class="track-tag mship">Membership</span></h1>
+  <p class="lead">10 verbatim objections specific to membership conversations. <strong>Not birthday objections — see <a href="#" data-section="bday-objections">Birthday Objections</a> for those.</strong></p>
+
+  <div class="anchors" id="mship-obj-anchors"></div>
+  <div id="mship-obj-list"></div>
+</section>
+
+<!-- ====================== MEMBERSHIP MATH & CLOSES ====================== -->
+<section class="section" id="mship-math">
+  <h1>Membership Math &amp; Closes <span class="track-tag mship">Membership</span></h1>
+  <p class="lead">Break-even by tier, the live-math 4-step, and the 5 closes — all in one place.</p>
+
+  <h2>Break-even by tier</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>$/mo</th><th>$/yr</th><th>Free hrs</th><th>Free hrs value*</th><th>Break-even</th></tr></thead>
+    <tbody>
+      <tr><td>Core</td><td>$89</td><td>$1,068</td><td>12</td><td>$540 (12 × $45)</td><td>~24 hrs/yr</td></tr>
+      <tr><td><strong style="color:var(--mship)">All-Star ★</strong></td><td>$139</td><td>$1,668</td><td>18</td><td>$810 (18 × $45)</td><td>~37 hrs/yr</td></tr>
+      <tr><td>Legend</td><td>$359</td><td>$4,308</td><td>48</td><td>$2,160 (48 × $45)</td><td>~96 hrs/yr</td></tr>
+    </tbody>
+  </table>
+  <div class="card-meta">*Assumes ~$45/hr average usage. Sal: confirm real average.</div>
+
+  <h2>Live math · 4 steps on the call</h2>
+  <ol>
+    <li><strong>Anchor:</strong> "You said you're coming in twice a month with 6 people, right?"</li>
+    <li><strong>Walk-in equivalent:</strong> "$89/hr × 24 sessions = $2,136 if you stayed pay-per-visit."</li>
+    <li><strong>Compare:</strong> "All-Star is $1,668/yr. That's $468 less. AND $810 of that is your 18 free hours."</li>
+    <li><strong>Per-person framing:</strong> "Across 6 people coming twice a month — that's less than $5 each per session. Cheaper than coffee."</li>
+  </ol>
+
+  <hr>
+
+  <h2>The 5 membership closes</h2>
+
+  <div class="card">
+    <div class="card-title">Close 1 · Assumed · discovery is positive</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Assumed</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Okay perfect — based on what you told me, All-Star is your spot. I'm sending you the link right now. You'll get the confirmation in two minutes. Any questions before I hit send?"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 2 · Alternative · undecided on tier</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Alternative</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Do you want to start with Core at $89 — great for your group size — or does All-Star at $139 make more sense given you said you're coming in weekly?"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 3 · Summary · recap to build momentum</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Summary</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"So — group of 6, twice a month, you want a Friday slot locked in. The All-Star locker is exactly that: 18 hours in the bank, 8 weeks advance booking, 10% off after. Want to get locked in today?"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 4 · Real-Urgency · only if real</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Urgency</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"I'll be straight with you — Friday evenings book up first. The next 4 Fridays at 7pm are already taken by members. If you want a regular Friday slot, the time is now, not after the group meeting. Want me to send the link while we're on the call?"
+    </div>
+    <div class="card-meta" style="margin-top:10px;color:var(--yellow)">⚠ Drop "extremely limited" / "only 1–2 spots" — those are fake scarcity, break trust.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Close 5 · Takeaway · stalling, no clear objection</div>
+    <div class="script mship">
+      <div class="script-head"><span class="script-label">Takeaway</span><button class="copy" onclick="copyScript(this)">Copy</button></div>
+"Look — I don't want to push something that isn't the right fit. If the timing's not there, totally fine. Just so you know — once we're full on a tier, we don't always reopen it. So if it does click in a few weeks, reach out and we'll see what we've got. No pressure."
+    </div>
+    <div class="card-meta" style="margin-top:10px">Then stop talking.</div>
+  </div>
+</section>
+
+<!-- ====================== PIVOT ====================== -->
+<section class="section" id="pivot">
+  <h1>The Birthday → Membership Pivot <span class="track-tag shared">Cross-Track</span></h1>
+  <p class="lead">When a birthday call signals a membership opportunity. The data shows: this works rarely, fails often, and depends entirely on timing.</p>
+
+  <div class="callout danger">
+    <strong>Hard rule:</strong> Don't pivot to membership during a birthday close. Wait until the birthday is booked OR the prospect explicitly signals recurring use.
+  </div>
+
+  <h2>The 4 patterns from the data</h2>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green)">✓ WIN · Daniel/Alicia (May 6)</div>
+    <p><strong>Setup:</strong> Outbound birthday renewal. Birthday already past — they were on vacation. Alicia volunteers a NEW need: training bookings.</p>
+    <div class="quote bday">Alicia: "We are actually thinking of doing some training at your location there."<br>
+    Izzy [adapts in 4 sec]: "There's actually gonna be an email going out to all current and ex players about new promotions..."<br>
+    Alicia: "We will be using your facility often in the next few weeks for sure."</div>
+    <p><strong>Why it worked:</strong> Customer surfaced the need. Izzy didn't push. Owner credibility late, not early.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green)">✓ PARTIAL WIN · Brie (Mar 27)</div>
+    <p><strong>Setup:</strong> First-time inbound birthday. Brie's daughter wants free play, considering stripping the package.</p>
+    <div class="quote bday">Izzy: "After the party, you're obviously welcome to book really casual sessions... You can book a training court for $40 and bring a couple friends, just hang out."<br>
+    Brie: "Yep. Yeah. Exactly."</div>
+    <p><strong>Why it worked:</strong> Casual-booking pivot, NOT membership pitch. $40 training court hook. Bridge to repeat use without the year commitment.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--red)">✗ FAIL · Anna (DIY veteran)</div>
+    <p><strong>Setup:</strong> 3–4 years of casual basketball + pizza without paying for the package. Outbound birthday renewal.</p>
+    <p><strong>Why it failed:</strong> She's already extracting "birthday" value from a casual booking. Polite decline. Pushed too hard, killed the warm relationship.</p>
+    <p><strong>Lesson:</strong> Veteran DIY customers don't convert to membership. Don't force it.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--yellow)">⚠ MIXED · Leanne (May 5)</div>
+    <p><strong>Setup:</strong> Repeat customer (multiple bookings + family events). Teacher = network of kids. High LTV indicators.</p>
+    <div class="quote bday">Izzy: "We have a free program for middle schoolers... I'll get into it after. Sorry to derail here."</div>
+    <p><strong>Diagnosis:</strong> Pivot CAN work because she's a connector. But buried at end-of-call and verbally hedged. Timing was sloppy.</p>
+    <p><strong>Lesson:</strong> Teachers / coaches / community connectors are right pivot targets. Make the pivot intentional, not a side note.</p>
+  </div>
+
+  <h2>The pivot decision tree</h2>
+
+  <h3>Don't pivot if:</h3>
+  <ul>
+    <li>It's a birthday close in progress (close the birthday first)</li>
+    <li>They're a one-off party booker (no recurring intent signaled)</li>
+    <li>They're a DIY veteran already extracting value casually</li>
+    <li>They haven't asked about pricing or recurring options</li>
+  </ul>
+
+  <h3>Do pivot if:</h3>
+  <ul>
+    <li>They explicitly say "weekly," "every Tuesday," "consistent group"</li>
+    <li>They volunteer a recurring use case (training, team practice)</li>
+    <li>They ask about hourly rates AFTER booking the birthday</li>
+    <li>They're a teacher / coach / youth pastor / community connector</li>
+  </ul>
+
+  <h3>How to pivot:</h3>
+  <ol>
+    <li>Wait until the birthday is closed/booked</li>
+    <li>Plant the seed: "By the way — for groups that come in regularly, we have a membership that ends up cheaper. Want me to send a one-pager?"</li>
+    <li>Don't run the full membership pitch on the same call — schedule a follow-up</li>
+    <li>If they say yes to the seed, run the <a href="#" data-section="mship-qualify">4-Q qualifier</a> on the next call</li>
+  </ol>
+</section>
+
+<!-- ====================== NUMBERS ====================== -->
+<section class="section" id="numbers">
+  <h1>My Numbers <span class="track-tag shared">System</span></h1>
+  <p class="lead">Realistic ramp + daily tracker. Track separately for birthday and membership.</p>
+
+  <h2>Realistic ramp</h2>
+  <table>
+    <thead><tr><th>Timeframe</th><th>Birthday</th><th>Membership</th><th>What it requires</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Today</strong></td><td>~3–4 / wk</td><td>~2 / wk</td><td>Current pace</td></tr>
+      <tr><td><strong>30 days</strong></td><td>5 / wk</td><td>5 / wk</td><td>Fix 3 compliance issues + 20 dials/day</td></tr>
+      <tr><td><strong>90 days</strong></td><td>8–10 / wk</td><td>10–15 / wk</td><td>+ daily booking-history outbound + Monday review</td></tr>
+      <tr><td><strong>6 months</strong></td><td>15+ / wk</td><td>20–25 / wk</td><td>+ 2nd closer + lead engine</td></tr>
+      <tr><td><strong>12 months</strong></td><td>20+ / wk</td><td>30–35 / wk</td><td>All of the above at maturity</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Birthday tracker · today</h2>
+  <table>
+    <thead><tr><th>Metric</th><th>Today</th></tr></thead>
+    <tbody>
+      <tr><td>Inbound birthday calls</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Outbound renewals (made)</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Voicemails left</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Birthdays booked</td><td><input type="number" class="field"></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Membership tracker · today</h2>
+  <table>
+    <thead><tr><th>Metric</th><th>Today</th></tr></thead>
+    <tbody>
+      <tr><td>Booking-history dials</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Connects</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Qualifiers run</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Pitches given</td><td><input type="number" class="field"></td></tr>
+      <tr><td>Memberships signed</td><td><input type="number" class="field"></td></tr>
+    </tbody>
+  </table>
+  <div class="card-meta" style="margin-top:6px">Local tracker only. Log to your CRM at end of day to persist.</div>
+
+  <h2>Monday Call Review · 30 min</h2>
+  <div class="card">
+    <p>Sal + Izzy listen to <strong>3 won + 3 lost calls</strong> from each track. Score against the framework: 6 beats, qualifier, math, social proof, link sent on call, follow-up scheduled.</p>
+    <p style="margin-top:8px">Won calls hit 8+/10. Lost calls usually miss 3+. Patterns emerge fast.</p>
+  </div>
+</section>
+
+<!-- ====================== REFERENCE ====================== -->
+<section class="section" id="reference">
+  <h1>Reference <span class="track-tag shared">System</span></h1>
+  <p class="lead">Voice, source data, and how this dashboard was built.</p>
+
+  <h2>Izzy's signature phrases · verbatim from real calls</h2>
+  <div class="grid grid-3">
+    <div class="card"><div class="card-title">"We got you."</div><p>Closing reassurance.</p></div>
+    <div class="card"><div class="card-title">"No worries at all."</div><p>Default acknowledgment.</p></div>
+    <div class="card"><div class="card-title">"Alright, boss."</div><p>Casual address.</p></div>
+    <div class="card"><div class="card-title">"Cheers."</div><p>Sign-off.</p></div>
+    <div class="card"><div class="card-title">"We do this every weekend."</div><p>Birthday social-proof refrain — most-effective phrase in dataset.</p></div>
+    <div class="card"><div class="card-title">"Two gym teachers running the day."</div><p>Coordinator framing — concrete mental model.</p></div>
+    <div class="card"><div class="card-title">"I'll make the exception."</div><p>The gift technique.</p></div>
+    <div class="card"><div class="card-title">"My name is Izzy here."</div><p>Personal sign-off mid-call.</p></div>
+    <div class="card"><div class="card-title">"I'm one of the owners."</div><p>Cofounder reveal — late, after rapport.</p></div>
+  </div>
+
+  <h2>Anti-phrases · don't use</h2>
+  <ul>
+    <li>❌ "I know it's expensive..." — never apologize for price</li>
+    <li>❌ "Look out for the email" — be specific (within 5 min)</li>
+    <li>❌ "Extremely limited" / "only 1–2 spots" — fake scarcity, breaks trust</li>
+    <li>❌ "I have to check with my team" — sounds like a stall</li>
+    <li>❌ "I believe it's..." — know your numbers cold</li>
+  </ul>
+
+  <h2>Source data</h2>
+  <div class="kv">
+    <div class="kv-row"><div class="k">Date pulled</div><div class="v">2026-05-06</div></div>
+    <div class="kv-row"><div class="k">Window</div><div class="v">90 days back</div></div>
+    <div class="kv-row"><div class="k">Source</div><div class="v">Quo (formerly OpenPhone) API · both lines</div></div>
+    <div class="kv-row"><div class="k">Total calls</div><div class="v">379</div></div>
+    <div class="kv-row"><div class="k">Birthday bucket</div><div class="v">36 calls</div></div>
+    <div class="kv-row"><div class="k">Membership bucket</div><div class="v">17 calls</div></div>
+    <div class="kv-row"><div class="k">Mixed bucket</div><div class="v">32 calls (birthday → membership)</div></div>
+    <div class="kv-row"><div class="k">Calls deeply analyzed</div><div class="v">25 by CMO + 16 birthday-specific</div></div>
+    <div class="kv-row"><div class="k">QA passes</div><div class="v">4 — oversight + post-build + dual-track + UI audit</div></div>
+  </div>
+
+  <h2>Vault files</h2>
+  <ul>
+    <li><code>~/vault/runrec/sales/transcripts/_index.md</code></li>
+    <li><code>~/vault/runrec/sales/transcripts/_classification.md</code></li>
+    <li><code>~/vault/runrec/sales/v3-call-analysis.md</code></li>
+    <li><code>~/vault/runrec/sales/v4-birthday-analysis.md</code></li>
+    <li><code>~/vault/runrec/sales/v4-birthday-strategy.md</code></li>
+    <li><code>~/.aos/work/runrec/quo_pull.py</code> · re-runnable puller</li>
+  </ul>
+
+  <h2>About v4</h2>
+  <p>v4 splits BIRTHDAY and MEMBERSHIP into completely separate tracks. They have different objections, different scripts, different closes. Mixing them was the mistake in v3.</p>
+  <p>To re-pull updated call data: <code>python3 ~/.aos/work/runrec/quo_pull.py</code> (~5 min).</p>
+</section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// =========== BIRTHDAY OBJECTIONS ===========
+const BDAY_OBJ = [
+  {n:1,type:"pricing",q:"$500 for a party is a lot.",who:"Leanne",label:"Totally hear you — the per-party number is the main concern.",proof:"Most of our families say the same on the first call. By the end of the party, they're texting me saying it was the best money they spent that year. We just did a Liam birthday last weekend — same kid count as yours. Mom said she'd pay double next time.",close:"Honest framing: the price isn't about the goodie bags. It's about the dynamic of the party. Want me to walk through what's actually included?"},
+  {n:2,type:"capacity",q:"We want 15 kids but the package caps at 11.",who:"Leanne",label:"I hear you — most elementary invites are 12–15. The cap is real but I can be lenient.",proof:"For repeat families or kids whose social circle is naturally a class size, I make exceptions. We've done parties with 14 kids on the HERO without bumping the price.",close:"What's your actual headcount? I'll work it. We'd rather have you here at 14 kids than at Shark Gym."},
+  {n:3,type:"stripping",q:"Can we just rent the space without the package?",who:"Sahar / Brie",label:"Sounds like you want to keep it simple — totally fair.",proof:"Two hours of three courts is $179/hr × 2 = $358. You'd lose: the coordinator, food permission, all the equipment, ability to lower hoops, scoreboard. For ~$140 more in the package, you're getting a service worth way more than that — plus you don't have to bring or clean anything.",close:"The package exists because it's actually the cheaper way to run the party once you account for everything. Want me to walk through the math?"},
+  {n:4,type:"seating",q:"Where will people sit? Is there a party room?",who:"Sahar / Pavan",label:"Great question — you want a comfortable space for the people not playing.",proof:"We have a designated party area with tables, custom-logo tablecloths, photo backdrop, and chairs along the side of the court. Fits 15+ adults watching without crowding the play area. Kids can pace between play and cake time.",close:"Want me to send you the floor plan so you can see how it lays out?"},
+  {n:5,type:"decorations",q:"Do you do balloons / decorations?",who:"Pavan / Amy",label:"You want it to feel personal and on-theme.",proof:"We provide tables, tablecloths, photo backdrop. We don't do balloons or themes — we leave that to you so you can make it your kid's. Most parents bring their own balloons + a few signs and the photo backdrop ties it together.",close:"You're welcome to bring everything. We set it up before you arrive. Want me to send the photo backdrop pic?"},
+  {n:6,type:"confidence",q:"Is it safe? Is it clean?",who:"Pavin family",label:"Of course — that's the first thing for a parent.",proof:"We have soft balls for younger kids, padded walls around the courts, lower the nets for kids' play. We do birthday parties for 5-year-olds every weekend. The space gets cleaned daily.",close:"Best move: come in this week and see it. Bring your kid. 15 minutes. You'll know if it's right."},
+  {n:7,type:"food",q:"Can we bring pizza? What about food?",who:"Jay's GF / Brie",label:"Smart — you want flexibility on what the kids eat.",proof:"With the package, yes — bring pizza, cake, juice boxes, anything. Most families order Domino's or Pizza Pizza directly to the venue. Roughly $80–$120 for 15 kids, plus you pick exactly what they want, no venue markup.",close:"Without the package, food isn't allowed on the courts — that's why the package exists. Going with the package?"},
+  {n:8,type:"committee",q:"I have to talk to my husband / family first.",who:"Leanne / Pavin",label:"Of course — that's smart. You want everyone on board.",proof:"Quick reality check on the calendar though: Saturday afternoons book 2-3 weeks out. The date you're looking at is currently open — Saturday before and after are already taken. So the window for that date is basically the next 24-48 hours.",close:"Talk to him tonight. If you're 80% sure, the safe move is to book tomorrow morning before another inquiry comes in. I won't pressure you — just want you to have the calendar truth."},
+  {n:9,type:"confusion",q:"I'm so confused because, like, there's so many problems.",who:"Sahar (verbatim)",label:"That's on us — the website tries to do too much. Let me make it simple.",proof:"Based on what you told me — [X] kids, age [Y], [date] — you'd be in [TIER]. Here's why: [match]. The other tiers don't fit your group as cleanly.",close:"That's the one. Want to lock that in?"},
+  {n:10,type:"coordinators",q:"Is one coordinator enough for 22 kids?",who:"Pavin",label:"Honest answer — 22+ active kids is a lot for one person.",proof:"For 20+ kids we usually recommend a 2nd coordinator at +$80 for the 2 hours. You get smoother flow, kids never bored, two adults watching. For groups under 20 one coordinator handles it.",close:"What's your actual head count? I'll tell you which way to go."},
+  {n:11,type:"age-mix",q:"We have 5-year-olds and 10-year-olds — will that work?",who:"Pavin / Sahar",label:"Mixed-age groups are super common — kids' parties always end up mixed.",proof:"Coordinators run age-appropriate games. The 5-year-olds get soft balls and lowered hoops; the 10-year-olds run their own scrimmages. They merge for dodgeball and music games. We do this every weekend.",close:"For your kid's age — what's the youngest sibling/cousin coming? I'll plan around them."},
+  {n:12,type:"urgency",q:"How soon do I need to decide? ASAP.",who:"Matt / Sahar / Leanne",label:"Hear you — let's move.",proof:"Saturday afternoons fill 2–3 weeks out. If your date is in the next 4 weeks, the time to lock in is today. After that, your top 2–3 time slots are usually gone.",close:"What's the date you're targeting? Let me check the calendar right now."}
+];
+
+// =========== MEMBERSHIP OBJECTIONS ===========
+const MSHIP_OBJ = [
+  {n:1,type:"contract",q:"Is this a contract — can I cancel?",who:"Damien / Momen",label:"Sounds like you want to make sure you're not stuck.",proof:"It's a 12-month locker because we front-load the hours and priority booking. We've never had a member leave feeling trapped. The few who needed real exceptions came to us directly and we worked it out.",close:"Honest answer: at $89, two visits and you've broken even. The question isn't whether you'll use it — it's whether you'll use it at least twice a month. Will you?"},
+  {n:2,type:"price",q:"$139 a month is a lot.",who:"membership pricing",label:"Hear you — let's do the math live.",proof:"You said you're coming in twice a month with 6 people. At $89/hr × 24 sessions = $2,136 if pay-per-visit. All-Star is $1,668. That's $468 less. AND $810 of that is your 18 free hours upfront.",close:"Across 6 people twice a month — under $5 each per session. Cheaper than coffee. Want me to walk through the breakdown?"},
+  {n:3,type:"defer",q:"Just email me the info.",who:"common defer pattern",label:"Absolutely — sending now. Quick question before you go.",proof:"When you looked at this, was the main thing on your mind the cost, or was it more about figuring out the scheduling? I'd hate for you to miss a Friday slot we have open right now.",close:"Sending the link now. Should be in your inbox in 60 seconds. Take a look tonight, text me directly back. We're filling fast on summer slots."},
+  {n:4,type:"committee",q:"I have to talk to my [husband / pastor / team] first.",who:"Armando / various",label:"Of course. Sounds like you want everyone on board.",proof:"What I usually do is send a one-pager you can forward — pricing, hours, perks all in one place. The line that always lands: 'have we ever been locked out of a Friday slot?' If yes, it's a no-brainer.",close:"When are you talking to them? I'll send the one-pager now — you'll have it before that conversation. Best email?"},
+  {n:5,type:"trial",q:"I want to try it before committing.",who:"common",label:"That makes sense — you want to know what you're getting into.",proof:"The 18 free hours ARE your trial. You're not paying for something you haven't used yet — you're getting hours upfront and using them through the year.",close:"If you've already played here a few times, that's your trial. The membership is just the version where you stop paying full walk-in rate. What's stopping you from locking in?"},
+  {n:6,type:"usage-fear",q:"I'm not sure how often we'll actually use it.",who:"common",label:"Right question to ask. That's exactly why Core exists.",proof:"Even twice a month — less than most groups — Core breaks even versus walk-in rates. The hours sit in your bank for the full year. Members tell us they end up coming MORE than expected because the friction is gone.",close:"Core at $89 is the safe bet — 12 hours in the bank, no risk. Want me to send the Core link?"},
+  {n:7,type:"solo",q:"I just come by myself sometimes — I don't need all that.",who:"common",label:"For solo play, Core is exactly right.",proof:"$89/mo, 12 hours in your bank, book anytime 24/7. Priority access and discounts. Training courts are perfect for solo work. A lot of our solo members are trainers or early-morning players.",close:"Core for solo use is a no-brainer at $89. Want me to send the Core link right now?"},
+  {n:8,type:"hours-out",q:"What happens when my free hours run out?",who:"common",label:"Great question — actually one of the best parts.",proof:"Once your hours are done, you keep booking at 10% off for the rest of the year. So your cost per session DROPS as the year goes on. Heavy users use the discount phase to book extra practice.",close:"So you're getting two things: hours upfront AND a discount rate after. Year-round value for one flat fee. Ready to lock in?"},
+  {n:9,type:"shorter",q:"Is there a shorter commitment?",who:"common",label:"Totally fair — 12 months feels like a lot.",proof:"We don't do shorter because the whole model front-loads you with value: hours, priority access, discount. We can only afford that with the year commitment. Members tell us by month 3 they've forgotten it's a year — they're just enjoying the slot.",close:"Core at $89 is the lowest commitment we offer. If 12 months on Core makes more sense than 12 months on All-Star — that's still a win. Which feels more comfortable to start with?"},
+  {n:10,type:"life-change",q:"What if my schedule changes during the year?",who:"common",label:"Fair concern.",proof:"We've had members relocate, have schedule changes — we handle it case by case. Nobody's left feeling stuck. We're a small team, not a corporation.",close:"For most people the question is: are things stable enough for the next few months? If yes — lock in today. How's your situation looking?"}
+];
+
+// =========== RENDER OBJECTIONS — fully expanded inline ===========
+function renderObjList(arr, listId, anchorsId, type){
+  const list = document.getElementById(listId);
+  const anchors = document.getElementById(anchorsId);
+  list.innerHTML = arr.map(o => `
+    <div class="obj ${type}" id="${type}-obj-${o.n}">
+      <div class="obj-head">
+        <div>
+          <div class="obj-num ${type}">Objection ${String(o.n).padStart(2,'0')}</div>
+          <div class="obj-quote">"${o.q}"</div>
+          <div class="obj-who">${o.who}</div>
+        </div>
+        <span class="obj-tag">${o.type}</span>
+      </div>
+      <div class="tier"><div class="tier-num">Tier 1 · Label &amp; Reframe</div><div class="tier-text">"${o.label}"</div></div>
+      <div class="tier"><div class="tier-num">Tier 2 · Social Proof</div><div class="tier-text">"${o.proof}"</div></div>
+      <div class="tier"><div class="tier-num">Tier 3 · Close</div><div class="tier-text">"${o.close}"</div></div>
+    </div>
+  `).join('');
+  anchors.innerHTML = arr.map(o =>
+    `<a class="anchor" href="#${type}-obj-${o.n}">${o.n}. ${o.type}</a>`
+  ).join('');
+}
+renderObjList(BDAY_OBJ, 'bday-obj-list', 'bday-obj-anchors', 'bday');
+renderObjList(MSHIP_OBJ, 'mship-obj-list', 'mship-obj-anchors', 'mship');
+
+// =========== NAVIGATION ===========
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById(id);
+  const nav = document.querySelector(`.nav-item[data-section="${id}"]`);
+  if(sec) sec.classList.add('active');
+  const topbar = document.getElementById('topbar');
+  topbar.classList.remove('bday','mship','shared');
+  if(nav){
+    nav.classList.add('active');
+    document.getElementById('crumb').textContent = nav.textContent.trim().replace(/^[^\w]+/,'');
+    const track = nav.dataset.track || 'shared';
+    topbar.classList.add(track);
+  }
+  window.scrollTo(0,0);
+  history.replaceState(null,'','#'+id);
+}
+document.querySelectorAll('.nav-item').forEach(n => n.addEventListener('click', () => showSection(n.dataset.section)));
+document.body.addEventListener('click', e => {
+  const link = e.target.closest('[data-section]');
+  if(!link || link.classList.contains('nav-item')) return;
+  e.preventDefault();
+  showSection(link.dataset.section);
+});
+
+// =========== COPY ===========
+function copyScript(btn){
+  const script = btn.closest('.script');
+  // Get text after the head
+  const head = script.querySelector('.script-head');
+  let text = '';
+  let node = head.nextSibling;
+  while(node){
+    text += node.textContent || node.nodeValue || '';
+    node = node.nextSibling;
+  }
+  text = text.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = original;
+    }, 1500);
+  });
+}
+
+// =========== BOOTSTRAP ===========
+if(window.location.hash){
+  const id = window.location.hash.slice(1);
+  if(document.getElementById(id)) showSection(id);
+}
+</script>
+</body>
+</html>

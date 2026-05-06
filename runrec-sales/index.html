@@ -508,20 +508,24 @@ tr:hover td{background:rgba(255,255,255,0.02)}
   margin-top:3px;
 }
 
-.calc-perperson{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+.calc-breakdown{
   background:var(--bg);border:1px solid var(--border);
-  border-radius:8px;padding:14px 18px;margin-bottom:18px;
+  border-radius:8px;margin-bottom:14px;overflow:hidden;
 }
-.calc-perperson-label{font-size:13.5px;color:var(--text-3);font-weight:500}
-.calc-perperson-num{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.02em}
-.calc-perperson-tag{
-  margin-left:auto;font-size:11px;font-weight:600;
-  padding:4px 10px;border-radius:999px;
-  background:rgba(34,197,94,0.12);color:var(--green);
-  letter-spacing:0.04em;text-transform:uppercase;
+.calc-breakdown-row{
+  display:flex;justify-content:space-between;
+  align-items:center;padding:9px 16px;
+  border-bottom:1px solid var(--border);
+  font-size:13.5px;color:var(--text-3);
 }
-.calc-perperson-tag.warn{background:rgba(234,179,8,0.12);color:var(--yellow)}
+.calc-breakdown-row:last-child{border-bottom:none}
+.calc-breakdown-row strong{color:var(--text);font-weight:600;font-family:var(--mono);font-size:13px}
+.calc-breakdown-row.total{
+  background:rgba(59,130,246,0.06);
+  border-top:1px solid rgba(59,130,246,0.2);
+  font-weight:600;color:var(--text-2);
+}
+.calc-breakdown-row.total strong{color:var(--mship);font-size:14px}
 
 .calc-script{
   background:#08080a;border:1px solid var(--border);
@@ -1483,33 +1487,42 @@ If anything changes, you've got my direct number. Keep coming."
     <div class="calc-output">
 
       <div class="calc-headline">
-        <div class="calc-headline-label">Recommended tier</div>
+        <div class="calc-headline-label">Recommended tier · best fit for their usage</div>
         <div class="calc-tier" id="calc-tier-name">All-Star</div>
         <div class="calc-tier-price" id="calc-tier-price">$139/mo · $1,668/yr</div>
       </div>
 
+      <h3 style="margin:18px 0 8px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em">Their annual usage</h3>
+      <div class="calc-breakdown">
+        <div class="calc-breakdown-row"><span>Hours per year</span><strong id="calc-annual-hrs">24 hrs</strong></div>
+        <div class="calc-breakdown-row"><span>Sessions × group → person-hours</span><strong id="calc-person-hrs">144 person-hours</strong></div>
+      </div>
+
+      <h3 style="margin:18px 0 8px;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em">Cost comparison · honest math</h3>
+      <div class="calc-breakdown">
+        <div class="calc-breakdown-row"><span>Walk-in (current) · sessions × $89</span><strong id="calc-walkin">$2,136</strong></div>
+        <div class="calc-breakdown-row"><span style="margin-left:0">— vs —</span><span></span></div>
+        <div class="calc-breakdown-row"><span>Membership annual fee</span><strong id="calc-fee">$1,668</strong></div>
+        <div class="calc-breakdown-row"><span>Free hours included</span><strong id="calc-free">18 hrs (covers 18)</strong></div>
+        <div class="calc-breakdown-row"><span>Overage hours @ discounted rate</span><strong id="calc-overage">6 hrs × $80.10 = $481</strong></div>
+        <div class="calc-breakdown-row total"><span>Total membership cost</span><strong id="calc-member">$2,149</strong></div>
+      </div>
+
       <div class="calc-stats">
-        <div class="calc-stat">
-          <div class="calc-stat-label">If they keep paying hourly</div>
-          <div class="calc-stat-num" id="calc-walkin">$2,136</div>
-          <div class="calc-stat-sub">per year</div>
-        </div>
-        <div class="calc-stat">
-          <div class="calc-stat-label">Membership cost</div>
-          <div class="calc-stat-num" id="calc-member">$1,668</div>
-          <div class="calc-stat-sub">per year</div>
-        </div>
-        <div class="calc-stat highlight">
-          <div class="calc-stat-label">They save</div>
+        <div class="calc-stat highlight" id="calc-savings-card">
+          <div class="calc-stat-label">Real savings vs hourly</div>
           <div class="calc-stat-num" id="calc-savings">$468</div>
           <div class="calc-stat-sub" id="calc-savings-sub">per year</div>
         </div>
+        <div class="calc-stat">
+          <div class="calc-stat-label">Per person, per session</div>
+          <div class="calc-stat-num" id="calc-perperson">$14.92</div>
+          <div class="calc-stat-sub" id="calc-perperson-sub">on membership</div>
+        </div>
       </div>
 
-      <div class="calc-perperson" id="calc-perperson-row">
-        <span class="calc-perperson-label">Per person, per session:</span>
-        <span class="calc-perperson-num" id="calc-perperson">$11.58</span>
-        <span class="calc-perperson-tag" id="calc-perperson-tag">cheaper than a movie</span>
+      <div class="callout" id="calc-recommendation" style="margin:6px 0 18px">
+        <strong>Recommendation:</strong> <span id="calc-rec-text">Pitch this — clear savings + lifestyle.</span>
       </div>
 
       <div class="calc-script">
@@ -1833,90 +1846,134 @@ function pickTier(group, freq, hours){
 
 function fmt(n){return '$' + Math.round(n).toLocaleString()}
 
-function buildScript(g, f, h, tierKey){
+function compute(g, f, h, tierKey){
   const t = TIERS[tierKey];
   const annualSessions = f;
-  const walkIn = annualSessions * h * HOURLY_RATE;
-  const savings = walkIn - t.yearly;
-  const ppps = t.yearly / annualSessions / g;  // per-person per-session
-  const freeHrsValue = t.freeHrs * HOURLY_RATE;
+  const annualHours = annualSessions * h;
+  const personHours = annualHours * g;
 
+  const walkIn = annualSessions * h * HOURLY_RATE;
+
+  // HONEST membership cost: yearly fee + overage at discount rate
+  const overageHours = Math.max(0, annualHours - t.freeHrs);
+  const overageRate = HOURLY_RATE * (1 - t.overage);
+  const overageCost = overageHours * overageRate;
+  const totalMembershipCost = t.yearly + overageCost;
+
+  const savings = walkIn - totalMembershipCost;
+  const ppps = totalMembershipCost / annualSessions / g;
+
+  return {
+    tier: t, tierKey,
+    annualSessions, annualHours, personHours,
+    walkIn,
+    yearlyFee: t.yearly,
+    freeHrs: t.freeHrs,
+    overageHours,
+    overageRate,
+    overageCost,
+    totalMembershipCost,
+    savings,
+    ppps,
+  };
+}
+
+function buildScript(g, f, h, tierKey){
+  const c = compute(g, f, h, tierKey);
   const groupLabel = g === 1 ? "you, solo" : g === 3 ? "your group of 2 or 3" : g === 6 ? "your group of 4 to 8" : "your group of 10+";
   const freqLabel = f === 12 ? "once a month" : f === 24 ? "twice a month" : f === 52 ? "once a week" : f === 104 ? "twice a week" : "three or more times a week";
-  const hLabel = h === 1 ? "an hour" : h + " hours";
 
-  // Two scripts depending on whether savings is positive
-  if(savings > 0) {
-    return `"You said ${groupLabel}, ${freqLabel}, about ${hLabel} each time, right?
+  // 3 scenarios: strong savings / break-even / negative
+  if(c.savings >= 300) {
+    // Strong savings · pitch confidently
+    return `"Quick math — you said ${groupLabel}, ${freqLabel}.
 
-At our hourly rate of $89 a court, that's ${fmt(walkIn)} a year if you keep paying per visit.
+That's ${c.annualHours} hours of court time a year. At hourly that's ${fmt(c.walkIn)}.
 
-The ${t.name} locker is ${fmt(t.yearly)} a year. That's ${fmt(savings)} less than what you'd pay anyway.
+With the ${c.tier.name} locker: ${fmt(c.yearlyFee)} for the year, ${c.freeHrs} hours free, and the rest of your hours at 10% off — total ${fmt(c.totalMembershipCost)}.
 
-And ${fmt(freeHrsValue)} of that is your ${t.freeHrs} free hours upfront — at the same hourly rate, you've already broken even on the free hours alone.
+You save ${fmt(c.savings)} a year — and that's just the dollar math. The bigger thing is your spot is locked 8 weeks ahead, you're a Founding Member, and the regulars become your people.
 
-Across ${g === 1 ? "your" : "the group's"} sessions, that works out to $${ppps.toFixed(2)} per person per session. ${ppps < 7 ? "Cheaper than coffee." : ppps < 12 ? "Cheaper than a movie ticket." : "Better deal than booking each time."}
+Want me to lock you in today?"`;
+  } else if(c.savings >= 0) {
+    // Break-even · vision-led pitch
+    return `"Honest math — at ${freqLabel}, hourly is ${fmt(c.walkIn)} a year, ${c.tier.name} comes out to about ${fmt(c.totalMembershipCost)}. So roughly break-even on dollars.
 
-Plus you get priority booking ${t.priority} of the public, ${(t.overage*100)}% off after your free hours, members-only events, and a direct line to me.
+Where the membership pays off isn't the spreadsheet — it's the priority booking, the community, and the fact you stop scrambling for slots. That's what your $${c.tier.monthly} a month actually buys.
 
-Want me to walk you through getting locked in?"`;
+If you're growing into more usage, this gets cheaper fast. If you stay at this pace, you're paying about the same — but you're locked in instead of competing for slots.
+
+Worth it for the lock-in?"`;
   } else {
-    // Honest: don't push membership if they don't book often enough
-    return `"Honest answer first — at ${freqLabel}, you're paying about ${fmt(walkIn)} a year hourly. The ${t.name} locker is ${fmt(t.yearly)}. That's ${fmt(Math.abs(savings))} MORE than booking when you need it.
+    // Negative · don't pitch on math, vision-only
+    return `"Real talk — at ${freqLabel}, paying hourly is actually cheaper. Hourly = ${fmt(c.walkIn)}/yr. ${c.tier.name} = ${fmt(c.totalMembershipCost)}/yr. You'd pay ${fmt(Math.abs(c.savings))} more.
 
-Membership only makes sense if you start coming more often — at twice a month or weekly, the math flips.
+Membership math flips when you come more often. At weekly with your group, it starts paying off. Right now — keep booking hourly.
 
-If your usage is going up — book the membership. If it's staying where it is — keep booking hourly. I'd rather give you the honest answer than sell you something that doesn't fit."`;
+If you do start coming weekly, give me a call back. Don't want to sell you something that doesn't fit."`;
   }
 }
 
 function updateCalc(){
   const tierKey = pickTier(calcGroup, calcFreq, calcHours);
-  const tier = TIERS[tierKey];
-
-  const annualSessions = calcFreq;
-  const walkIn = annualSessions * calcHours * HOURLY_RATE;
-  const savings = walkIn - tier.yearly;
-  const ppps = tier.yearly / annualSessions / calcGroup;
+  const c = compute(calcGroup, calcFreq, calcHours, tierKey);
 
   // Headline
-  document.getElementById('calc-tier-name').textContent = tier.name;
-  document.getElementById('calc-tier-price').textContent = `$${tier.monthly}/mo · $${tier.yearly.toLocaleString()}/yr`;
+  document.getElementById('calc-tier-name').textContent = c.tier.name;
+  document.getElementById('calc-tier-price').textContent = `$${c.tier.monthly}/mo · $${c.tier.yearly.toLocaleString()}/yr`;
 
-  // Stats
-  document.getElementById('calc-walkin').textContent = fmt(walkIn);
-  document.getElementById('calc-member').textContent = fmt(tier.yearly);
+  // Annual usage breakdown
+  document.getElementById('calc-annual-hrs').textContent = `${c.annualHours} hrs (${c.annualSessions} sessions × 1 hr)`;
+  document.getElementById('calc-person-hrs').textContent = `${c.personHours} person-hours`;
 
-  // Savings or warning
+  // Cost breakdown
+  document.getElementById('calc-walkin').textContent = fmt(c.walkIn) + '/yr';
+  document.getElementById('calc-fee').textContent = fmt(c.yearlyFee);
+  document.getElementById('calc-free').textContent = c.overageHours === 0
+    ? `${c.freeHrs} hrs (covers all ${c.annualHours})`
+    : `${c.freeHrs} hrs (covers ${c.freeHrs} of ${c.annualHours})`;
+  document.getElementById('calc-overage').textContent = c.overageHours === 0
+    ? `0 hrs · no overage`
+    : `${c.overageHours} hrs × $${c.overageRate.toFixed(2)} = ${fmt(c.overageCost)}`;
+  document.getElementById('calc-member').textContent = fmt(c.totalMembershipCost) + '/yr';
+
+  // Savings card
   const savingsEl = document.getElementById('calc-savings');
   const savingsSubEl = document.getElementById('calc-savings-sub');
-  const savingsCard = savingsEl.closest('.calc-stat');
-  if(savings >= 0){
-    savingsEl.textContent = fmt(savings);
-    savingsSubEl.textContent = 'per year saved';
+  const savingsCard = document.getElementById('calc-savings-card');
+  savingsCard.classList.remove('highlight','dontbuy');
+  if(c.savings >= 300){
+    savingsEl.textContent = fmt(c.savings);
+    savingsSubEl.textContent = 'per year · clear savings';
     savingsCard.classList.add('highlight');
-    savingsCard.classList.remove('dontbuy');
-    savingsCard.querySelector('.calc-stat-label').textContent = 'They save';
+  } else if(c.savings >= 0){
+    savingsEl.textContent = fmt(c.savings);
+    savingsSubEl.textContent = 'per year · roughly break-even';
   } else {
-    savingsEl.textContent = '+' + fmt(Math.abs(savings));
-    savingsSubEl.textContent = 'more than hourly · don\'t pitch';
-    savingsCard.classList.remove('highlight');
+    savingsEl.textContent = '–' + fmt(Math.abs(c.savings));
+    savingsSubEl.textContent = 'membership costs MORE · don\'t pitch math';
     savingsCard.classList.add('dontbuy');
-    savingsCard.querySelector('.calc-stat-label').textContent = 'Membership costs MORE';
   }
 
   // Per person per session
-  document.getElementById('calc-perperson').textContent = '$' + ppps.toFixed(2);
-  const tag = document.getElementById('calc-perperson-tag');
-  if(ppps < 7){
-    tag.textContent = 'Cheaper than coffee';
-    tag.classList.remove('warn');
-  } else if(ppps < 12){
-    tag.textContent = 'Cheaper than a movie';
-    tag.classList.remove('warn');
+  document.getElementById('calc-perperson').textContent = '$' + c.ppps.toFixed(2);
+  document.getElementById('calc-perperson-sub').textContent = c.savings >= 0
+    ? `on membership (vs $${(HOURLY_RATE/calcGroup).toFixed(2)} hourly)`
+    : `vs $${(HOURLY_RATE/calcGroup).toFixed(2)} hourly · membership is more`;
+
+  // Recommendation callout
+  const rec = document.getElementById('calc-recommendation');
+  const recText = document.getElementById('calc-rec-text');
+  rec.classList.remove('good','warn','danger','info');
+  if(c.savings >= 300){
+    rec.classList.add('good');
+    recText.textContent = `PITCH THIS confidently. ${fmt(c.savings)}/yr in real savings, plus the lifestyle pitch on top.`;
+  } else if(c.savings >= 0){
+    rec.classList.add('info');
+    recText.textContent = `BREAK-EVEN on dollars. Pitch the VISION first (community, priority, Founding Member) — math comes second as confirmation. Open the Sell the Vision module.`;
   } else {
-    tag.textContent = 'Solid deal';
-    tag.classList.add('warn');
+    rec.classList.add('warn');
+    recText.textContent = `DON'T pitch on math. At this usage, hourly is cheaper by ${fmt(Math.abs(c.savings))}/yr. Plant the seed for when their usage grows. Or pitch pure vision (Founding Member status) — but be honest about the dollars.`;
   }
 
   // Script

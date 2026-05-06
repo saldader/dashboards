@@ -424,6 +424,126 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 }
 .check label{cursor:pointer;font-size:14px;color:var(--text-2)}
 
+/* ============ CALCULATOR ============ */
+.calc{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:24px 26px;margin:14px 0 24px;
+}
+.calc-row{margin-bottom:18px}
+.calc-label{
+  font-size:11px;font-weight:700;color:var(--mship);
+  letter-spacing:0.08em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.calc-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.calc-btn{
+  background:var(--bg);border:1px solid var(--border-strong);
+  color:var(--text-2);padding:10px 16px;border-radius:7px;
+  cursor:pointer;font-family:var(--font);font-size:13.5px;
+  font-weight:500;transition:all 0.12s;
+}
+.calc-btn:hover{background:var(--hover);color:var(--text);border-color:var(--text-3)}
+.calc-btn.active{
+  background:var(--mship);color:white;
+  border-color:var(--mship);font-weight:600;
+}
+
+.calc-output{
+  margin-top:24px;padding-top:24px;
+  border-top:1px solid var(--border);
+}
+
+.calc-headline{
+  background:var(--mship-soft);
+  border:1px solid rgba(59,130,246,0.25);
+  border-radius:10px;padding:18px 22px;
+  margin-bottom:18px;
+}
+.calc-headline-label{
+  font-size:11px;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.06em;
+  font-weight:600;margin-bottom:4px;
+}
+.calc-tier{
+  font-size:28px;font-weight:700;
+  color:var(--text);letter-spacing:-0.02em;
+}
+.calc-tier-price{
+  font-size:14px;color:var(--text-3);
+  font-weight:500;margin-top:4px;
+}
+
+.calc-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin-bottom:18px;
+}
+@media(max-width:680px){.calc-stats{grid-template-columns:1fr}}
+.calc-stat{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:14px 16px;
+}
+.calc-stat.highlight{
+  background:rgba(34,197,94,0.06);
+  border-color:rgba(34,197,94,0.25);
+}
+.calc-stat.dontbuy{
+  background:rgba(234,179,8,0.06);
+  border-color:rgba(234,179,8,0.25);
+}
+.calc-stat-label{
+  font-size:11px;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.04em;
+  font-weight:600;margin-bottom:5px;
+}
+.calc-stat-num{
+  font-size:24px;font-weight:700;
+  color:var(--text);letter-spacing:-0.02em;line-height:1.1;
+}
+.calc-stat.highlight .calc-stat-num{color:var(--green)}
+.calc-stat.dontbuy .calc-stat-num{color:var(--yellow)}
+.calc-stat-sub{
+  font-size:11.5px;color:var(--text-4);
+  margin-top:3px;
+}
+
+.calc-perperson{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:14px 18px;margin-bottom:18px;
+}
+.calc-perperson-label{font-size:13.5px;color:var(--text-3);font-weight:500}
+.calc-perperson-num{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.02em}
+.calc-perperson-tag{
+  margin-left:auto;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:999px;
+  background:rgba(34,197,94,0.12);color:var(--green);
+  letter-spacing:0.04em;text-transform:uppercase;
+}
+.calc-perperson-tag.warn{background:rgba(234,179,8,0.12);color:var(--yellow)}
+
+.calc-script{
+  background:#08080a;border:1px solid var(--border);
+  border-radius:8px;padding:18px 20px;
+}
+.calc-script-head{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:12px;
+  padding-bottom:10px;border-bottom:1px solid var(--border);
+}
+.calc-script-label{
+  font-size:11px;color:var(--mship);
+  letter-spacing:0.08em;text-transform:uppercase;
+  font-weight:700;
+}
+.calc-script-body{
+  font-size:14.5px;line-height:1.7;color:var(--text);
+  white-space:pre-wrap;
+}
+.calc-script-body strong{color:var(--text);font-weight:700}
+.calc-script-body em{font-style:normal;color:var(--mship);font-weight:600}
+
 /* ============ MOBILE ============ */
 @media(max-width:760px){
   .app{flex-direction:column}
@@ -1103,23 +1223,26 @@ If anything changes, you've got my direct number. Keep coming."
   <h1>Membership Math &amp; Closes <span class="track-tag mship">Membership</span></h1>
   <p class="lead">Break-even by tier, the live-math 4-step, and the 5 closes — all in one place.</p>
 
-  <h2>Break-even by tier</h2>
+  <p class="lead" style="margin-bottom:12px">Use the calculator at the bottom of this page for live math during a call. Static reference below.</p>
+
+  <h2>Break-even by tier (at $89/hr full court)</h2>
   <table>
-    <thead><tr><th>Tier</th><th>$/mo</th><th>$/yr</th><th>Free hrs</th><th>Free hrs value*</th><th>Break-even</th></tr></thead>
+    <thead><tr><th>Tier</th><th>$/mo</th><th>$/yr</th><th>Free hrs</th><th>Free hrs value</th><th>Break-even</th></tr></thead>
     <tbody>
-      <tr><td>Core</td><td>$89</td><td>$1,068</td><td>12</td><td>$540 (12 × $45)</td><td>~24 hrs/yr</td></tr>
-      <tr><td><strong style="color:var(--mship)">All-Star ★</strong></td><td>$139</td><td>$1,668</td><td>18</td><td>$810 (18 × $45)</td><td>~37 hrs/yr</td></tr>
-      <tr><td>Legend</td><td>$359</td><td>$4,308</td><td>48</td><td>$2,160 (48 × $45)</td><td>~96 hrs/yr</td></tr>
+      <tr><td>Core</td><td>$89</td><td>$1,068</td><td>12</td><td>$1,068 (12 × $89)</td><td>~12 hrs/yr · 1×/mo</td></tr>
+      <tr><td><strong style="color:var(--mship)">All-Star ★</strong></td><td>$139</td><td>$1,668</td><td>18</td><td>$1,602 (18 × $89)</td><td>~19 hrs/yr · ~1.5×/mo</td></tr>
+      <tr><td>Legend</td><td>$359</td><td>$4,308</td><td>48</td><td>$4,272 (48 × $89)</td><td>~48 hrs/yr · ~1×/wk</td></tr>
     </tbody>
   </table>
-  <div class="card-meta">*Assumes ~$45/hr average usage. Sal: confirm real average.</div>
+  <div class="card-meta">At $89/hr full court walk-in rate. Membership pays for itself in free hours alone — everything else (priority booking, discounts, perks) is bonus.</div>
 
   <h2>Live math · 4 steps on the call</h2>
+  <p class="lead" style="margin-bottom:12px">Or skip the math and just use the calculator below — it spits out the script for you.</p>
   <ol>
     <li><strong>Anchor:</strong> "You said you're coming in twice a month with 6 people, right?"</li>
     <li><strong>Walk-in equivalent:</strong> "$89/hr × 24 sessions = $2,136 if you stayed pay-per-visit."</li>
-    <li><strong>Compare:</strong> "All-Star is $1,668/yr. That's $468 less. AND $810 of that is your 18 free hours."</li>
-    <li><strong>Per-person framing:</strong> "Across 6 people coming twice a month — that's less than $5 each per session. Cheaper than coffee."</li>
+    <li><strong>Compare:</strong> "All-Star is $1,668/yr. That's $468 less. AND $1,602 of that is your 18 free hours at hourly rate."</li>
+    <li><strong>Per-person framing:</strong> "Across 6 people coming twice a month — that's $11.58 per person per session. Cheaper than a movie."</li>
   </ol>
 
   <hr>
@@ -1166,6 +1289,87 @@ If anything changes, you've got my direct number. Keep coming."
 "Look — I don't want to push something that isn't the right fit. If the timing's not there, totally fine. Just so you know — once we're full on a tier, we don't always reopen it. So if it does click in a few weeks, reach out and we'll see what we've got. No pressure."
     </div>
     <div class="card-meta" style="margin-top:10px">Then stop talking.</div>
+  </div>
+
+  <hr>
+
+  <!-- ====================== LIVE CALCULATOR ====================== -->
+  <h2 id="mship-calc" style="font-size:22px;margin-top:8px">💰 Live Membership Calculator</h2>
+  <p class="lead" style="margin-bottom:20px">During the call, click their group size and frequency. The math + the script update instantly. Hit copy and read it.</p>
+
+  <div class="calc">
+    <div class="calc-row">
+      <div class="calc-label">1 · Their group size</div>
+      <div class="calc-buttons" id="calc-group">
+        <button class="calc-btn" data-group="1">Solo</button>
+        <button class="calc-btn active" data-group="3">2–3 people</button>
+        <button class="calc-btn" data-group="6">4–8 people</button>
+        <button class="calc-btn" data-group="12">10+ people</button>
+      </div>
+    </div>
+
+    <div class="calc-row">
+      <div class="calc-label">2 · How often they come</div>
+      <div class="calc-buttons" id="calc-freq">
+        <button class="calc-btn" data-freq="12">1× / month</button>
+        <button class="calc-btn active" data-freq="24">2× / month</button>
+        <button class="calc-btn" data-freq="52">Weekly</button>
+        <button class="calc-btn" data-freq="104">2× / week</button>
+        <button class="calc-btn" data-freq="156">3+× / week</button>
+      </div>
+    </div>
+
+    <div class="calc-row">
+      <div class="calc-label">3 · Hours per session</div>
+      <div class="calc-buttons" id="calc-hours">
+        <button class="calc-btn active" data-hours="1">1 hr</button>
+        <button class="calc-btn" data-hours="1.5">1.5 hr</button>
+        <button class="calc-btn" data-hours="2">2 hr</button>
+        <button class="calc-btn" data-hours="3">3 hr</button>
+      </div>
+    </div>
+
+    <div class="calc-output">
+
+      <div class="calc-headline">
+        <div class="calc-headline-label">Recommended tier</div>
+        <div class="calc-tier" id="calc-tier-name">All-Star</div>
+        <div class="calc-tier-price" id="calc-tier-price">$139/mo · $1,668/yr</div>
+      </div>
+
+      <div class="calc-stats">
+        <div class="calc-stat">
+          <div class="calc-stat-label">If they keep paying hourly</div>
+          <div class="calc-stat-num" id="calc-walkin">$2,136</div>
+          <div class="calc-stat-sub">per year</div>
+        </div>
+        <div class="calc-stat">
+          <div class="calc-stat-label">Membership cost</div>
+          <div class="calc-stat-num" id="calc-member">$1,668</div>
+          <div class="calc-stat-sub">per year</div>
+        </div>
+        <div class="calc-stat highlight">
+          <div class="calc-stat-label">They save</div>
+          <div class="calc-stat-num" id="calc-savings">$468</div>
+          <div class="calc-stat-sub" id="calc-savings-sub">per year</div>
+        </div>
+      </div>
+
+      <div class="calc-perperson" id="calc-perperson-row">
+        <span class="calc-perperson-label">Per person, per session:</span>
+        <span class="calc-perperson-num" id="calc-perperson">$11.58</span>
+        <span class="calc-perperson-tag" id="calc-perperson-tag">cheaper than a movie</span>
+      </div>
+
+      <div class="calc-script">
+        <div class="calc-script-head">
+          <span class="calc-script-label">📞 Say this on the call</span>
+          <button class="copy" onclick="copyCalcScript(this)">Copy</button>
+        </div>
+        <div class="calc-script-body" id="calc-script">Loading…</div>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -1451,6 +1655,154 @@ function copyScript(btn){
     }, 1500);
   });
 }
+
+// =========== MEMBERSHIP CALCULATOR ===========
+const HOURLY_RATE = 89;  // $/hr full court walk-in
+
+const TIERS = {
+  core:    {name:"Core",     monthly:89,  yearly:1068, freeHrs:12, priority:"4 weeks ahead", overage:0.05},
+  allstar: {name:"All-Star", monthly:139, yearly:1668, freeHrs:18, priority:"8 weeks ahead", overage:0.10},
+  legend:  {name:"Legend",   monthly:359, yearly:4308, freeHrs:48, priority:"12 weeks ahead", overage:0.10},
+};
+
+let calcGroup = 3;   // default 2-3 people
+let calcFreq = 24;   // default 2x/month
+let calcHours = 1;   // default 1 hour
+
+function pickTier(group, freq, hours){
+  // Group size primary driver
+  if(group >= 10) return 'legend';
+  if(group >= 4) return 'allstar';
+  // 1-3 people
+  // If they're heavy users, All-Star may still beat Core via priority booking
+  const annualHours = freq * hours;
+  if(annualHours >= 50) return 'allstar';   // weekly+ at 1hr
+  return 'core';
+}
+
+function fmt(n){return '$' + Math.round(n).toLocaleString()}
+
+function buildScript(g, f, h, tierKey){
+  const t = TIERS[tierKey];
+  const annualSessions = f;
+  const walkIn = annualSessions * h * HOURLY_RATE;
+  const savings = walkIn - t.yearly;
+  const ppps = t.yearly / annualSessions / g;  // per-person per-session
+  const freeHrsValue = t.freeHrs * HOURLY_RATE;
+
+  const groupLabel = g === 1 ? "you, solo" : g === 3 ? "your group of 2 or 3" : g === 6 ? "your group of 4 to 8" : "your group of 10+";
+  const freqLabel = f === 12 ? "once a month" : f === 24 ? "twice a month" : f === 52 ? "once a week" : f === 104 ? "twice a week" : "three or more times a week";
+  const hLabel = h === 1 ? "an hour" : h + " hours";
+
+  // Two scripts depending on whether savings is positive
+  if(savings > 0) {
+    return `"You said ${groupLabel}, ${freqLabel}, about ${hLabel} each time, right?
+
+At our hourly rate of $89 a court, that's ${fmt(walkIn)} a year if you keep paying per visit.
+
+The ${t.name} locker is ${fmt(t.yearly)} a year. That's ${fmt(savings)} less than what you'd pay anyway.
+
+And ${fmt(freeHrsValue)} of that is your ${t.freeHrs} free hours upfront — at the same hourly rate, you've already broken even on the free hours alone.
+
+Across ${g === 1 ? "your" : "the group's"} sessions, that works out to $${ppps.toFixed(2)} per person per session. ${ppps < 7 ? "Cheaper than coffee." : ppps < 12 ? "Cheaper than a movie ticket." : "Better deal than booking each time."}
+
+Plus you get priority booking ${t.priority} of the public, ${(t.overage*100)}% off after your free hours, members-only events, and a direct line to me.
+
+Want me to walk you through getting locked in?"`;
+  } else {
+    // Honest: don't push membership if they don't book often enough
+    return `"Honest answer first — at ${freqLabel}, you're paying about ${fmt(walkIn)} a year hourly. The ${t.name} locker is ${fmt(t.yearly)}. That's ${fmt(Math.abs(savings))} MORE than booking when you need it.
+
+Membership only makes sense if you start coming more often — at twice a month or weekly, the math flips.
+
+If your usage is going up — book the membership. If it's staying where it is — keep booking hourly. I'd rather give you the honest answer than sell you something that doesn't fit."`;
+  }
+}
+
+function updateCalc(){
+  const tierKey = pickTier(calcGroup, calcFreq, calcHours);
+  const tier = TIERS[tierKey];
+
+  const annualSessions = calcFreq;
+  const walkIn = annualSessions * calcHours * HOURLY_RATE;
+  const savings = walkIn - tier.yearly;
+  const ppps = tier.yearly / annualSessions / calcGroup;
+
+  // Headline
+  document.getElementById('calc-tier-name').textContent = tier.name;
+  document.getElementById('calc-tier-price').textContent = `$${tier.monthly}/mo · $${tier.yearly.toLocaleString()}/yr`;
+
+  // Stats
+  document.getElementById('calc-walkin').textContent = fmt(walkIn);
+  document.getElementById('calc-member').textContent = fmt(tier.yearly);
+
+  // Savings or warning
+  const savingsEl = document.getElementById('calc-savings');
+  const savingsSubEl = document.getElementById('calc-savings-sub');
+  const savingsCard = savingsEl.closest('.calc-stat');
+  if(savings >= 0){
+    savingsEl.textContent = fmt(savings);
+    savingsSubEl.textContent = 'per year saved';
+    savingsCard.classList.add('highlight');
+    savingsCard.classList.remove('dontbuy');
+    savingsCard.querySelector('.calc-stat-label').textContent = 'They save';
+  } else {
+    savingsEl.textContent = '+' + fmt(Math.abs(savings));
+    savingsSubEl.textContent = 'more than hourly · don\'t pitch';
+    savingsCard.classList.remove('highlight');
+    savingsCard.classList.add('dontbuy');
+    savingsCard.querySelector('.calc-stat-label').textContent = 'Membership costs MORE';
+  }
+
+  // Per person per session
+  document.getElementById('calc-perperson').textContent = '$' + ppps.toFixed(2);
+  const tag = document.getElementById('calc-perperson-tag');
+  if(ppps < 7){
+    tag.textContent = 'Cheaper than coffee';
+    tag.classList.remove('warn');
+  } else if(ppps < 12){
+    tag.textContent = 'Cheaper than a movie';
+    tag.classList.remove('warn');
+  } else {
+    tag.textContent = 'Solid deal';
+    tag.classList.add('warn');
+  }
+
+  // Script
+  document.getElementById('calc-script').textContent = buildScript(calcGroup, calcFreq, calcHours, tierKey);
+}
+
+// Wire up calculator buttons
+function wireCalcButtons(containerId, dataKey, setter){
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.calc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.calc-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setter(parseFloat(btn.dataset[dataKey]));
+      updateCalc();
+    });
+  });
+}
+wireCalcButtons('calc-group','group',v => calcGroup = v);
+wireCalcButtons('calc-freq','freq',v => calcFreq = v);
+wireCalcButtons('calc-hours','hours',v => calcHours = v);
+
+// Copy the calculator script
+function copyCalcScript(btn){
+  const text = document.getElementById('calc-script').textContent.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = 'Copied';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = 'Copy';
+    }, 1500);
+  });
+}
+
+// Run on load
+updateCalc();
 
 // =========== BOOTSTRAP ===========
 if(window.location.hash){

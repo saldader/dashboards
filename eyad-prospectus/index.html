@@ -43,15 +43,15 @@ a{color:inherit;text-decoration:none}
 .back:hover{color:var(--t2)}
 
 .header{margin-bottom:48px;border-bottom:1px solid var(--border);padding-bottom:36px}
-.status-row{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;position:relative}
 .pill{
-  font-size:13px;font-weight:600;
-  padding:6px 14px;border-radius:999px;
-  letter-spacing:0.04em;text-transform:uppercase;
-  display:inline-flex;align-items:center;gap:8px;
+  font-size:10.5px;font-weight:600;
+  padding:4px 10px;border-radius:999px;
+  letter-spacing:0.05em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;
   border:1px solid transparent;
 }
-.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .pill.not-started{background:rgba(176,176,184,0.10);color:#b0b0b8;border-color:rgba(176,176,184,0.20)}
 .pill.in-progress{background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.25)}
 .pill.blocked{background:rgba(245,158,11,0.12);color:#fbbf24;border-color:rgba(245,158,11,0.25)}
@@ -59,6 +59,46 @@ a{color:inherit;text-decoration:none}
 /* legacy aliases kept for any older markup */
 .pill.live{background:rgba(34,197,94,0.12);color:var(--green)}
 .pill.muted{background:rgba(255,255,255,0.06);color:var(--t3)}
+
+/* Status pill as dropdown trigger */
+.status-pill-btn{
+  cursor:pointer;
+  background:none;border:none;padding:0;margin:0;font:inherit;
+  outline:none;
+}
+.status-pill-btn .pill{transition:opacity .15s, transform .15s}
+.status-pill-btn:hover .pill{opacity:0.9}
+.status-pill-btn .chev-down{
+  margin-left:2px;font-size:9px;opacity:0.7;transition:transform .15s;
+}
+.status-pill-btn[aria-expanded="true"] .chev-down{transform:rotate(180deg)}
+
+.status-menu{
+  position:absolute;top:100%;left:0;margin-top:6px;z-index:100;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  display:none;flex-direction:column;gap:2px;
+  min-width:160px;
+}
+.status-menu.open{display:flex}
+.status-menu button{
+  background:none;border:none;font:inherit;color:var(--t2);
+  padding:8px 12px;border-radius:6px;cursor:pointer;
+  text-align:left;display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:500;
+  transition:background .12s;
+}
+.status-menu button:hover{background:var(--hover)}
+.status-menu button .menu-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-menu button[data-status="not-started"] .menu-dot{background:#b0b0b8}
+.status-menu button[data-status="in-progress"] .menu-dot{background:#60a5fa}
+.status-menu button[data-status="blocked"] .menu-dot{background:#fbbf24}
+.status-menu button[data-status="done"] .menu-dot{background:#22c55e}
+.status-menu button[aria-checked="true"]{background:var(--hover);color:var(--text)}
+.status-menu button[aria-checked="true"]::after{
+  content:"✓";margin-left:auto;color:var(--accent);font-weight:600;
+}
 h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:14px;color:var(--text)}
 .lead{color:var(--t3);font-size:16px;max-width:660px}
 
@@ -180,7 +220,15 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
   <!-- Header -->
   <div class="header">
     <div class="status-row">
-      <span class="pill in-progress">In Progress</span>
+      <button id="statusPillBtn" class="status-pill-btn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span id="statusPill" class="pill in-progress">In Progress<span class="chev-down">▾</span></span>
+      </button>
+      <div id="statusMenu" class="status-menu" role="menu" aria-labelledby="statusPillBtn">
+        <button type="button" data-status="not-started" data-label="Not Started" role="menuitemradio"><span class="menu-dot"></span>Not Started</button>
+        <button type="button" data-status="in-progress" data-label="In Progress" role="menuitemradio" aria-checked="true"><span class="menu-dot"></span>In Progress</button>
+        <button type="button" data-status="blocked" data-label="Blocked" role="menuitemradio"><span class="menu-dot"></span>Blocked</button>
+        <button type="button" data-status="done" data-label="Done" role="menuitemradio"><span class="menu-dot"></span>Done</button>
+      </div>
     </div>
     <h1>Franchise Prospectus — Eyad Brief</h1>
     <p class="lead">Plug-and-play spec for the 6–7 page franchise prospectus PDF that Izzy sends to a prospect after their first discovery call. Built from the May 7, 2026 strategy call with Brian Bazely.</p>
@@ -633,5 +681,54 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
   </div>
 
 </div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'eyad-prospectus-status';
+  const btn = document.getElementById('statusPillBtn');
+  const pill = document.getElementById('statusPill');
+  const menu = document.getElementById('statusMenu');
+  const items = menu.querySelectorAll('button[data-status]');
+  const STATUS_CLASSES = ['not-started','in-progress','blocked','done'];
+
+  function applyStatus(status, label){
+    STATUS_CLASSES.forEach(c => pill.classList.remove(c));
+    pill.classList.add(status);
+    pill.firstChild.nodeValue = label;
+    items.forEach(i => i.setAttribute('aria-checked', i.dataset.status === status ? 'true' : 'false'));
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({status, label})); }catch(e){}
+  }
+
+  // Restore saved status
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if(saved && saved.status) applyStatus(saved.status, saved.label);
+  }catch(e){}
+
+  function openMenu(){ menu.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+  function closeMenu(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    menu.classList.contains('open') ? closeMenu() : openMenu();
+  });
+
+  items.forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      applyStatus(item.dataset.status, item.dataset.label);
+      closeMenu();
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if(!menu.contains(e.target) && e.target !== btn) closeMenu();
+  });
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') closeMenu();
+  });
+})();
+</script>
 </body>
 </html>

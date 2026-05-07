@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franchise Prospectus — Eyad Brief · RunRec</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --text: #ffffff;
+  --t2: #d4d4dc;
+  --t3: #b0b0b8;
+  --t4: #6c6c74;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #ff6b35;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (font-variation-settings: normal) { html { font-family: "Inter var", sans-serif; } }
+html,body{background:var(--bg);color:var(--t2);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;font-feature-settings:"cv02","cv03","cv11"}
+body{padding:60px 24px 100px;background:radial-gradient(ellipse at top,rgba(255,107,53,0.05),transparent 60%),var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.wrap{width:100%;max-width:880px;margin:0 auto}
+
+/* ── Header ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+.brand{display:inline-flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;background:var(--accent);border-radius:10px;display:grid;place-items:center;color:white;font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--t4);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;margin-top:2px}
+.back{font-size:13px;color:var(--t4);transition:color .15s}
+.back:hover{color:var(--t2)}
+
+.header{margin-bottom:48px;border-bottom:1px solid var(--border);padding-bottom:36px}
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.pill{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:0.05em;text-transform:uppercase}
+.pill.live{background:rgba(34,197,94,0.12);color:var(--green)}
+.pill.muted{background:rgba(255,255,255,0.06);color:var(--t3)}
+h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:14px;color:var(--text)}
+.lead{color:var(--t3);font-size:16px;max-width:660px}
+
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;margin-top:28px}
+.meta-item{display:flex;flex-direction:column;gap:4px}
+.meta-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
+.meta-val{font-size:14px;color:var(--text);font-weight:500}
+
+/* ── Section ── */
+section{margin-top:56px}
+.sec-head{margin-bottom:22px}
+.sec-num{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px}
+.sec-title{font-size:22px;font-weight:600;letter-spacing:-0.015em;color:var(--text);margin-bottom:6px}
+.sec-desc{color:var(--t3);font-size:14px;max-width:600px}
+
+/* ── Panel (callout) ── */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px 26px}
+.panel + .panel{margin-top:14px}
+.panel-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.dot.red{background:var(--red)}
+.dot.green{background:var(--green)}
+
+/* ── Two-column rules block ── */
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.rules{grid-template-columns:1fr}}
+.rule-block{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 24px}
+.rule-block.dont{border-left:3px solid var(--red)}
+.rule-block.do{border-left:3px solid var(--green)}
+.rule-head{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:14px}
+.rule-head.dont{color:var(--red)}
+.rule-head.do{color:var(--green)}
+.rule-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.rule-list li{font-size:13.5px;color:var(--t2);line-height:1.55;padding-left:18px;position:relative}
+.rule-list li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:1.5px;background:var(--t4)}
+
+/* ── Page spec cards ── */
+.pages{display:flex;flex-direction:column;gap:14px}
+.page-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:0;overflow:hidden;transition:border-color .15s}
+.page-card:hover{border-color:var(--border-strong)}
+.page-head{padding:20px 26px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.page-head-left{display:flex;align-items:center;gap:14px}
+.page-num{width:30px;height:30px;border-radius:8px;background:rgba(255,107,53,0.12);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:13px;flex-shrink:0}
+.page-title{font-size:15.5px;font-weight:600;color:var(--text);letter-spacing:-0.005em}
+.page-purpose{font-size:13px;color:var(--t4);margin-top:3px}
+.chev{color:var(--t4);font-size:18px;transition:transform .2s}
+details[open] .chev{transform:rotate(90deg)}
+.page-body{padding:0 26px 24px 70px;border-top:1px solid var(--border);padding-top:20px;font-size:14px;line-height:1.65}
+.page-body h4{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--t4);font-weight:600;margin-top:18px;margin-bottom:8px}
+.page-body h4:first-child{margin-top:0}
+.page-body ul{list-style:none;display:flex;flex-direction:column;gap:7px;padding-left:2px}
+.page-body ul li{padding-left:16px;position:relative;color:var(--t2)}
+.page-body ul li::before{content:"·";position:absolute;left:4px;top:0;color:var(--t4);font-weight:700}
+.page-body strong{color:var(--text);font-weight:600}
+.page-body em{color:var(--t3);font-style:normal;font-weight:500}
+.quote{margin-top:14px;padding:14px 18px;background:rgba(255,107,53,0.06);border-left:2.5px solid var(--accent);border-radius:6px;font-style:italic;color:var(--t2);font-size:13.5px;line-height:1.6}
+.quote::before{content:"";display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);font-style:normal;font-weight:600;margin-bottom:4px}
+.quote.brian::before{content:"Brian's words"}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13.5px}
+th,td{text-align:left;padding:12px 18px;border-bottom:1px solid var(--border)}
+th{background:rgba(255,255,255,0.02);color:var(--t4);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+tr:last-child td{border-bottom:none}
+td{color:var(--t2)}
+td strong{color:var(--text)}
+
+/* ── Approval flow ── */
+.flow{display:flex;flex-direction:column;gap:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px 0;overflow:hidden}
+.step{display:flex;gap:18px;padding:16px 26px;align-items:flex-start;position:relative}
+.step:not(:last-child)::after{content:"";position:absolute;left:39px;top:38px;bottom:-8px;width:1px;background:var(--border)}
+.step-num{width:24px;height:24px;border-radius:50%;background:rgba(255,107,53,0.15);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12px;flex-shrink:0;z-index:1;margin-top:1px}
+.step-body{flex:1}
+.step-actor{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);font-weight:600;margin-bottom:3px}
+.step-text{font-size:13.5px;color:var(--t2)}
+
+/* ── FAQ ── */
+.faq{display:flex;flex-direction:column;gap:10px}
+details.faq-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+details.faq-item summary{padding:14px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.faq-item summary::-webkit-details-marker{display:none}
+details.faq-item summary::after{content:"+";color:var(--t4);font-size:18px;font-weight:300;transition:transform .15s}
+details.faq-item[open] summary::after{transform:rotate(45deg)}
+details.faq-item[open] summary{border-bottom:1px solid var(--border)}
+.faq-answer{padding:14px 20px;font-size:13.5px;color:var(--t2);line-height:1.65}
+
+/* ── Quotes block ── */
+.quotes{display:flex;flex-direction:column;gap:12px}
+.q{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:18px 22px;font-style:italic;color:var(--t2);font-size:14.5px;line-height:1.65}
+
+/* ── Footer ── */
+.foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
+.foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+
+/* utility */
+.kbd{display:inline-block;padding:1px 6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:4px;font-family:"SF Mono",ui-monospace,monospace;font-size:12px;color:var(--t2)}
+.amber{color:var(--amber)}
+.accent{color:var(--accent)}
+
+/* small print */
+.tiny{font-size:11.5px;color:var(--t4);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="../" class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="brand-name">Sal's Dashboards</div>
+        <div class="brand-sub">Internal tools</div>
+      </div>
+    </a>
+    <a href="../" class="back">← All dashboards</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="status-row">
+      <span class="pill live">● Spec Ready</span>
+      <span class="pill muted">v1.0 brief</span>
+    </div>
+    <h1>Franchise Prospectus — Eyad Brief</h1>
+    <p class="lead">Plug-and-play spec for the 6–7 page franchise prospectus PDF. Built from the May 7, 2026 strategy call with Brian Bazely. Every detail Brian outlined is here. No need to invent.</p>
+
+    <div class="meta">
+      <div class="meta-item"><span class="meta-label">For</span><span class="meta-val">Eyad — Designer</span></div>
+      <div class="meta-item"><span class="meta-label">From</span><span class="meta-val">Sal Dader</span></div>
+      <div class="meta-item"><span class="meta-label">Source</span><span class="meta-val">Brian Bazely · May 7, 2026</span></div>
+      <div class="meta-item"><span class="meta-label">Target draft</span><span class="meta-val">5–7 days</span></div>
+    </div>
+  </div>
+
+  <!-- 1. What you're building -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">01 — Overview</div>
+      <div class="sec-title">What you're building</div>
+    </div>
+
+    <div class="panel">
+      <p style="margin-bottom:14px"><strong>A 6–7 page graphically strong PDF prospectus</strong> that Izzy sends to franchise prospects after their first call.</p>
+      <p style="color:var(--t3);font-size:14px;margin-bottom:18px"><strong style="color:var(--text)">Why it exists:</strong> prospects get excited on the call, then water it down when they re-pitch to investors/partners. We need a leave-behind that does the selling when we're not in the room.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:8px">
+        <div><div class="meta-label">Format</div><div class="meta-val" style="font-size:13.5px;margin-top:4px">Canva or Figma → PDF</div></div>
+        <div><div class="meta-label">Filename</div><div class="meta-val" style="font-size:13.5px;margin-top:4px"><code style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;font-size:12px">RunRec-Franchisee-Prospectus-v1.0.pdf</code></div></div>
+        <div><div class="meta-label">Versioning</div><div class="meta-val" style="font-size:13.5px;margin-top:4px">v1.0, v1.1, v1.2</div></div>
+        <div><div class="meta-label">Tone</div><div class="meta-val" style="font-size:13.5px;margin-top:4px">Financial-institution prospectus, not a flyer</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Non-negotiables -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">02 — Read this first</div>
+      <div class="sec-title">Non-negotiables</div>
+      <div class="sec-desc">Hard rules. Do not deviate without sign-off from Sal.</div>
+    </div>
+
+    <div class="rules">
+      <div class="rule-block dont">
+        <div class="rule-head dont">Do not</div>
+        <ul class="rule-list">
+          <li><strong style="color:var(--text)">No PGC logo</strong> anywhere — title, footer, testimonials. Tagging in social posts is fine, not in the prospectus.</li>
+          <li><strong style="color:var(--text)">No revenue figures or income claims.</strong> Legally restricted until we have an Item 19 in our FDD.</li>
+          <li><strong style="color:var(--text)">No "Learn More" CTAs</strong> mid-document. CTA goes on the last page only.</li>
+          <li><strong style="color:var(--text)">No invented pages.</strong> Don't add "Our Team" / "Roadmap" / "FAQ" unless asked.</li>
+        </ul>
+      </div>
+      <div class="rule-block do">
+        <div class="rule-head do">Always</div>
+        <ul class="rule-list">
+          <li>Include a <strong style="color:var(--text)">disclaimer on every financial number</strong> ("Costs vary by community. See FDD for details.")</li>
+          <li>Put the <strong style="color:var(--text)">version number on the cover page</strong> (small, footer-style).</li>
+          <li>Use <strong style="color:var(--text)">RunRec brand only</strong> — colors, typography, logos from brand foundation.</li>
+          <li><strong style="color:var(--text)">Few words per page.</strong> Visually impactful. Easy to read.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Page-by-page spec -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">03 — Build spec</div>
+      <div class="sec-title">Page-by-page</div>
+      <div class="sec-desc">Click any page to expand. Each section has Brian's exact direction so you don't have to guess.</div>
+    </div>
+
+    <div class="pages">
+
+      <!-- Page 1 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">1</div>
+            <div>
+              <div class="page-title">Title Page</div>
+              <div class="page-purpose">Cover · brand · version</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Content</h4>
+          <ul>
+            <li><strong>Title:</strong> RunRec Franchisee Prospectus <em>(or Franchisee Information)</em></li>
+            <li>Strong cover image — basketball, court, RunRec branding</li>
+            <li>Version number bottom corner: <strong>v1.0</strong></li>
+            <li>Date</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- Page 2 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">2</div>
+            <div>
+              <div class="page-title">What is RunRec / Why RunRec</div>
+              <div class="page-purpose">The setup — define the model in one page</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Purpose</h4>
+          <p>When Andre in Atlanta sends this to <strong>his</strong> investors, they need to understand RunRec without ever talking to us.</p>
+
+          <h4>Content to include</h4>
+          <ul>
+            <li>One-line definition: <em>"RunRec is a 24/7/365 staffless basketball facility."</em></li>
+            <li>3–4 bullets on what makes us different</li>
+            <li>Visual: facility photo or hero shot of court</li>
+          </ul>
+
+          <div class="quote brian">"What is RunRec? Why RunRec? That's the whole — graphically very simple, very clean, not a lot of words."</div>
+        </div>
+      </details>
+
+      <!-- Page 3 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">3</div>
+            <div>
+              <div class="page-title">The Basketball Industry</div>
+              <div class="page-purpose">Show the size of the wave</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Purpose</h4>
+          <p>Basketball coaches don't know the market data. We do. Plant the "this is huge" feeling.</p>
+
+          <h4>Stats to include (Brian's exact callouts)</h4>
+          <ul>
+            <li><strong>$7 billion+</strong> total basketball market</li>
+            <li><strong>$14.3 billion</strong> equipment & apparel industry</li>
+            <li>Equipment / apparel growing at <strong>5.3%</strong></li>
+            <li><strong>40+ million</strong> basketball players in North America <em>(source: Sal's LinkedIn post — pull citation)</em></li>
+            <li>Headline: <em>"Be part of a $7 billion growing industry."</em></li>
+          </ul>
+
+          <h4>Visual treatment</h4>
+          <ul><li>Tight stats with clean charts/graphs. No clutter.</li></ul>
+
+          <div class="quote brian">"I can even envision pulling some tight stats and seeing some graphs and some charts on that page."</div>
+        </div>
+      </details>
+
+      <!-- Page 4 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">4</div>
+            <div>
+              <div class="page-title">24/7/365 Staffless Model</div>
+              <div class="page-purpose">The crown jewel of the offer</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Purpose</h4>
+          <p>Frame our model against the pain of every other business.</p>
+
+          <h4>Core message</h4>
+          <ul><li><em>"Why our business model is incredibly powerful."</em></li></ul>
+
+          <h4>Bullets / talking points</h4>
+          <ul>
+            <li>24 hours / 7 days / 365 days</li>
+            <li>Fully staffless — automated entry, booking, payments</li>
+            <li><em>"The biggest challenge in owning a business is managing staffing."</em> RunRec eliminates that.</li>
+            <li>Most owners are tied to operations — vacations suffer, weekends gone. <strong>Not RunRec.</strong></li>
+            <li>Proprietary software runs the gym</li>
+          </ul>
+
+          <h4>Visual ideas (Brian's direct suggestions)</h4>
+          <div class="quote brian">"Picture of someone sitting on their sofa with a cup of coffee, phone in hand, RunRec app open. Caption: 'Monitor your gym from anywhere.'"</div>
+          <div class="quote brian" style="margin-top:8px">"Or: someone grabbing the door of the facility with a clock emblem above. Caption: 'Proprietary software lets your customers come in 24/7.'"</div>
+        </div>
+      </details>
+
+      <!-- Page 5 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">5</div>
+            <div>
+              <div class="page-title">Coach Testimonials — "Why Our Coaches Love Us"</div>
+              <div class="page-purpose">Social proof from real, passionate coaches</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Brian's vision (verbatim)</h4>
+          <div class="quote brian">"You can picture an entire page where 'our coaches love us' with a picture of a coach standing there with a whistle around their neck and a little testimonial beside them."</div>
+
+          <h4>The "Andre standard"</h4>
+          <p>Andre in Atlanta — sweating, in his car, fired up: <em>"Man, I've wanted to do this type of thing forever."</em> That energy is what we want to capture in the photo + quote.</p>
+
+          <h4>Layout</h4>
+          <ul>
+            <li>Photo of coach (whistle, clipboard, real basketball setting — <strong>not stock</strong>)</li>
+            <li>Short pull quote (1–2 sentences)</li>
+            <li>Coach name + city</li>
+          </ul>
+
+          <h4>Source</h4>
+          <ul><li>Sal will provide testimonials and photos. If unpolished by v1.0, mock up with placeholder; swap in v1.1.</li></ul>
+        </div>
+      </details>
+
+      <!-- Page 6 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">6</div>
+            <div>
+              <div class="page-title">Why Ownership is Good for You</div>
+              <div class="page-purpose">Lifestyle + income control — emotional close</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Purpose</h4>
+          <p>Speak to <strong>the person</strong>, not the business.</p>
+
+          <h4>Brian's framing (verbatim phrases to use)</h4>
+          <ul>
+            <li><em>"You control your income level."</em></li>
+            <li><em>"Many of our owners are looking to open 3 to 10 RunRecs."</em></li>
+            <li><em>"I love to coach my kids' basketball and soccer."</em></li>
+            <li><em>"I love the freedom to go watch a college basketball game."</em></li>
+            <li><em>"I like to cut my lawn in the middle of the afternoon."</em></li>
+            <li><em>"Did you know that with RunRec, you determine how much income you make?"</em></li>
+          </ul>
+
+          <h4>Visual treatment</h4>
+          <ul><li>Lifestyle imagery — coaching kids, family, freedom. Make them <strong>feel</strong> it.</li></ul>
+        </div>
+      </details>
+
+      <!-- Page 7 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">7</div>
+            <div>
+              <div class="page-title">Investment + Capital Access</div>
+              <div class="page-purpose">Demystify the money. Show this is reachable.</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Investment estimate</h4>
+          <ul>
+            <li><strong>$300,000 – $370,000</strong> to set up</li>
+            <li>Disclaimer: <em>"Costs vary by community. See FDD for full details."</em></li>
+          </ul>
+
+          <h4>How franchise partners access this capital (Brian's exact list)</h4>
+          <ul>
+            <li><strong>Personal savings</strong></li>
+            <li><strong>401(k) access</strong> — up to <strong>$50,000</strong> or <strong>50% of balance</strong>, whichever is less <em>(small disclaimer footnote)</em></li>
+            <li><strong>Small business loan</strong> (SBA loan)</li>
+            <li><strong>Family investment</strong></li>
+            <li><strong>Home equity / line of credit</strong> — example: house worth $400K, $300K paid off → access ~$200K HELOC</li>
+          </ul>
+
+          <h4>RunRec minimum requirement</h4>
+          <div class="quote brian">"RunRec requires a minimum of $80,000 in available capital to invest in your project. Your bank may require more."</div>
+
+          <h4>Visual treatment</h4>
+          <ul><li>Clean buckets / icons for each capital path. Bowling-lane prospectus layout is the reference.</li></ul>
+        </div>
+      </details>
+
+      <!-- Page 8 -->
+      <details class="page-card">
+        <summary class="page-head">
+          <div class="page-head-left">
+            <div class="page-num">8</div>
+            <div>
+              <div class="page-title">Call to Action</div>
+              <div class="page-purpose">Last page — clear next step</div>
+            </div>
+          </div>
+          <span class="chev">›</span>
+        </summary>
+        <div class="page-body">
+          <h4>Content</h4>
+          <ul>
+            <li>One strong CTA — <em>"Book your franchise discovery call"</em> or <em>"Take the next step"</em></li>
+            <li>Email + phone + booking link</li>
+            <li>RunRec logo</li>
+            <li>Version number footer: <strong>v1.0</strong></li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- 4. Visual reference -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">04 — Assets</div>
+      <div class="sec-title">Visual reference library</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Asset</th><th>Source</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Bowling lane acquisition prospectus</strong> (visual benchmark)</td><td>Sal will request example file from Brian</td></tr>
+        <tr><td><strong>Coach photos</strong> (Andre-style)</td><td>Sal will provide / source</td></tr>
+        <tr><td><strong>RunRec brand foundation</strong> (colors, type, logos)</td><td>Vault: <code>runrec/brand/</code> — request from Sal</td></tr>
+        <tr><td><strong>Court / facility photos</strong></td><td>Waterloo location library</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. Deliverables -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">05 — What to ship</div>
+      <div class="sec-title">Deliverables</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>Deliverable</th><th>Format</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Working file (editable)</td><td>Canva or Figma link</td></tr>
+        <tr><td>2</td><td>Final export</td><td><code>RunRec-Franchisee-Prospectus-v1.0.pdf</code></td></tr>
+        <tr><td>3</td><td>Source assets folder</td><td>All photos / icons used, organized</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 6. Approval flow -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">06 — Approval</div>
+      <div class="sec-title">Flow</div>
+    </div>
+
+    <div class="flow">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-actor">Eyad</div><div class="step-text">Drafts v1.0 → shares Canva/Figma link with Sal</div></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-actor">Sal</div><div class="step-text">Reviews → forwards to Brian for content sign-off</div></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-actor">Brian</div><div class="step-text">Approves content → green-lights export</div></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-actor">Eyad</div><div class="step-text">Exports PDF, delivers final file + source assets</div></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-body"><div class="step-actor">RunRec</div><div class="step-text">v1.0 ships → goes into Izzy's post-call email send</div></div></div>
+    </div>
+
+    <p class="tiny">Updates ship as v1.1, v1.2 — minor copy tweaks won't bump the major version, layout / page changes will.</p>
+  </section>
+
+  <!-- 7. FAQ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">07 — FAQ</div>
+      <div class="sec-title">Eyad's questions, answered</div>
+    </div>
+
+    <div class="faq">
+      <details class="faq-item">
+        <summary>Can I add my own creative ideas?</summary>
+        <div class="faq-answer">Yes for <strong>visual treatment</strong> (layout, imagery, typography). No for <strong>content / structure</strong> — Brian's 6–7 page spec is locked.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if I find a better way to present the financial section?</summary>
+        <div class="faq-answer">Propose it. We'll review with Brian. <strong>Don't ship without sign-off</strong> — legal sensitivity is high on this section.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Should I include the RunRec mobile app screenshots?</summary>
+        <div class="faq-answer">Yes — <strong>Page 4</strong> (24/7 staffless model) is the perfect place. Show the booking flow.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What about the Andre testimonial — do I have a real photo?</summary>
+        <div class="faq-answer">Not yet. Use a placeholder for v1.0. Sal is sourcing real coach testimonials in parallel.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I see the bowling lane prospectus Brian referenced?</summary>
+        <div class="faq-answer">Sal will request from Brian and forward.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What if a section isn't clear?</summary>
+        <div class="faq-answer"><strong>Don't invent.</strong> Ping Sal — we'd rather delay a day than ship generic copy.</div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 8. Brian quotes -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">08 — Context</div>
+      <div class="sec-title">Brian's verbatim quotes</div>
+      <div class="sec-desc">If you want to hear his energy on this project.</div>
+    </div>
+
+    <div class="quotes">
+      <div class="q">"If we settled in on the five to six most salient points and this becomes a six or seven page prospectus..."</div>
+      <div class="q">"It's like, Jesus, this looks pretty damn impressive."</div>
+      <div class="q">"That's how it gets watered down. And so I'm thinking about something where he can read through this and understand it."</div>
+      <div class="q">"Graphically very simple, very clean, not a lot of words. Easy to read."</div>
+      <div class="q">"There is some risk to it, but there's lots of reward and the risk is pretty small because we're not really misrepresenting."</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div class="foot">
+    <p>This brief is the source of truth. If anything is unclear, ask before you build.</p>
+    <p style="margin-top:6px">Hosted on GitHub Pages · auto-deploys on push to <code>main</code> · github.com/saldader/dashboards</p>
+  </div>
+
+</div>
+</body>
+</html>

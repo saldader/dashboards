@@ -765,10 +765,17 @@
   // Bootstrap
   // ---------------------------------------------------------------
   async function detectBackend() {
+    const url = (API || location.origin) + '/health';
+    console.info('[sos] checking backend at', url);
     try {
-      const r = await fetch(API + '/health', { signal: AbortSignal.timeout(2000) });
-      return r.ok;
-    } catch (e) { return false; }
+      const r = await fetch(API + '/health', { signal: AbortSignal.timeout(6000) });
+      const ok = r.ok;
+      console.info('[sos] backend check:', ok ? 'OK ✓' : `failed (status ${r.status})`);
+      return ok;
+    } catch (e) {
+      console.warn('[sos] backend check failed:', e.message);
+      return false;
+    }
   }
 
   function hideSalesOSNav(reason) {

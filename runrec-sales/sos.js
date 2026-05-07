@@ -10,9 +10,30 @@
 (function () {
   'use strict';
 
-  // Same-origin API. When served via Flask, this resolves to the local Tailscale host.
-  // When opened as file://, falls back to localhost.
-  const API = (location.protocol === 'file:') ? 'http://127.0.0.1:8765' : '';
+  // ---------------------------------------------------------------
+  // API host resolution
+  // The Sales OS dashboard runs in three places:
+  //   1. Mac Mini directly         http://127.0.0.1:8765/         → API='' (same-origin)
+  //   2. file:// (debug)            file:///.../index.html         → API=localhost
+  //   3. GitHub Pages public        saldader.github.io/...        → API=Tailscale URL
+  //
+  // The Tailscale URL only resolves for devices on Sal's tailnet; outsiders get
+  // a connection failure and the Sales OS group auto-hides.
+  // To override (e.g. on a different tailnet), set localStorage.sosApiHost.
+  // ---------------------------------------------------------------
+  // HTTPS via `tailscale serve` (port 443 → 127.0.0.1:8765 on Mac Mini)
+  const TAILSCALE_BACKEND = 'https://agents-mac-mini-2.taila0423e.ts.net';
+  const override = (typeof localStorage !== 'undefined') ? localStorage.getItem('sosApiHost') : null;
+  let API;
+  if (override) {
+    API = override.replace(/\/$/, '');
+  } else if (location.protocol === 'file:') {
+    API = 'http://127.0.0.1:8765';
+  } else if (location.hostname === '127.0.0.1' || location.hostname === 'localhost' || location.hostname.endsWith('.ts.net')) {
+    API = '';   // same-origin (Mac Mini direct or Tailscale)
+  } else {
+    API = TAILSCALE_BACKEND;   // GitHub Pages → reach into tailnet
+  }
 
   const state = {
     queue: [],

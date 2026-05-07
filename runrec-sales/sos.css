@@ -1,0 +1,652 @@
+/* =============================================================
+   Sales OS — sidecar styles
+   Reuses existing dashboard tokens (--bg, --panel, --card, --text*).
+   New token: --sos (purple) for the Sales OS track accent.
+   ============================================================= */
+
+:root {
+  --sos: #8b5cf6;          /* violet */
+  --sos-soft: rgba(139,92,246,0.12);
+  --sos-edge: rgba(139,92,246,0.32);
+
+  /* Signal palette (ranking hierarchy) */
+  --sig-committed: #8b5cf6;   /* purple — hottest */
+  --sig-missed: #f59e0b;      /* amber */
+  --sig-repeat: #ef4444;      /* red */
+  --sig-first: #f97316;       /* orange */
+  --sig-followup: #3b82f6;    /* blue */
+  --sig-lapsed: #71717a;      /* zinc */
+}
+
+.nav-dot.sos { background: var(--sos); }
+.nav-item.active.sos { box-shadow: inset 2px 0 0 var(--sos); }
+
+/* ====== sections ====== */
+.section.sos-track { padding: 0; }
+.section.sos-track h1 { padding: 24px 28px 0; }
+.section.sos-track .lead { padding: 0 28px 16px; }
+
+/* ====== scorecard strip ====== */
+.sos-scorecard-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.sos-strip-cell {
+  background: var(--panel);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sos-strip-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-4);
+  font-weight: 600;
+}
+.sos-strip-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.sos-strip-value .sos-strip-target {
+  font-size: 14px;
+  color: var(--text-4);
+  font-weight: 500;
+  margin-left: 4px;
+}
+.sos-strip-meta {
+  font-size: 11.5px;
+  color: var(--text-4);
+}
+.sos-strip-meta.on-track { color: var(--green); }
+.sos-strip-meta.behind { color: var(--yellow); }
+.sos-strip-meta.danger { color: var(--red); }
+.sos-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--card);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.sos-progress-fill {
+  height: 100%;
+  background: var(--sos);
+  transition: width 0.3s ease;
+}
+.sos-progress-fill.behind { background: var(--yellow); }
+.sos-progress-fill.danger { background: var(--red); }
+
+/* ====== queue + contact grid ====== */
+.sos-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.4fr);
+  gap: 0;
+  height: calc(100vh - 110px);     /* topbar + scorecard strip ~110px */
+  overflow: hidden;
+}
+.sos-pane {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sos-pane.sos-contact-pane {
+  border-right: none;
+  background: var(--bg);
+}
+.sos-pane-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 2;
+}
+.sos-pane-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-3);
+  flex: 1;
+}
+.sos-count {
+  font-size: 11px;
+  color: var(--text-4);
+  background: var(--card);
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  letter-spacing: 0.04em;
+}
+.sos-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.sos-btn-ghost:hover { background: var(--card); color: var(--text); }
+
+/* ====== queue rows ====== */
+.sos-queue { padding-bottom: 24px; }
+.sos-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 12px;
+  padding: 10px 18px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.08s;
+}
+.sos-row:hover { background: var(--hover); }
+.sos-row.active { background: var(--card); box-shadow: inset 3px 0 0 var(--sos); }
+.sos-pill {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.sos-pill.committed { background: var(--sig-committed); box-shadow: 0 0 0 3px rgba(139,92,246,0.18); }
+.sos-pill.missed_call { background: var(--sig-missed); }
+.sos-pill.repeat_booker { background: var(--sig-repeat); }
+.sos-pill.first_booker { background: var(--sig-first); }
+.sos-pill.follow_up { background: var(--sig-followup); }
+.sos-pill.lapsed { background: var(--sig-lapsed); }
+.sos-row-main { min-width: 0; }
+.sos-row-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sos-row-name .sos-row-phone {
+  font-weight: 400;
+  color: var(--text-4);
+  margin-left: 6px;
+  font-size: 12px;
+}
+.sos-row-reason {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sos-row-meta {
+  font-size: 11px;
+  color: var(--text-4);
+  white-space: nowrap;
+  text-align: right;
+}
+.sos-row-empty {
+  padding: 36px 24px;
+  color: var(--text-4);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ====== contact panel ====== */
+.sos-contact { padding: 0; }
+.sos-contact-empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-4);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.sos-contact-head {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sos-contact-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.sos-contact-phone {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 4px;
+  font-family: var(--mono);
+  cursor: pointer;
+}
+.sos-contact-phone:hover { color: var(--text); }
+.sos-contact-tags {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sos-tag {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  background: var(--card);
+  color: var(--text-3);
+}
+.sos-tag.member { background: rgba(34,197,94,0.16); color: var(--green); }
+.sos-tag.signal { background: var(--sos-soft); color: var(--sos); }
+.sos-contact-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.sos-section {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.sos-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-4);
+  margin-bottom: 10px;
+}
+.sos-history-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  border-bottom: 1px dashed var(--border);
+}
+.sos-history-row:last-child { border-bottom: none; }
+.sos-history-row .sos-h-date {
+  color: var(--text-4);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.sos-history-row .sos-h-detail { color: var(--text-2); }
+.sos-history-row .sos-h-amount {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.sos-call-row {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 12.5px;
+}
+.sos-call-row:last-child { border-bottom: none; }
+.sos-call-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--text-4);
+  margin-bottom: 3px;
+}
+.sos-call-summary { color: var(--text-2); line-height: 1.5; }
+.sos-call-transcript {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--card);
+  border-radius: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  display: none;
+}
+.sos-call-row.expanded .sos-call-transcript { display: block; }
+.sos-call-toggle {
+  font-size: 11px;
+  color: var(--sos);
+  cursor: pointer;
+  margin-top: 3px;
+  display: inline-block;
+}
+
+/* ====== log form ====== */
+.sos-log {
+  padding: 16px 24px;
+  background: var(--panel);
+  border-top: 1px solid var(--border-strong);
+  position: sticky;
+  bottom: 0;
+}
+.sos-log-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+.sos-log-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.sos-log-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-family: inherit;
+}
+.sos-log-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.sos-log-btn.active {
+  background: var(--sos-soft);
+  color: var(--sos);
+  border-color: var(--sos-edge);
+}
+.sos-log-btn.closed.active {
+  background: rgba(34,197,94,0.16);
+  color: var(--green);
+  border-color: var(--green);
+}
+.sos-log-row select,
+.sos-log-row input,
+.sos-log-row textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  min-height: 34px;
+}
+.sos-log-row select { min-width: 130px; }
+.sos-log-row input[type="datetime-local"] { font-family: var(--mono); flex: 1; min-width: 200px; }
+.sos-log-row textarea { width: 100%; min-height: 50px; resize: vertical; }
+.sos-log-followup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--card);
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  margin: 8px 0;
+}
+.sos-log-followup-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.sos-log-followup-required {
+  color: var(--red);
+  margin-left: 2px;
+}
+.sos-log-skip {
+  font-size: 11.5px;
+  color: var(--text-4);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sos-log-skip input { accent-color: var(--sos); }
+.sos-log-cta {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+.sos-log-next {
+  background: var(--sos);
+  color: white;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  font-family: inherit;
+}
+.sos-log-next:hover { background: #7c3aed; }
+.sos-log-next:disabled {
+  background: var(--card);
+  color: var(--text-4);
+  cursor: not-allowed;
+}
+.sos-log-status {
+  font-size: 11.5px;
+  color: var(--text-4);
+  margin-left: auto;
+}
+
+/* ====== pipeline board ====== */
+#sos-pipeline-board {
+  padding: 16px 28px 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.sos-stage-col {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 200px;
+}
+.sos-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.sos-stage-count {
+  background: var(--card);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-4);
+}
+.sos-stage-card {
+  background: var(--card);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.1s;
+  border: 1px solid transparent;
+}
+.sos-stage-card:hover { border-color: var(--sos-edge); }
+.sos-stage-card .sc-name { font-size: 13px; color: var(--text); font-weight: 600; }
+.sos-stage-card .sc-meta { font-size: 11px; color: var(--text-4); margin-top: 4px; line-height: 1.5; }
+.sos-stage-empty { font-size: 11.5px; color: var(--text-4); padding: 8px; text-align: center; font-style: italic; }
+
+/* ====== After-Call Card (floating) ====== */
+.sos-coach-card {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  width: 380px;
+  background: var(--panel);
+  border: 1px solid var(--sos-edge);
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.55), 0 0 0 1px var(--sos-soft);
+  z-index: 1000;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.sos-coach-card.hidden {
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+}
+.sos-coach-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--sos);
+}
+.sos-coach-head .sos-coach-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sos);
+  box-shadow: 0 0 0 4px rgba(139,92,246,0.24);
+}
+.sos-coach-meta {
+  font-size: 11px;
+  color: var(--text-4);
+  margin-bottom: 8px;
+  font-family: var(--mono);
+}
+.sos-coach-note {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.sos-coach-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sos-coach-stat {
+  background: var(--card);
+  padding: 7px 10px;
+  border-radius: 5px;
+}
+.sos-coach-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-4);
+  font-weight: 600;
+}
+.sos-coach-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 2px;
+}
+.sos-coach-stat-value.warn { color: var(--yellow); }
+.sos-coach-stat-value.bad { color: var(--red); }
+.sos-coach-stat-value.good { color: var(--green); }
+.sos-coach-cta {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.sos-coach-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sos-coach-btn.primary {
+  background: var(--sos);
+  border-color: var(--sos);
+  color: white;
+}
+
+/* ====== full scorecard view ====== */
+#sos-scorecard-full {
+  padding: 16px 28px 28px;
+}
+.sos-sc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+.sos-sc-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.sos-sc-card .sos-sc-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-4);
+  font-weight: 600;
+}
+.sos-sc-card .sos-sc-num {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin: 6px 0;
+}
+.sos-sc-card .sos-sc-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.sos-sc-pace {
+  margin-top: 18px;
+  padding: 18px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.sos-sc-pace.behind { border-color: rgba(234,179,8,0.4); }
+.sos-sc-pace.danger { border-color: rgba(239,68,68,0.4); }
+
+/* utils */
+.hidden { display: none !important; }

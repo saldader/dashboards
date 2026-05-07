@@ -559,6 +559,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
   .kv-row .k{font-weight:600}
 }
 </style>
+<link rel="stylesheet" href="sos.css">
 </head>
 <body>
 <div class="app">
@@ -576,6 +577,13 @@ tr:hover td{background:rgba(255,255,255,0.02)}
       <div class="nav-label">Start</div>
       <div class="nav-item shared active" data-section="home" data-track="shared"><span class="nav-emoji">🏠</span> Home</div>
       <div class="nav-item shared" data-section="fixes" data-track="shared"><span class="nav-emoji">🔧</span> The 3 Fixes</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label"><span class="nav-dot sos"></span> Sales OS</div>
+      <div class="nav-item sos" data-section="sos-today" data-track="sos"><span class="nav-emoji">📞</span> Today's Queue</div>
+      <div class="nav-item sos" data-section="sos-pipeline" data-track="sos"><span class="nav-emoji">🪜</span> Pipeline</div>
+      <div class="nav-item sos" data-section="sos-scorecard" data-track="sos"><span class="nav-emoji">📈</span> Scorecard</div>
     </div>
 
     <div class="nav-group">
@@ -1964,6 +1972,40 @@ If anything changes, you've got my direct number. Keep coming."
   <p>To re-pull updated call data: <code>python3 ~/.aos/work/runrec/quo_pull.py</code> (~5 min).</p>
 </section>
 
+<!-- ====================== SALES OS — TODAY ====================== -->
+<section class="section sos-track" id="sos-today">
+  <div class="sos-scorecard-strip" id="sos-strip"></div>
+  <div class="sos-grid">
+    <div class="sos-pane sos-queue-pane">
+      <div class="sos-pane-head">
+        <div class="sos-pane-title">Today's Queue <span id="sos-queue-count" class="sos-count"></span></div>
+        <button class="sos-btn-ghost" id="sos-refresh-queue">↻</button>
+      </div>
+      <div class="sos-queue" id="sos-queue"></div>
+    </div>
+    <div class="sos-pane sos-contact-pane">
+      <div id="sos-contact"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SALES OS — PIPELINE ====================== -->
+<section class="section sos-track" id="sos-pipeline">
+  <h1>Pipeline</h1>
+  <p class="lead">Every contact Izzy has touched, grouped by where they are in the deal motion.</p>
+  <div id="sos-pipeline-board"></div>
+</section>
+
+<!-- ====================== SALES OS — SCORECARD ====================== -->
+<section class="section sos-track" id="sos-scorecard">
+  <h1>Scorecard</h1>
+  <p class="lead">Pace toward 85 memberships by Dec 1, 2026.</p>
+  <div id="sos-scorecard-full"></div>
+</section>
+
+<!-- After-Call Card (floating panel) -->
+<div id="sos-coaching-card" class="sos-coach-card hidden"></div>
+
     </div>
   </main>
 </div>
@@ -2272,5 +2314,6 @@ if(window.location.hash){
   if(document.getElementById(id)) showSection(id);
 }
 </script>
+<script src="sos.js"></script>
 </body>
 </html>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="googlebot" content="noindex,nofollow">
+<title>Kanban · Sal's Dashboards</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --text: #ffffff;
+  --t2: #d4d4dc;
+  --t3: #b0b0b8;
+  --t4: #6c6c74;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #ff6b35;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (font-variation-settings: normal) { html { font-family: "Inter var", sans-serif; } }
+html,body{background:var(--bg);color:var(--t2);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"cv02","cv03","cv11"}
+body{padding:60px 24px 100px;background:radial-gradient(ellipse at top,rgba(255,107,53,0.05),transparent 60%),var(--bg);min-height:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+
+.wrap{width:100%;max-width:1400px;margin:0 auto}
+
+/* ── Top bar (matches /task/) ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+.brand{display:inline-flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;background:var(--accent);border-radius:10px;display:grid;place-items:center;color:white;font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--t4);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;margin-top:2px}
+.back{font-size:13px;color:var(--t4);transition:color .15s}
+.back:hover{color:var(--t2)}
+
+/* ── Page header ── */
+.page-head{margin-bottom:28px}
+h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:10px;color:var(--text)}
+.lead{color:var(--t3);font-size:16px;max-width:640px;line-height:1.55}
+
+/* ── Filter row ── */
+.filter-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin-bottom:32px;padding-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.filter-label{
+  font-size:11px;text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--t4);font-weight:600;margin-right:6px;
+}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px 5px 6px;
+  font-size:13px;color:var(--t2);font-weight:500;
+  cursor:pointer;transition:background .15s, border-color .15s, color .15s;
+  outline:none;
+}
+.filter-chip:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.filter-chip:focus-visible{border-color:var(--accent)}
+.filter-chip[aria-pressed="true"]{
+  background:rgba(255,107,53,0.10);
+  border-color:rgba(255,107,53,0.45);
+  color:var(--text);
+}
+.filter-clear{
+  margin-left:4px;background:none;border:none;cursor:pointer;
+  font-size:12.5px;color:var(--t4);font-weight:500;padding:6px 8px;
+  display:none;align-items:center;gap:4px;
+  transition:color .15s;
+}
+.filter-clear:hover{color:var(--t2)}
+.filter-clear.show{display:inline-flex}
+
+/* ── Avatars (mirror /task/ exactly) ── */
+.avatar{
+  width:16px;height:16px;border-radius:2px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:white;letter-spacing:0;
+  flex-shrink:0;overflow:hidden;
+}
+.avatar.sal{background:#ff6b35}
+.avatar.izzy{background:#3b82f6}
+.avatar.rammah{background:#a855f7}
+.avatar.brian{background:#22c55e}
+.avatar.rob{background:#ec4899}
+.avatar.eyad{background:#14b8a6}
+
+/* ── Board ── */
+.board{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:18px;
+  align-items:start;
+}
+@media (max-width: 1100px){
+  .board{grid-template-columns:repeat(2, minmax(0, 1fr))}
+}
+@media (max-width: 640px){
+  .board{grid-template-columns:1fr}
+}
+
+.column{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 12px 14px 12px;
+  min-width:0;
+  display:flex;flex-direction:column;gap:10px;
+}
+.col-head{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 6px 10px 6px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:2px;
+}
+.col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.col-dot.not-started{background:#b0b0b8}
+.col-dot.in-progress{background:#60a5fa}
+.col-dot.blocked{background:#fbbf24}
+.col-dot.done{background:#22c55e}
+.col-name{
+  font-size:11px;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--t2);
+}
+.col-count{
+  margin-left:auto;
+  font-size:11px;font-weight:600;
+  color:var(--t4);
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:1px 8px;min-width:22px;text-align:center;
+}
+
+.col-list{display:flex;flex-direction:column;gap:8px;min-height:4px}
+
+/* ── Card ── */
+.task-card{
+  position:relative;
+  display:block;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-left-width:2px;
+  border-radius:10px;
+  padding:14px 16px;
+  color:inherit;
+  transition:background .15s, border-color .15s, transform .15s;
+}
+.task-card:hover{
+  background:var(--hover);
+  border-color:var(--border-strong);
+  transform:translateY(-1px);
+}
+.task-card.not-started{border-left-color:#b0b0b8}
+.task-card.in-progress{border-left-color:#60a5fa}
+.task-card.blocked{border-left-color:#fbbf24}
+.task-card.done{border-left-color:#22c55e}
+
+.task-card.done .card-title{color:var(--t3)}
+
+.card-title{
+  font-size:14.5px;font-weight:600;
+  line-height:1.4;color:var(--text);
+  letter-spacing:-0.005em;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  word-break:break-word;
+}
+.card-owners{
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+  margin-top:10px;min-height:18px;
+}
+.card-owners .avatar{box-shadow:0 0 0 2px var(--card)}
+.task-card:hover .card-owners .avatar{box-shadow:0 0 0 2px var(--hover)}
+.card-owners-empty{
+  font-size:11.5px;color:var(--t4);font-weight:500;
+}
+
+/* ── Add card affordance ── */
+.add-card{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:transparent;
+  border:1px dashed var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+  cursor:pointer;color:var(--t4);
+  font-size:13px;font-weight:500;
+  transition:border-color .15s, color .15s, background .15s;
+  width:100%;
+}
+.add-card:hover{
+  border-color:rgba(255,107,53,0.55);
+  border-style:solid;
+  color:var(--text);
+  background:rgba(255,107,53,0.05);
+}
+.add-card .plus{font-size:14px;font-weight:500;line-height:1}
+
+/* ── Empty placeholder ── */
+.col-empty{
+  font-size:12px;color:var(--t4);
+  text-align:center;padding:8px 6px;
+  font-style:italic;
+}
+
+/* ── Loading / error states ── */
+.board-status{
+  text-align:center;color:var(--t4);font-size:13px;
+  padding:32px 0;
+}
+.board-status.error{color:var(--red)}
+
+/* ── Modal ── */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;z-index:200;
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  width:100%;max-width:420px;
+  background:var(--panel);
+  border:1px solid var(--border-strong);
+  border-radius:14px;
+  padding:28px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;gap:18px;
+}
+.modal-head{display:flex;flex-direction:column;gap:4px}
+.modal-eyebrow{
+  font-size:10.5px;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--t4);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.modal-eyebrow .dot{width:6px;height:6px;border-radius:50%}
+.modal-eyebrow .dot.not-started{background:#b0b0b8}
+.modal-eyebrow .dot.in-progress{background:#60a5fa}
+.modal-eyebrow .dot.blocked{background:#fbbf24}
+.modal-eyebrow .dot.done{background:#22c55e}
+.modal-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+.modal-input{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  font:inherit;font-size:16px;color:var(--text);
+  width:100%;outline:none;
+  transition:border-color .15s;
+}
+.modal-input:focus{border-color:var(--accent)}
+.modal-input::placeholder{color:var(--t4)}
+.modal-error{
+  font-size:12.5px;color:var(--red);
+  display:none;
+}
+.modal-error.show{display:block}
+.modal-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:2px}
+.btn{
+  font:inherit;font-size:13.5px;font-weight:600;
+  padding:9px 16px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;
+  transition:background .15s, border-color .15s, opacity .15s;
+}
+.btn-secondary{background:none;color:var(--t3)}
+.btn-secondary:hover{color:var(--text)}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{opacity:0.92}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+
+/* ── Footer (matches /task/) ── */
+.foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
+.foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="../" class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="brand-name">Sal's Dashboards</div>
+        <div class="brand-sub">Internal tools</div>
+      </div>
+    </a>
+    <a href="../" class="back">← All dashboards</a>
+  </div>
+
+  <!-- Page header -->
+  <div class="page-head">
+    <h1>Kanban</h1>
+    <p class="lead">All tasks across the project. Click a card to open. Click an avatar above to filter by owner.</p>
+  </div>
+
+  <!-- Owner filter row -->
+  <div class="filter-row" id="filterRow" role="toolbar" aria-label="Filter by owner">
+    <span class="filter-label">Owner</span>
+    <button type="button" class="filter-chip" data-key="sal" aria-pressed="false">
+      <span class="avatar sal">SD</span><span>Sal Dader</span>
+    </button>
+    <button type="button" class="filter-chip" data-key="izzy" aria-pressed="false">
+      <span class="avatar izzy">IZ</span><span>Izzy</span>
+    </button>
+    <button type="button" class="filter-chip" data-key="rammah" aria-pressed="false">
+      <span class="avatar rammah">RH</span><span>Rammah</span>
+    </button>
+    <button type="button" class="filter-chip" data-key="brian" aria-pressed="false">
+      <span class="avatar brian">BB</span><span>Brian Bazely</span>
+    </button>
+    <button type="button" class="filter-chip" data-key="rob" aria-pressed="false">
+      <span class="avatar rob">RS</span><span>Rob Salloum</span>
+    </button>
+    <button type="button" class="filter-chip" data-key="eyad" aria-pressed="false">
+      <span class="avatar eyad">EA</span><span>Eyad Attia</span>
+    </button>
+    <button type="button" class="filter-clear" id="filterClear" aria-label="Clear owner filter">× Clear</button>
+  </div>
+
+  <!-- Board -->
+  <div class="board" id="board" aria-live="polite">
+    <div class="column" data-status="not-started">
+      <div class="col-head">
+        <span class="col-dot not-started"></span>
+        <span class="col-name">Not Started</span>
+        <span class="col-count" data-count>0</span>
+      </div>
+      <div class="col-list" data-list></div>
+      <button type="button" class="add-card" data-add="not-started" aria-label="Add a task to Not Started">
+        <span class="plus">+</span><span>Add a task</span>
+      </button>
+    </div>
+
+    <div class="column" data-status="in-progress">
+      <div class="col-head">
+        <span class="col-dot in-progress"></span>
+        <span class="col-name">In Progress</span>
+        <span class="col-count" data-count>0</span>
+      </div>
+      <div class="col-list" data-list></div>
+      <button type="button" class="add-card" data-add="in-progress" aria-label="Add a task to In Progress">
+        <span class="plus">+</span><span>Add a task</span>
+      </button>
+    </div>
+
+    <div class="column" data-status="blocked">
+      <div class="col-head">
+        <span class="col-dot blocked"></span>
+        <span class="col-name">Blocked</span>
+        <span class="col-count" data-count>0</span>
+      </div>
+      <div class="col-list" data-list></div>
+      <button type="button" class="add-card" data-add="blocked" aria-label="Add a task to Blocked">
+        <span class="plus">+</span><span>Add a task</span>
+      </button>
+    </div>
+
+    <div class="column" data-status="done">
+      <div class="col-head">
+        <span class="col-dot done"></span>
+        <span class="col-name">Done</span>
+        <span class="col-count" data-count>0</span>
+      </div>
+      <div class="col-list" data-list></div>
+      <button type="button" class="add-card" data-add="done" aria-label="Add a task to Done">
+        <span class="plus">+</span><span>Add a task</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="board-status" id="boardStatus">Loading tasks…</div>
+
+  <!-- Footer -->
+  <div class="foot">
+    <p>All tasks live in one Supabase table. Click any card to edit. Click <code>+ Add a task</code> to insert into a column.</p>
+    <p style="margin-top:6px">Hosted on GitHub Pages · auto-deploys on push to <code>main</code> · github.com/saldader/dashboards</p>
+  </div>
+
+</div>
+
+<!-- Create-task modal -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <span class="modal-eyebrow"><span class="dot" id="modalDot"></span><span id="modalEyebrowLabel">New task</span></span>
+      <span class="modal-title" id="modalTitle">Create a task</span>
+    </div>
+    <input type="text" class="modal-input" id="modalInput" placeholder="Task title" autocomplete="off" maxlength="200">
+    <span class="modal-error" id="modalError"></span>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="modalCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="modalCreate">Create task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────────────
+// Config
+// ────────────────────────────────────────────────────────────────────
+const SUPABASE = {
+  url: 'https://ivdzpptjtwoxdaxsbsqz.supabase.co',
+  key: 'sb_publishable_CLEzGz8hR3Z2cioPFSSu-g_33VtSdDb'
+};
+
+const STATUS_ORDER = ['not-started','in-progress','blocked','done'];
+const STATUS_LABELS = {
+  'not-started': 'Not Started',
+  'in-progress': 'In Progress',
+  'blocked': 'Blocked',
+  'done': 'Done'
+};
+const OWNER_KEYS = ['sal','izzy','rammah','brian','rob','eyad'];
+const OWNER_INITIALS = { sal:'SD', izzy:'IZ', rammah:'RH', brian:'BB', rob:'RS', eyad:'EA' };
+const OWNER_NAMES = { sal:'Sal Dader', izzy:'Izzy', rammah:'Rammah', brian:'Brian Bazely', rob:'Rob Salloum', eyad:'Eyad Attia' };
+
+// ────────────────────────────────────────────────────────────────────
+// DB helper (parallel to /task/)
+// ────────────────────────────────────────────────────────────────────
+const db = {
+  headers(){
+    return {
+      apikey: SUPABASE.key,
+      Authorization: `Bearer ${SUPABASE.key}`,
+      'Content-Type': 'application/json'
+    };
+  },
+  async listTasks(){
+    const url = `${SUPABASE.url}/rest/v1/tasks?select=*&order=status,updated_at.desc`;
+    const r = await fetch(url, { headers: this.headers() });
+    if(!r.ok) throw new Error(`GET ${r.status}`);
+    return await r.json();
+  },
+  async slugExists(slug){
+    const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(slug)}&select=slug`;
+    const r = await fetch(url, { headers: this.headers() });
+    if(!r.ok) throw new Error(`GET ${r.status}`);
+    const rows = await r.json();
+    return rows.length > 0;
+  },
+  async insertTask(row){
+    const url = `${SUPABASE.url}/rest/v1/tasks`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { ...this.headers(), Prefer: 'return=representation' },
+      body: JSON.stringify(row)
+    });
+    if(!r.ok){
+      const text = await r.text().catch(() => '');
+      throw new Error(`POST ${r.status} ${text}`);
+    }
+    const rows = await r.json();
+    return rows[0] || null;
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Utilities
+// ────────────────────────────────────────────────────────────────────
+function escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function slugify(title){
+  const base = String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  if(base) return base.slice(0, 80);
+  // fallback
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `task-${rand}`;
+}
+
+async function uniqueSlug(base){
+  let candidate = base;
+  let n = 2;
+  while(await db.slugExists(candidate)){
+    candidate = `${base}-${n}`;
+    n++;
+    if(n > 100) throw new Error('Could not find a unique slug');
+  }
+  return candidate;
+}
+
+function ownersArray(raw){
+  if(Array.isArray(raw)) return raw.filter(k => OWNER_KEYS.includes(k));
+  return [];
+}
+
+// ────────────────────────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────────────────────────
+const state = {
+  tasks: [],          // raw rows from DB
+  filterOwner: null,  // null | one of OWNER_KEYS
+  loaded: false,
+  modalOpen: false,
+  modalStatus: null
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Render
+// ────────────────────────────────────────────────────────────────────
+const board = document.getElementById('board');
+const boardStatus = document.getElementById('boardStatus');
+
+function buildCardHTML(t){
+  const status = STATUS_ORDER.includes(t.status) ? t.status : 'not-started';
+  const owners = ownersArray(t.owners);
+  let ownersHTML;
+  if(owners.length === 0){
+    ownersHTML = `<span class="card-owners-empty">+ Add Owner</span>`;
+  } else {
+    ownersHTML = owners.slice(0, 6).map(k =>
+      `<span class="avatar ${k}" title="${escapeHtml(OWNER_NAMES[k] || k)}" aria-label="${escapeHtml(OWNER_NAMES[k] || k)}">${OWNER_INITIALS[k] || ''}</span>`
+    ).join('');
+  }
+  const slug = encodeURIComponent(t.slug || '');
+  const title = escapeHtml(t.title || '(untitled)');
+  return `
+    <a class="task-card ${status}" href="../task/?slug=${slug}" aria-label="Open task: ${title}">
+      <div class="card-title">${title}</div>
+      <div class="card-owners">${ownersHTML}</div>
+    </a>
+  `;
+}
+
+function render(){
+  if(!state.loaded) return;
+
+  const filtered = state.filterOwner
+    ? state.tasks.filter(t => ownersArray(t.owners).includes(state.filterOwner))
+    : state.tasks;
+
+  const groups = { 'not-started': [], 'in-progress': [], 'blocked': [], 'done': [] };
+  filtered.forEach(t => {
+    const s = STATUS_ORDER.includes(t.status) ? t.status : 'not-started';
+    groups[s].push(t);
+  });
+
+  STATUS_ORDER.forEach(status => {
+    const col = board.querySelector(`.column[data-status="${status}"]`);
+    if(!col) return;
+    const list = col.querySelector('[data-list]');
+    const count = col.querySelector('[data-count]');
+    const rows = groups[status];
+    count.textContent = rows.length;
+
+    if(rows.length === 0){
+      list.innerHTML = `<div class="col-empty">No tasks</div>`;
+    } else {
+      list.innerHTML = rows.map(buildCardHTML).join('');
+    }
+  });
+
+  boardStatus.style.display = 'none';
+}
+
+function setBoardStatus(msg, isError){
+  boardStatus.textContent = msg;
+  boardStatus.className = 'board-status' + (isError ? ' error' : '');
+  boardStatus.style.display = 'block';
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Fetch
+// ────────────────────────────────────────────────────────────────────
+let fetchInFlight = false;
+
+async function refresh(){
+  if(fetchInFlight) return;
+  if(state.modalOpen) return; // pause refetch while modal is open
+  fetchInFlight = true;
+  try {
+    const rows = await db.listTasks();
+    state.tasks = rows;
+    state.loaded = true;
+    render();
+  } catch(e){
+    console.error('listTasks failed', e);
+    if(!state.loaded){
+      setBoardStatus('Could not load tasks. Check your connection and refresh.', true);
+    }
+  } finally {
+    fetchInFlight = false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Filter (URL-synced)
+// ────────────────────────────────────────────────────────────────────
+const filterRow = document.getElementById('filterRow');
+const filterClear = document.getElementById('filterClear');
+const filterChips = filterRow.querySelectorAll('.filter-chip');
+
+function applyFilter(key, opts = {}){
+  const next = (key && OWNER_KEYS.includes(key)) ? key : null;
+  state.filterOwner = next;
+
+  filterChips.forEach(chip => {
+    chip.setAttribute('aria-pressed', chip.dataset.key === next ? 'true' : 'false');
+  });
+  filterClear.classList.toggle('show', !!next);
+
+  if(opts.syncUrl !== false){
+    const url = new URL(location.href);
+    if(next) url.searchParams.set('owner', next);
+    else url.searchParams.delete('owner');
+    history.replaceState(null, '', url.toString());
+  }
+  if(state.loaded) render();
+}
+
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const k = chip.dataset.key;
+    if(state.filterOwner === k){
+      applyFilter(null);
+    } else {
+      applyFilter(k);
+    }
+  });
+});
+filterClear.addEventListener('click', () => applyFilter(null));
+
+// Initial filter from URL
+(function initFilterFromUrl(){
+  const u = new URL(location.href);
+  const owner = u.searchParams.get('owner');
+  if(owner && OWNER_KEYS.includes(owner)){
+    applyFilter(owner, { syncUrl: false });
+  }
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Modal — create task
+// ────────────────────────────────────────────────────────────────────
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modal = document.getElementById('modal');
+const modalInput = document.getElementById('modalInput');
+const modalError = document.getElementById('modalError');
+const modalCancel = document.getElementById('modalCancel');
+const modalCreate = document.getElementById('modalCreate');
+const modalDot = document.getElementById('modalDot');
+const modalEyebrowLabel = document.getElementById('modalEyebrowLabel');
+
+function openModal(status){
+  if(!STATUS_ORDER.includes(status)) status = 'not-started';
+  state.modalOpen = true;
+  state.modalStatus = status;
+  modalDot.className = 'dot ' + status;
+  modalEyebrowLabel.textContent = `New · ${STATUS_LABELS[status]}`;
+  modalInput.value = '';
+  modalError.classList.remove('show');
+  modalError.textContent = '';
+  modalCreate.disabled = false;
+  modalBackdrop.classList.add('open');
+  // autofocus, slight delay so the focus lands after open
+  setTimeout(() => modalInput.focus(), 0);
+}
+
+function closeModal(){
+  state.modalOpen = false;
+  state.modalStatus = null;
+  modalBackdrop.classList.remove('open');
+}
+
+async function submitCreate(){
+  const title = (modalInput.value || '').trim();
+  if(!title){
+    modalError.textContent = 'Title is required.';
+    modalError.classList.add('show');
+    modalInput.focus();
+    return;
+  }
+  modalError.classList.remove('show');
+  modalCreate.disabled = true;
+  modalCreate.textContent = 'Creating…';
+  try {
+    const base = slugify(title);
+    const slug = await uniqueSlug(base);
+    const row = await db.insertTask({
+      slug,
+      title,
+      status: state.modalStatus || 'not-started',
+      owners: [],
+      description: ''
+    });
+    const finalSlug = (row && row.slug) ? row.slug : slug;
+    location.href = `../task/?slug=${encodeURIComponent(finalSlug)}`;
+  } catch(e){
+    console.error('create failed', e);
+    modalError.textContent = 'Could not create task. Please try again.';
+    modalError.classList.add('show');
+    modalCreate.disabled = false;
+    modalCreate.textContent = 'Create task';
+  }
+}
+
+// open modal from add-card buttons
+board.querySelectorAll('.add-card').forEach(btn => {
+  btn.addEventListener('click', () => openModal(btn.dataset.add));
+});
+
+// modal interactions
+modalCancel.addEventListener('click', closeModal);
+modalCreate.addEventListener('click', submitCreate);
+modalInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); submitCreate(); }
+});
+modalBackdrop.addEventListener('click', e => {
+  if(e.target === modalBackdrop) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && state.modalOpen) closeModal();
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Visibility refetch
+// ────────────────────────────────────────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !state.modalOpen){
+    refresh();
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Boot
+// ────────────────────────────────────────────────────────────────────
+refresh();
+</script>
+</body>
+</html>

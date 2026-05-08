@@ -205,18 +205,21 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
 .owners-block{margin-top:28px;display:flex;flex-direction:column;gap:8px;position:relative;max-width:420px}
 .owners-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
 .owners-trigger{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:8px 10px;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  cursor:pointer;color:inherit;font:inherit;width:100%;text-align:left;
-  transition:border-color .15s,background .15s;outline:none;
+  background:none;border:none;padding:0;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;color:inherit;font:inherit;text-align:left;
+  outline:none;
 }
-.owners-trigger:hover{border-color:var(--border-strong)}
-.owners-trigger[aria-expanded="true"]{border-color:var(--accent)}
-.owners-selected{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:1}
-.owners-empty{color:var(--t4);font-size:13.5px;padding:2px 4px}
-.owners-trigger .chev{color:var(--t3);transition:transform .15s;flex-shrink:0;display:flex;align-items:center}
-.owners-trigger[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.owners-selected{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.owners-empty{
+  display:inline-flex;align-items:center;
+  color:var(--t3);font-size:13.5px;font-weight:500;
+  padding:2px 0;
+}
+.owners-trigger:hover .owners-empty{color:var(--text)}
+.owners-trigger .chev{color:var(--t3);transition:transform .15s,color .15s;flex-shrink:0;display:flex;align-items:center}
+.owners-trigger:hover .chev{color:var(--t2)}
+.owners-trigger[aria-expanded="true"] .chev{transform:rotate(180deg);color:var(--accent)}
 
 .owner-chip{
   display:inline-flex;align-items:center;gap:8px;
@@ -807,7 +810,7 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
   function renderSelected(){
     const chosen = Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true');
     if(chosen.length === 0){
-      selected.innerHTML = '<span class="owners-empty">Add owner</span>';
+      selected.innerHTML = '<span class="owners-empty">+ Add Owner</span>';
       return;
     }
     selected.innerHTML = chosen.map(o => {

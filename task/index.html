@@ -102,6 +102,111 @@ a{color:inherit;text-decoration:none}
 
 h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:14px;color:var(--text)}
 
+/* ── Inline-editable H1 ── */
+#taskTitle{
+  cursor:text;
+  outline:none;
+  border-radius:6px;
+  padding:2px 6px;
+  margin-left:-6px;
+  margin-right:-6px;
+  transition:background .12s, box-shadow .12s;
+  -webkit-user-modify:read-write-plaintext-only;
+}
+#taskTitle:hover{
+  background:rgba(255,255,255,0.025);
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,0.18);
+}
+#taskTitle[contenteditable="true"]:focus,
+#taskTitle.editing{
+  background:rgba(255,255,255,0.04);
+  box-shadow:inset 0 0 0 1px rgba(255,107,53,0.45);
+  caret-color:var(--accent);
+}
+#taskTitle[contenteditable="true"]:hover{box-shadow:inset 0 0 0 1px rgba(255,107,53,0.45)}
+
+/* ── Header toolbar (kebab) ── */
+.header-actions{
+  position:absolute;top:0;right:0;
+  display:flex;align-items:center;gap:6px;
+}
+.kebab-btn{
+  background:none;border:1px solid transparent;
+  width:30px;height:30px;border-radius:8px;
+  color:var(--t4);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;line-height:1;font-family:inherit;
+  transition:background .12s, color .12s, border-color .12s;
+  outline:none;padding:0;
+}
+.kebab-btn:hover{background:var(--card);color:var(--t2);border-color:var(--border)}
+.kebab-btn:focus-visible{border-color:var(--border-strong)}
+.kebab-btn[aria-expanded="true"]{background:var(--card);color:var(--text);border-color:var(--border-strong)}
+.kebab-menu{
+  position:absolute;top:36px;right:0;z-index:60;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;min-width:180px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.5);
+  display:none;flex-direction:column;gap:1px;
+}
+.kebab-menu.open{display:flex}
+.kebab-menu button{
+  background:none;border:none;font:inherit;color:var(--t2);
+  padding:8px 12px;border-radius:6px;cursor:pointer;
+  text-align:left;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:500;
+  transition:background .12s, color .12s;
+}
+.kebab-menu button:hover{background:var(--hover);color:var(--text)}
+.kebab-menu button.danger{color:#fca5a5}
+.kebab-menu button.danger:hover{background:rgba(239,68,68,0.10);color:#fca5a5}
+.kebab-menu button svg{width:14px;height:14px;flex-shrink:0;opacity:0.85}
+
+.header{position:relative}
+
+/* ── Confirm modal (delete) ── */
+.confirm-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;z-index:400;
+}
+.confirm-backdrop.open{display:flex}
+.confirm-modal{
+  width:100%;max-width:420px;
+  background:var(--panel);
+  border:1px solid var(--border-strong);
+  border-radius:14px;padding:26px 28px 22px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;gap:14px;
+}
+.confirm-eyebrow{
+  font-size:10.5px;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:#fca5a5;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.confirm-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#ef4444}
+.confirm-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+.confirm-body{font-size:13.5px;color:var(--t3);line-height:1.55}
+.confirm-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:6px}
+.confirm-btn{
+  font:inherit;font-size:13.5px;font-weight:600;
+  padding:9px 16px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;
+  transition:background .15s, border-color .15s, opacity .15s, color .15s;
+}
+.confirm-btn-secondary{background:none;color:var(--t3)}
+.confirm-btn-secondary:hover{color:var(--text)}
+.confirm-btn-danger{
+  background:rgba(239,68,68,0.14);
+  color:#fca5a5;
+  border-color:rgba(239,68,68,0.45);
+}
+.confirm-btn-danger:hover{background:rgba(239,68,68,0.22);color:#fff}
+.confirm-btn-danger:disabled{opacity:0.6;cursor:not-allowed}
+
 /* ── Owner(s) multi-select ── */
 .owners-block{margin-top:24px;display:flex;flex-direction:column;gap:8px;position:relative;max-width:420px}
 .owners-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
@@ -165,11 +270,32 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 /* ── Description editor ── */
 .description-section{margin-top:18px;position:relative}
 .description-meta{
-  display:flex;align-items:center;gap:8px;
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
   margin-bottom:10px;min-height:18px;
   font-size:11.5px;color:var(--t4);
   letter-spacing:0.02em;
 }
+.description-panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px 24px;
+  transition:border-color .15s;
+  position:relative;
+}
+.description-panel:focus-within{border-color:var(--border-strong)}
+.description-placeholder{
+  position:absolute;
+  top:20px;left:24px;right:24px;
+  pointer-events:none;
+  color:var(--t4);
+  font-style:italic;
+  font-size:14px;
+  line-height:1.6;
+  opacity:0.85;
+  display:none;
+}
+.description-panel.show-placeholder .description-placeholder{display:block}
 .save-indicator{
   display:inline-flex;align-items:center;gap:6px;
   transition:color .2s, opacity .2s;
@@ -200,20 +326,20 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 
 .description-editor{
   position:relative;
-  padding:16px 24px 60px;
-  border-radius:10px;
+  padding:0;
+  border-radius:0;
   outline:none;
   color:var(--t2);
   font-size:15.5px;
   line-height:1.65;
   caret-color:var(--accent);
-  min-height:240px;
+  min-height:200px;
   transition:background .2s;
 }
 .description-editor:focus{outline:none}
-.description-editor.drag-over{
+.description-panel.drag-over{
   background:rgba(255,107,53,0.04);
-  box-shadow:inset 0 0 0 1px var(--accent);
+  border-color:var(--accent);
 }
 
 /* Editor typography */
@@ -425,6 +551,17 @@ body.has-task .empty-panel{display:none}
 
   <!-- Header -->
   <div class="header" id="taskHeader" hidden>
+    <div class="header-actions">
+      <button id="kebabBtn" class="kebab-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Task actions">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+      </button>
+      <div id="kebabMenu" class="kebab-menu" role="menu" aria-labelledby="kebabBtn">
+        <button type="button" id="deleteTaskBtn" class="danger" role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+          Delete task
+        </button>
+      </div>
+    </div>
     <div class="status-row">
       <button id="statusPillBtn" class="status-pill-btn" type="button" aria-haspopup="menu" aria-expanded="false">
         <span id="statusPill" class="pill not-started">Not Started<span class="chev-down">▾</span></span>
@@ -436,7 +573,7 @@ body.has-task .empty-panel{display:none}
         <button type="button" data-status="done" data-label="Done" role="menuitemradio"><span class="menu-dot"></span>Done</button>
       </div>
     </div>
-    <h1 id="taskTitle">Loading…</h1>
+    <h1 id="taskTitle" title="Click to rename">Loading…</h1>
 
     <div class="owners-block">
       <span class="owners-label">Owner(s)</span>
@@ -464,8 +601,24 @@ body.has-task .empty-panel{display:none}
     <div class="description-meta">
       <span class="save-indicator" id="saveIndicator">Loaded</span>
     </div>
-    <div id="description" class="description-editor" contenteditable="true" spellcheck="true"></div>
+    <div class="description-panel" id="descriptionPanel">
+      <div class="description-placeholder" id="descriptionPlaceholder">Type / to insert a table, or paste text to start.</div>
+      <div id="description" class="description-editor" contenteditable="true" spellcheck="true"></div>
+    </div>
   </section>
+
+  <!-- Delete confirm modal -->
+  <div class="confirm-backdrop" id="confirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-modal" id="confirmModal">
+      <span class="confirm-eyebrow"><span class="dot"></span>Delete task</span>
+      <span class="confirm-title" id="confirmTitle">Delete this task?</span>
+      <span class="confirm-body">This cannot be undone. The task and all of its description will be permanently removed.</span>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-btn confirm-btn-secondary" id="confirmCancel">Cancel</button>
+        <button type="button" class="confirm-btn confirm-btn-danger" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Empty / not-found panel -->
   <div class="empty-panel" id="emptyPanel" hidden>
@@ -533,6 +686,17 @@ const db = {
     if(!r.ok) throw new Error(`PATCH ${r.status}`);
     const rows = await r.json();
     return rows; // empty array if filter matched 0 rows
+  },
+  async deleteTask(){
+    if(!SUPABASE.slug) return null;
+    const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}`;
+    const r = await fetch(url, {
+      method: 'DELETE',
+      headers: { ...this.headers(), Prefer: 'return=representation' }
+    });
+    if(!r.ok) throw new Error(`DELETE ${r.status}`);
+    const rows = await r.json().catch(() => []);
+    return rows;
   }
 };
 
@@ -1017,6 +1181,10 @@ function isCaretAtEmptyBlockStart(){
   if(!sel || !sel.rangeCount) return false;
   const range = sel.getRangeAt(0);
   if(!range.collapsed) return false;
+  // First, ensure caret is inside the editor at all
+  let cur = range.startContainer;
+  while(cur && cur !== editor) cur = cur.parentNode;
+  if(cur !== editor) return false;
   // Walk up to find the block container inside the editor
   let node = range.startContainer;
   let block = null;
@@ -1026,7 +1194,13 @@ function isCaretAtEmptyBlockStart(){
     }
     node = node.parentNode;
   }
-  if(!block) return false;
+  if(!block){
+    // Caret is directly inside the editor (no wrapping block).
+    // Treat as empty-block-start when the editor itself has no meaningful content.
+    const txt = (editor.textContent || '').replace(/​/g,'').trim();
+    if(txt.length === 0) return true;
+    return false;
+  }
   // Empty block: only contains <br> or empty text
   const txt = (block.textContent || '').replace(/​/g,'').trim();
   if(txt.length === 0) return true;
@@ -1409,16 +1583,17 @@ function addColToTable(table){
 // ────────────────────────────────────────────────────────────────────
 // CSV drop
 // ────────────────────────────────────────────────────────────────────
+const descriptionPanel = document.getElementById('descriptionPanel');
 editor.addEventListener('dragover', (e) => {
   e.preventDefault();
-  editor.classList.add('drag-over');
+  descriptionPanel.classList.add('drag-over');
 });
 editor.addEventListener('dragleave', (e) => {
-  if(e.target === editor) editor.classList.remove('drag-over');
+  if(e.target === editor) descriptionPanel.classList.remove('drag-over');
 });
 editor.addEventListener('drop', (e) => {
   e.preventDefault();
-  editor.classList.remove('drag-over');
+  descriptionPanel.classList.remove('drag-over');
   const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
   if(!file) return;
   const isCsv = file.type === 'text/csv'
@@ -1486,6 +1661,186 @@ editor.addEventListener('drop', (e) => {
 // Block image drops via paste? Out of scope for spec.
 
 // ────────────────────────────────────────────────────────────────────
+// Inline rename of H1 title
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const titleEl = document.getElementById('taskTitle');
+  let savedBefore = '';
+  let editing = false;
+
+  function placeCaretAtEnd(el){
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    r.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+
+  function beginEdit(){
+    if(editing) return;
+    editing = true;
+    savedBefore = titleEl.textContent || '';
+    titleEl.setAttribute('contenteditable','plaintext-only');
+    if(titleEl.contentEditable !== 'plaintext-only'){
+      // Fallback for browsers that don't support plaintext-only
+      titleEl.setAttribute('contenteditable','true');
+    }
+    titleEl.classList.add('editing');
+    titleEl.focus();
+    placeCaretAtEnd(titleEl);
+  }
+
+  function endEdit(commit){
+    if(!editing) return;
+    editing = false;
+    titleEl.removeAttribute('contenteditable');
+    titleEl.classList.remove('editing');
+    const next = (titleEl.textContent || '').replace(/\s+/g,' ').trim();
+    if(!commit){
+      titleEl.textContent = savedBefore;
+      return;
+    }
+    if(!next || next === savedBefore.trim()){
+      titleEl.textContent = savedBefore;
+      return;
+    }
+    titleEl.textContent = next;
+    document.title = `${next} · RunRec`;
+    // Persist with same indicator pattern as description
+    state.saveInFlight = true;
+    refreshIndicator();
+    db.updateTask({ title: next }).then(rows => {
+      if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+      state.saveInFlight = false;
+      state.lastSavedAt = Date.now();
+      refreshIndicator();
+    }).catch(err => {
+      console.warn('title save failed', err);
+      state.saveInFlight = false;
+      setIndicator('Save failed', 'error');
+      // Revert to last good
+      titleEl.textContent = savedBefore;
+      document.title = `${savedBefore || 'Task'} · RunRec`;
+    });
+  }
+
+  titleEl.addEventListener('click', (e) => {
+    if(editing) return;
+    beginEdit();
+  });
+  titleEl.addEventListener('keydown', (e) => {
+    if(!editing) return;
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      endEdit(true);
+      titleEl.blur();
+    } else if(e.key === 'Escape'){
+      e.preventDefault();
+      endEdit(false);
+      titleEl.blur();
+    }
+  });
+  titleEl.addEventListener('blur', () => {
+    if(editing) endEdit(true);
+  });
+  // Strip rich-paste defensively
+  titleEl.addEventListener('paste', (e) => {
+    if(!editing) return;
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+    document.execCommand('insertText', false, text.replace(/\s+/g,' '));
+  });
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Kebab menu + Delete confirm
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const kebabBtn = document.getElementById('kebabBtn');
+  const kebabMenu = document.getElementById('kebabMenu');
+  const deleteBtn = document.getElementById('deleteTaskBtn');
+  const backdrop = document.getElementById('confirmBackdrop');
+  const cancelBtn = document.getElementById('confirmCancel');
+  const confirmBtn = document.getElementById('confirmDelete');
+
+  function openKebab(){ kebabMenu.classList.add('open'); kebabBtn.setAttribute('aria-expanded','true'); }
+  function closeKebab(){ kebabMenu.classList.remove('open'); kebabBtn.setAttribute('aria-expanded','false'); }
+
+  function openConfirm(){
+    backdrop.classList.add('open');
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Delete';
+    setTimeout(() => cancelBtn.focus(), 0);
+  }
+  function closeConfirm(){
+    backdrop.classList.remove('open');
+  }
+
+  kebabBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if(kebabMenu.classList.contains('open')) closeKebab(); else openKebab();
+  });
+  document.addEventListener('click', e => {
+    if(!kebabMenu.contains(e.target) && e.target !== kebabBtn && !kebabBtn.contains(e.target)) closeKebab();
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      if(backdrop.classList.contains('open')){ closeConfirm(); return; }
+      closeKebab();
+    }
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    closeKebab();
+    openConfirm();
+  });
+  cancelBtn.addEventListener('click', closeConfirm);
+  backdrop.addEventListener('click', e => { if(e.target === backdrop) closeConfirm(); });
+
+  confirmBtn.addEventListener('click', async () => {
+    if(confirmBtn.disabled) return;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Deleting…';
+    // Cancel any pending autosave so we don't race the delete
+    if(state.saveTimer){ clearTimeout(state.saveTimer); state.saveTimer = null; }
+    state.isStale = true; // prevents further saves
+    try {
+      await db.deleteTask();
+      // Redirect to kanban
+      location.href = '../kanban/';
+    } catch(err){
+      console.warn('delete failed', err);
+      state.isStale = false;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Delete';
+      showToast('Could not delete task. Please try again.');
+    }
+  });
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Editor empty-state placeholder hint
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const panel = document.getElementById('descriptionPanel');
+  function isEditorEmpty(){
+    // Empty if no text content and no tables/lists/etc.
+    if(editor.querySelector('table, ul, ol, blockquote, h1, h2, h3, h4, img')) return false;
+    const txt = (editor.textContent || '').replace(/[​ \s]/g,'');
+    return txt.length === 0;
+  }
+  function refreshPlaceholder(){
+    if(isEditorEmpty()) panel.classList.add('show-placeholder');
+    else panel.classList.remove('show-placeholder');
+  }
+  editor.addEventListener('input', refreshPlaceholder);
+  editor.addEventListener('blur', refreshPlaceholder);
+  // expose for boot
+  window._refreshPlaceholder = refreshPlaceholder;
+})();
+
+// ────────────────────────────────────────────────────────────────────
 // Boot
 // ────────────────────────────────────────────────────────────────────
 function showEmpty(title, msg){
@@ -1522,6 +1877,7 @@ function showTask(){
     state.loadedDescription = task.description || '';
     renderMarkdown(state.loadedDescription);
     showTask();
+    if(window._refreshPlaceholder) window._refreshPlaceholder();
     setIndicator('Loaded');
   } catch(e){
     console.error(e);

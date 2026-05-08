@@ -113,36 +113,44 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 }
 
 .column{
-  background:var(--panel);
-  border:1px solid var(--border);
+  background:#131318;
+  border:1px solid rgba(255,255,255,0.20);
   border-radius:14px;
-  padding:14px 12px 14px 12px;
-  min-width:0;
+  padding:14px 12px 16px 12px;
+  min-width:0;min-height:200px;
   display:flex;flex-direction:column;gap:10px;
+  transition:border-color .15s, background .15s;
+}
+.column.drag-active{
+  border-color:rgba(255,107,53,0.55);
+  background:rgba(255,107,53,0.04);
 }
 .col-head{
   display:flex;align-items:center;gap:8px;
   padding:4px 6px 10px 6px;
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid rgba(255,255,255,0.10);
   margin-bottom:2px;
 }
-.col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.col-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
 .col-dot.not-started{background:#b0b0b8}
 .col-dot.in-progress{background:#60a5fa}
 .col-dot.blocked{background:#fbbf24}
 .col-dot.done{background:#22c55e}
 .col-name{
-  font-size:11px;font-weight:600;letter-spacing:0.08em;
-  text-transform:uppercase;color:var(--t2);
+  font-size:11px;font-weight:600;letter-spacing:0.088em;
+  text-transform:uppercase;color:#D4D4DC;
 }
 .col-count{
   margin-left:auto;
   font-size:11px;font-weight:600;
-  color:var(--t4);
+  color:#6C6C74;
   background:rgba(255,255,255,0.04);
-  border:1px solid var(--border);
+  border:1px solid rgba(255,255,255,0.07);
   border-radius:999px;
-  padding:1px 8px;min-width:22px;text-align:center;
+  width:22px;height:20px;
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
 }
 
 .col-list{display:flex;flex-direction:column;gap:8px;min-height:4px}
@@ -151,30 +159,44 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .task-card{
   position:relative;
   display:block;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-left-width:2px;
+  background:#1E1E25;
+  border:1px solid rgba(255,255,255,0.20);
   border-radius:10px;
-  padding:14px 16px;
+  padding:14px;
   color:inherit;
-  transition:background .15s, border-color .15s, transform .15s;
+  transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
+  user-select:none;
+  cursor:grab;
 }
+.task-card:active{cursor:grabbing}
 .task-card:hover{
-  background:var(--hover);
-  border-color:var(--border-strong);
+  border-color:rgba(255,255,255,0.28);
   transform:translateY(-1px);
 }
-.task-card.not-started{border-left-color:#b0b0b8}
-.task-card.in-progress{border-left-color:#60a5fa}
-.task-card.blocked{border-left-color:#fbbf24}
-.task-card.done{border-left-color:#22c55e}
+/* Dragging state */
+.task-card.dragging{
+  opacity:0.5;
+  cursor:grabbing;
+}
+/* Status accent: a 4px left bar inset, distinct from border */
+.task-card::before{
+  content:"";
+  position:absolute;left:0;top:10px;bottom:10px;width:2px;
+  border-radius:0 2px 2px 0;
+  background:transparent;
+  transition:background .15s;
+}
+.task-card.not-started::before{background:#b0b0b8}
+.task-card.in-progress::before{background:#60a5fa}
+.task-card.blocked::before{background:#fbbf24}
+.task-card.done::before{background:#22c55e}
 
 .task-card.done .card-title{color:var(--t3)}
 
 .card-title{
   font-size:14.5px;font-weight:600;
-  line-height:1.4;color:var(--text);
-  letter-spacing:-0.005em;
+  line-height:20px;color:#FFFFFF;
+  letter-spacing:-0.072px;
   display:-webkit-box;
   -webkit-line-clamp:3;
   -webkit-box-orient:vertical;
@@ -185,31 +207,50 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   display:flex;flex-wrap:wrap;align-items:center;gap:4px;
   margin-top:10px;min-height:18px;
 }
-.card-owners .avatar{box-shadow:0 0 0 2px var(--card)}
-.task-card:hover .card-owners .avatar{box-shadow:0 0 0 2px var(--hover)}
+.card-owners .avatar{box-shadow:0 0 0 2px #1E1E25}
 .card-owners-empty{
   font-size:11.5px;color:var(--t4);font-weight:500;
+}
+
+/* The card's open-link anchor (inside the draggable wrapper) */
+.task-card .card-open{
+  position:absolute;inset:0;
+  border-radius:inherit;
+  z-index:1;
 }
 
 /* ── Add card affordance ── */
 .add-card{
   display:flex;align-items:center;justify-content:center;gap:6px;
   background:transparent;
-  border:1px dashed var(--border);
+  border:1px dashed rgba(255,255,255,0.20);
   border-radius:10px;
-  padding:14px 16px;
-  cursor:pointer;color:var(--t4);
+  padding:0 14px;
+  height:49px;
+  cursor:pointer;color:#6C6C74;
   font-size:13px;font-weight:500;
   transition:border-color .15s, color .15s, background .15s;
   width:100%;
+  margin-top:auto;
 }
 .add-card:hover{
-  border-color:rgba(255,107,53,0.55);
+  border-color:var(--accent);
   border-style:solid;
   color:var(--text);
-  background:rgba(255,107,53,0.05);
 }
-.add-card .plus{font-size:14px;font-weight:500;line-height:1}
+.add-card .plus{font-size:14px;font-weight:500;line-height:1;color:inherit}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t2);font-size:13px;padding:10px 16px;border-radius:8px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.5);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s, transform .18s;
+  z-index:300;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── Empty placeholder ── */
 .col-empty{
@@ -396,6 +437,9 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <!-- Create-task modal -->
 <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal" id="modal">
@@ -466,6 +510,20 @@ const db = {
     if(!r.ok){
       const text = await r.text().catch(() => '');
       throw new Error(`POST ${r.status} ${text}`);
+    }
+    const rows = await r.json();
+    return rows[0] || null;
+  },
+  async patchTaskBySlug(slug, patch){
+    const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(slug)}`;
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...this.headers(), Prefer: 'return=representation' },
+      body: JSON.stringify(patch)
+    });
+    if(!r.ok){
+      const text = await r.text().catch(() => '');
+      throw new Error(`PATCH ${r.status} ${text}`);
     }
     const rows = await r.json();
     return rows[0] || null;
@@ -540,12 +598,14 @@ function buildCardHTML(t){
     ).join('');
   }
   const slug = encodeURIComponent(t.slug || '');
+  const slugAttr = escapeHtml(t.slug || '');
   const title = escapeHtml(t.title || '(untitled)');
   return `
-    <a class="task-card ${status}" href="../task/?slug=${slug}" aria-label="Open task: ${title}">
+    <div class="task-card ${status}" draggable="true" data-slug="${slugAttr}" data-status="${status}" tabindex="0" aria-label="Task: ${title}. Drag to a different column to change status.">
+      <a class="card-open" href="../task/?slug=${slug}" aria-label="Open task: ${title}" tabindex="-1" draggable="false"></a>
       <div class="card-title">${title}</div>
       <div class="card-owners">${ownersHTML}</div>
-    </a>
+    </div>
   `;
 }
 
@@ -737,6 +797,188 @@ modalBackdrop.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && state.modalOpen) closeModal();
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Toast
+// ────────────────────────────────────────────────────────────────────
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, ms = 3500){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Drag-and-drop between columns
+// ────────────────────────────────────────────────────────────────────
+const dragState = {
+  card: null,        // the dragging element
+  fromStatus: null,  // its origin column status
+  pressX: 0, pressY: 0,
+  moved: false,
+  pressed: false
+};
+
+function clearDragHighlights(){
+  board.querySelectorAll('.column.drag-active').forEach(c => c.classList.remove('drag-active'));
+}
+
+function updateColumnCounts(){
+  STATUS_ORDER.forEach(status => {
+    const col = board.querySelector(`.column[data-status="${status}"]`);
+    if(!col) return;
+    const list = col.querySelector('[data-list]');
+    const count = col.querySelector('[data-count]');
+    // Count actual task-card children (ignore .col-empty)
+    const n = list.querySelectorAll('.task-card').length;
+    count.textContent = n;
+    // Toggle empty placeholder
+    const emptyEl = list.querySelector('.col-empty');
+    if(n === 0){
+      if(!emptyEl) list.innerHTML = `<div class="col-empty">No tasks</div>`;
+    } else {
+      if(emptyEl) emptyEl.remove();
+    }
+  });
+}
+
+function findCardEl(t){
+  if(!t) return null;
+  if(t.classList && t.classList.contains('task-card')) return t;
+  return t.closest ? t.closest('.task-card') : null;
+}
+
+board.addEventListener('mousedown', (e) => {
+  const card = findCardEl(e.target);
+  if(!card) return;
+  dragState.pressed = true;
+  dragState.moved = false;
+  dragState.pressX = e.clientX;
+  dragState.pressY = e.clientY;
+});
+
+board.addEventListener('mousemove', (e) => {
+  if(!dragState.pressed) return;
+  const dx = Math.abs(e.clientX - dragState.pressX);
+  const dy = Math.abs(e.clientY - dragState.pressY);
+  if(dx > 5 || dy > 5) dragState.moved = true;
+});
+
+window.addEventListener('mouseup', () => {
+  // Reset on next tick so click handler sees correct state
+  setTimeout(() => { dragState.pressed = false; dragState.moved = false; }, 0);
+});
+
+// Suppress click navigation if a drag actually happened
+board.addEventListener('click', (e) => {
+  // If user dragged, prevent the embedded <a class="card-open"> from navigating.
+  if(dragState.moved){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+board.addEventListener('dragstart', (e) => {
+  const card = findCardEl(e.target);
+  if(!card){ return; }
+  // Only allow drag if it started from a card body (not a click on its inner <a> being blocked)
+  dragState.card = card;
+  dragState.fromStatus = card.dataset.status || null;
+  card.classList.add('dragging');
+  // Highlight all OTHER columns as valid drop targets
+  STATUS_ORDER.forEach(s => {
+    if(s === dragState.fromStatus) return;
+    const c = board.querySelector(`.column[data-status="${s}"]`);
+    if(c) c.classList.add('drag-active');
+  });
+  if(e.dataTransfer){
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', card.dataset.slug || ''); } catch(_){}
+  }
+});
+
+board.addEventListener('dragend', () => {
+  if(dragState.card) dragState.card.classList.remove('dragging');
+  clearDragHighlights();
+  dragState.card = null;
+  dragState.fromStatus = null;
+});
+
+// Allow dropping on columns
+board.querySelectorAll('.column').forEach(col => {
+  col.addEventListener('dragover', (e) => {
+    if(!dragState.card) return;
+    e.preventDefault();
+    if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  });
+  col.addEventListener('dragenter', (e) => {
+    if(!dragState.card) return;
+    e.preventDefault();
+  });
+  col.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const card = dragState.card;
+    if(!card) return;
+    const newStatus = col.dataset.status;
+    const oldStatus = dragState.fromStatus;
+    if(!STATUS_ORDER.includes(newStatus)) return;
+    if(newStatus === oldStatus){
+      // No-op — just clear highlights
+      card.classList.remove('dragging');
+      clearDragHighlights();
+      dragState.card = null;
+      return;
+    }
+    const slug = card.dataset.slug;
+    if(!slug){
+      card.classList.remove('dragging');
+      clearDragHighlights();
+      return;
+    }
+    // Optimistic move
+    const oldList = board.querySelector(`.column[data-status="${oldStatus}"] [data-list]`);
+    const newList = col.querySelector('[data-list]');
+    if(!newList){
+      card.classList.remove('dragging');
+      clearDragHighlights();
+      return;
+    }
+    // Update card classes (status + visual)
+    card.classList.remove(oldStatus);
+    card.classList.add(newStatus);
+    card.dataset.status = newStatus;
+    // Move DOM node into new list
+    newList.appendChild(card);
+    card.classList.remove('dragging');
+    clearDragHighlights();
+    dragState.card = null;
+    updateColumnCounts();
+
+    // Update local state row
+    const row = state.tasks.find(t => t.slug === slug);
+    if(row) row.status = newStatus;
+
+    // Persist
+    try {
+      const updated = await db.patchTaskBySlug(slug, { status: newStatus });
+      if(updated && updated.updated_at){
+        if(row) row.updated_at = updated.updated_at;
+      }
+    } catch(err){
+      console.warn('drag patch failed', err);
+      // Revert
+      card.classList.remove(newStatus);
+      card.classList.add(oldStatus);
+      card.dataset.status = oldStatus;
+      if(oldList) oldList.appendChild(card);
+      if(row) row.status = oldStatus;
+      updateColumnCounts();
+      showToast('Could not update task. Reverted.');
+    }
+  });
 });
 
 // ────────────────────────────────────────────────────────────────────

@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="googlebot" content="noindex,nofollow">
+<title>Task · RunRec</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --text: #ffffff;
+  --t2: #d4d4dc;
+  --t3: #b0b0b8;
+  --t4: #6c6c74;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #ff6b35;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (font-variation-settings: normal) { html { font-family: "Inter var", sans-serif; } }
+html,body{background:var(--bg);color:var(--t2);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;font-feature-settings:"cv02","cv03","cv11"}
+body{padding:60px 24px 100px;background:radial-gradient(ellipse at top,rgba(255,107,53,0.05),transparent 60%),var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.wrap{width:100%;max-width:880px;margin:0 auto}
+
+/* ── Header ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+.brand{display:inline-flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;background:var(--accent);border-radius:10px;display:grid;place-items:center;color:white;font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--t4);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;margin-top:2px}
+.back{font-size:13px;color:var(--t4);transition:color .15s}
+.back:hover{color:var(--t2)}
+
+.header{margin-bottom:40px;border-bottom:1px solid var(--border);padding-bottom:36px}
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;position:relative}
+.pill{
+  font-size:10.5px;font-weight:600;
+  padding:4px 10px;border-radius:999px;
+  letter-spacing:0.05em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid transparent;
+}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.not-started{background:rgba(176,176,184,0.10);color:#b0b0b8;border-color:rgba(176,176,184,0.20)}
+.pill.in-progress{background:rgba(59,130,246,0.12);color:#60a5fa;border-color:rgba(59,130,246,0.25)}
+.pill.blocked{background:rgba(245,158,11,0.12);color:#fbbf24;border-color:rgba(245,158,11,0.25)}
+.pill.done{background:rgba(34,197,94,0.12);color:#22c55e;border-color:rgba(34,197,94,0.25)}
+
+.status-pill-btn{
+  cursor:pointer;
+  background:none;border:none;padding:0;margin:0;font:inherit;
+  outline:none;
+}
+.status-pill-btn .pill{transition:opacity .15s, transform .15s}
+.status-pill-btn:hover .pill{opacity:0.9}
+.status-pill-btn .chev-down{
+  margin-left:2px;font-size:9px;opacity:0.7;transition:transform .15s;
+}
+.status-pill-btn[aria-expanded="true"] .chev-down{transform:rotate(180deg)}
+
+.status-menu{
+  position:absolute;top:100%;left:0;margin-top:6px;z-index:100;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  display:none;flex-direction:column;gap:2px;
+  min-width:160px;
+}
+.status-menu.open{display:flex}
+.status-menu button{
+  background:none;border:none;font:inherit;color:var(--t2);
+  padding:8px 12px;border-radius:6px;cursor:pointer;
+  text-align:left;display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:500;
+  transition:background .12s;
+}
+.status-menu button:hover{background:var(--hover)}
+.status-menu button .menu-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-menu button[data-status="not-started"] .menu-dot{background:#b0b0b8}
+.status-menu button[data-status="in-progress"] .menu-dot{background:#60a5fa}
+.status-menu button[data-status="blocked"] .menu-dot{background:#fbbf24}
+.status-menu button[data-status="done"] .menu-dot{background:#22c55e}
+.status-menu button[aria-checked="true"]{background:var(--hover);color:var(--text)}
+.status-menu button[aria-checked="true"]::after{
+  content:"✓";margin-left:auto;color:var(--accent);font-weight:600;
+}
+
+h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:14px;color:var(--text)}
+
+/* ── Owner(s) multi-select ── */
+.owners-block{margin-top:24px;display:flex;flex-direction:column;gap:8px;position:relative;max-width:420px}
+.owners-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
+.owners-trigger{
+  background:none;border:none;padding:0;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;color:inherit;font:inherit;text-align:left;
+  outline:none;
+}
+.owners-selected{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.owners-empty{
+  display:inline-flex;align-items:center;
+  color:var(--t3);font-size:13.5px;font-weight:500;
+  padding:2px 0;
+}
+.owners-trigger:hover .owners-empty{color:var(--text)}
+.owners-trigger .chev{color:var(--t3);transition:transform .15s,color .15s;flex-shrink:0;display:flex;align-items:center}
+.owners-trigger:hover .chev{color:var(--t2)}
+.owners-trigger[aria-expanded="true"] .chev{transform:rotate(180deg);color:var(--accent)}
+
+.owner-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:999px;padding:3px 10px 3px 4px;
+  font-size:13px;color:var(--text);font-weight:500;
+}
+.avatar{
+  width:16px;height:16px;border-radius:2px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:white;letter-spacing:0;
+  flex-shrink:0;overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar.sal{background:#ff6b35}
+.avatar.izzy{background:#3b82f6}
+.avatar.rammah{background:#a855f7}
+.avatar.brian{background:#22c55e}
+.avatar.rob{background:#ec4899}
+.avatar.eyad{background:#14b8a6}
+
+.owners-menu{
+  position:absolute;top:100%;left:0;right:0;margin-top:6px;z-index:50;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.45);
+  display:none;flex-direction:column;gap:1px;max-width:420px;
+}
+.owners-menu.open{display:flex}
+.owner-option{
+  background:none;border:none;font:inherit;color:var(--t2);
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  text-align:left;transition:background .12s;
+}
+.owner-option:hover{background:var(--hover)}
+.owner-option[aria-checked="true"]{color:var(--text)}
+.owner-option[aria-checked="true"] .check{opacity:1}
+.owner-option .check{margin-left:auto;color:var(--accent);opacity:0;font-weight:600;font-size:14px}
+.owner-option .name{font-size:13.5px}
+
+/* ── Description editor ── */
+.description-section{margin-top:18px;position:relative}
+.description-meta{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:10px;min-height:18px;
+  font-size:11.5px;color:var(--t4);
+  letter-spacing:0.02em;
+}
+.save-indicator{
+  display:inline-flex;align-items:center;gap:6px;
+  transition:color .2s, opacity .2s;
+}
+.save-indicator::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--t4);transition:background .2s;
+}
+.save-indicator.saving::before{background:var(--amber)}
+.save-indicator.saved::before{background:var(--green)}
+.save-indicator.error::before{background:var(--red)}
+
+.stale-banner{
+  display:none;background:rgba(245,158,11,0.10);
+  border:1px solid rgba(245,158,11,0.30);
+  border-radius:10px;padding:14px 18px;
+  margin-bottom:14px;
+  font-size:13.5px;color:var(--t2);
+  align-items:center;justify-content:space-between;gap:14px;
+}
+.stale-banner.show{display:flex}
+.stale-banner button{
+  background:var(--amber);color:#1a1408;border:none;
+  padding:6px 14px;border-radius:6px;font:inherit;
+  font-size:13px;font-weight:600;cursor:pointer;
+}
+.stale-banner button:hover{opacity:0.92}
+
+.description-editor{
+  position:relative;
+  padding:16px 24px 60px;
+  border-radius:10px;
+  outline:none;
+  color:var(--t2);
+  font-size:15.5px;
+  line-height:1.65;
+  caret-color:var(--accent);
+  min-height:240px;
+  transition:background .2s;
+}
+.description-editor:focus{outline:none}
+.description-editor.drag-over{
+  background:rgba(255,107,53,0.04);
+  box-shadow:inset 0 0 0 1px var(--accent);
+}
+
+/* Editor typography */
+.description-editor h1,
+.description-editor h2,
+.description-editor h3,
+.description-editor h4{
+  color:var(--text);font-weight:600;letter-spacing:-0.01em;
+  margin-top:32px;margin-bottom:10px;line-height:1.25;
+}
+.description-editor h1{font-size:28px;letter-spacing:-0.02em;margin-top:0}
+.description-editor h2{font-size:22px;letter-spacing:-0.015em}
+.description-editor h3{font-size:18px}
+.description-editor h4{font-size:15.5px;letter-spacing:0;color:var(--t2);text-transform:none}
+.description-editor > *:first-child{margin-top:0}
+.description-editor p{margin:0 0 14px}
+.description-editor ul,
+.description-editor ol{margin:0 0 14px;padding-left:20px}
+.description-editor li{margin:4px 0;color:var(--t2)}
+.description-editor ul li::marker{color:var(--t4)}
+.description-editor ol li::marker{color:var(--t4)}
+.description-editor strong{color:var(--text);font-weight:600}
+.description-editor em{color:var(--t3);font-style:italic}
+.description-editor code{
+  font-family:"SF Mono","Menlo",ui-monospace,monospace;
+  font-size:0.9em;color:var(--t2);
+  background:rgba(255,255,255,0.06);
+  padding:1px 6px;border-radius:4px;
+  border:1px solid var(--border);
+}
+.description-editor a{color:var(--accent);text-decoration:underline;text-decoration-color:rgba(255,107,53,0.4);text-underline-offset:2px}
+.description-editor a:hover{text-decoration-color:var(--accent)}
+.description-editor blockquote{
+  margin:14px 0;padding:12px 18px;
+  background:rgba(255,107,53,0.06);
+  border-left:2.5px solid var(--accent);
+  border-radius:6px;color:var(--t2);font-style:italic;
+  font-size:14.5px;line-height:1.6;
+}
+.description-editor blockquote p{margin:0 0 8px}
+.description-editor blockquote p:last-child{margin-bottom:0}
+
+/* Tables in editor */
+.description-editor .table-wrap{
+  position:relative;margin:18px 0;
+  /* hover affordances anchored here */
+}
+.description-editor table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;font-size:13.5px;
+}
+.description-editor th,
+.description-editor td{
+  text-align:left;padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+  outline:none;
+}
+.description-editor th{
+  background:rgba(255,255,255,0.02);color:var(--t4);
+  font-size:11px;text-transform:uppercase;letter-spacing:0.06em;
+  font-weight:600;
+}
+.description-editor tr:last-child td{border-bottom:none}
+.description-editor td{color:var(--t2)}
+.description-editor td strong{color:var(--text)}
+.description-editor th:focus,
+.description-editor td:focus{
+  background:rgba(255,107,53,0.04);
+  box-shadow:inset 0 0 0 1px rgba(255,107,53,0.4);
+}
+.description-editor th:focus{
+  background:rgba(255,107,53,0.06);
+}
+
+/* Table affordances */
+.tbl-action{
+  position:absolute;
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t2);font-size:12px;font-weight:500;
+  padding:4px 10px;border-radius:6px;cursor:pointer;
+  display:none;align-items:center;gap:5px;
+  font-family:inherit;line-height:1;
+  transition:background .12s,color .12s,border-color .12s;
+  user-select:none;
+  z-index:8;
+}
+.tbl-action:hover{background:var(--hover);color:var(--text);border-color:var(--accent)}
+.tbl-action .plus{color:var(--accent);font-size:14px;line-height:1}
+.table-wrap:hover .tbl-action,
+.table-wrap.focus-within .tbl-action{display:inline-flex}
+.tbl-action.add-row{right:-8px;bottom:-14px}
+.tbl-action.add-col{top:-14px;right:-8px}
+
+.row-delete{
+  position:absolute;left:-22px;width:18px;height:18px;
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t3);border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;font-size:12px;line-height:1;font-family:inherit;
+  padding:0;transition:background .12s,color .12s,border-color .12s;
+  z-index:9;
+}
+.row-delete:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.col-delete{
+  position:absolute;top:-22px;width:18px;height:18px;
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t3);border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;font-size:12px;line-height:1;font-family:inherit;
+  padding:0;transition:background .12s,color .12s,border-color .12s;
+  z-index:9;
+}
+.col-delete:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.table-wrap.show-row-handles .row-delete{display:flex}
+.table-wrap.show-col-handles .col-delete{display:flex}
+
+/* ── Slash menu ── */
+.slash-menu{
+  position:fixed;z-index:200;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;min-width:200px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.5);
+  display:none;flex-direction:column;gap:2px;
+}
+.slash-menu.open{display:flex}
+.slash-menu .slash-label{
+  font-size:10.5px;color:var(--t4);text-transform:uppercase;
+  letter-spacing:0.08em;font-weight:600;
+  padding:6px 10px 4px;
+}
+.slash-menu button{
+  background:none;border:none;font:inherit;color:var(--t2);
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  text-align:left;display:flex;align-items:center;gap:10px;
+  font-size:13.5px;font-weight:500;width:100%;
+  transition:background .12s,color .12s;
+}
+.slash-menu button:hover,
+.slash-menu button.active{background:var(--hover);color:var(--text)}
+.slash-menu .slash-icon{
+  width:24px;height:24px;border-radius:5px;
+  background:rgba(255,107,53,0.12);color:var(--accent);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.slash-menu .slash-icon svg{width:14px;height:14px}
+.slash-menu .slash-text{display:flex;flex-direction:column;gap:1px;flex:1}
+.slash-menu .slash-name{font-size:13.5px;color:var(--text)}
+.slash-menu .slash-desc{font-size:11.5px;color:var(--t4);font-weight:400}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t2);font-size:13px;padding:10px 16px;border-radius:8px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.5);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s,transform .18s;
+  z-index:300;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Empty / not-found panels ── */
+.empty-panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:36px 32px;text-align:center;
+  margin-top:32px;
+}
+.empty-panel h2{
+  color:var(--text);font-size:20px;font-weight:600;
+  letter-spacing:-0.01em;margin-bottom:8px;
+}
+.empty-panel p{color:var(--t3);font-size:14px;margin-bottom:16px}
+.empty-panel a.empty-link{
+  display:inline-block;color:var(--accent);font-size:13.5px;
+  font-weight:500;padding:8px 14px;border:1px solid rgba(255,107,53,0.4);
+  border-radius:8px;transition:background .12s,border-color .12s;
+}
+.empty-panel a.empty-link:hover{background:rgba(255,107,53,0.08);border-color:var(--accent)}
+
+/* ── Footer ── */
+.foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
+.foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+
+/* small print */
+.tiny{font-size:11.5px;color:var(--t4);margin-top:8px}
+
+/* Hide editor when no slug / not found */
+body.no-task .header,
+body.no-task .description-section{display:none}
+body.has-task .empty-panel{display:none}
+</style>
+</head>
+<body class="loading">
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="../" class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="brand-name">Sal's Dashboards</div>
+        <div class="brand-sub">Internal tools</div>
+      </div>
+    </a>
+    <a href="../" class="back">← All dashboards</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header" id="taskHeader" hidden>
+    <div class="status-row">
+      <button id="statusPillBtn" class="status-pill-btn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span id="statusPill" class="pill not-started">Not Started<span class="chev-down">▾</span></span>
+      </button>
+      <div id="statusMenu" class="status-menu" role="menu" aria-labelledby="statusPillBtn">
+        <button type="button" data-status="not-started" data-label="Not Started" role="menuitemradio"><span class="menu-dot"></span>Not Started</button>
+        <button type="button" data-status="in-progress" data-label="In Progress" role="menuitemradio"><span class="menu-dot"></span>In Progress</button>
+        <button type="button" data-status="blocked" data-label="Blocked" role="menuitemradio"><span class="menu-dot"></span>Blocked</button>
+        <button type="button" data-status="done" data-label="Done" role="menuitemradio"><span class="menu-dot"></span>Done</button>
+      </div>
+    </div>
+    <h1 id="taskTitle">Loading…</h1>
+
+    <div class="owners-block">
+      <span class="owners-label">Owner(s)</span>
+      <button id="ownersTrigger" class="owners-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span id="ownersSelected" class="owners-selected"></span>
+        <span class="chev"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m7 10l5 5l5-5z"/></svg></span>
+      </button>
+      <div id="ownersMenu" class="owners-menu" role="listbox" aria-multiselectable="true">
+        <button type="button" class="owner-option" role="option" data-key="sal" data-name="Sal Dader" aria-checked="false"><span class="avatar sal">SD</span><span class="name">Sal Dader</span><span class="check">✓</span></button>
+        <button type="button" class="owner-option" role="option" data-key="izzy" data-name="Izzy" aria-checked="false"><span class="avatar izzy">IZ</span><span class="name">Izzy</span><span class="check">✓</span></button>
+        <button type="button" class="owner-option" role="option" data-key="rammah" data-name="Rammah" aria-checked="false"><span class="avatar rammah">RH</span><span class="name">Rammah</span><span class="check">✓</span></button>
+        <button type="button" class="owner-option" role="option" data-key="brian" data-name="Brian Bazely" aria-checked="false"><span class="avatar brian">BB</span><span class="name">Brian Bazely</span><span class="check">✓</span></button>
+        <button type="button" class="owner-option" role="option" data-key="rob" data-name="Rob Salloum" aria-checked="false"><span class="avatar rob">RS</span><span class="name">Rob Salloum</span><span class="check">✓</span></button>
+        <button type="button" class="owner-option" role="option" data-key="eyad" data-name="Eyad Attia" aria-checked="false"><span class="avatar eyad">EA</span><span class="name">Eyad Attia</span><span class="check">✓</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description editor section -->
+  <section class="description-section" id="descriptionSection" hidden>
+    <div class="stale-banner" id="staleBanner">
+      <span>This task was edited elsewhere. Reload to see the latest version.</span>
+      <button type="button" id="staleReload">Reload</button>
+    </div>
+    <div class="description-meta">
+      <span class="save-indicator" id="saveIndicator">Loaded</span>
+    </div>
+    <div id="description" class="description-editor" contenteditable="true" spellcheck="true"></div>
+  </section>
+
+  <!-- Empty / not-found panel -->
+  <div class="empty-panel" id="emptyPanel" hidden>
+    <h2 id="emptyTitle">Open a task from the Kanban</h2>
+    <p id="emptyMsg">This page renders a task by URL. Add <code>?slug=&lt;your-task-slug&gt;</code> to view one.</p>
+    <a href="../" class="empty-link">← All dashboards</a>
+  </div>
+
+  <!-- Footer -->
+  <div class="foot">
+    <p>This page renders any task by <code>?slug=…</code>. Edits autosave to Supabase.</p>
+    <p style="margin-top:6px">Hosted on GitHub Pages · auto-deploys on push to <code>main</code> · github.com/saldader/dashboards</p>
+  </div>
+
+</div>
+
+<!-- Slash command menu (positioned via JS) -->
+<div class="slash-menu" id="slashMenu" role="menu" aria-label="Insert block">
+  <div class="slash-label">Insert</div>
+  <button type="button" data-action="table" class="active">
+    <span class="slash-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg></span>
+    <span class="slash-text">
+      <span class="slash-name">Table</span>
+      <span class="slash-desc">2 × 2 with header row</span>
+    </span>
+  </button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ────────────────────────────────────────────────────────────────────
+// Config + slug
+// ────────────────────────────────────────────────────────────────────
+const SUPABASE = {
+  url: 'https://ivdzpptjtwoxdaxsbsqz.supabase.co',
+  key: 'sb_publishable_CLEzGz8hR3Z2cioPFSSu-g_33VtSdDb',
+  slug: new URL(location.href).searchParams.get('slug') || ''
+};
+
+// ────────────────────────────────────────────────────────────────────
+// DB helper (parallel to eyad-prospectus)
+// ────────────────────────────────────────────────────────────────────
+const db = {
+  headers(){ return { apikey: SUPABASE.key, Authorization: `Bearer ${SUPABASE.key}`, 'Content-Type': 'application/json' }; },
+  async getTask(){
+    if(!SUPABASE.slug) return null;
+    const r = await fetch(`${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&select=*`, { headers: this.headers() });
+    if(!r.ok) throw new Error(`GET ${r.status}`);
+    const rows = await r.json();
+    return rows[0] || null;
+  },
+  async updateTask(patch, opts = {}){
+    if(!SUPABASE.slug) return null;
+    let url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}`;
+    if(opts.ifUpdatedAt){
+      url += `&updated_at=eq.${encodeURIComponent(opts.ifUpdatedAt)}`;
+    }
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...this.headers(), Prefer: 'return=representation' },
+      body: JSON.stringify(patch)
+    });
+    if(!r.ok) throw new Error(`PATCH ${r.status}`);
+    const rows = await r.json();
+    return rows; // empty array if filter matched 0 rows
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Toast helper
+// ────────────────────────────────────────────────────────────────────
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, ms = 4000){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Status pill (DB-backed)
+// ────────────────────────────────────────────────────────────────────
+const STATUS_CLASSES = ['not-started','in-progress','blocked','done'];
+const STATUS_LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progress', 'blocked': 'Blocked', 'done': 'Done' };
+
+(function(){
+  const btn = document.getElementById('statusPillBtn');
+  const pill = document.getElementById('statusPill');
+  const menu = document.getElementById('statusMenu');
+  const items = menu.querySelectorAll('button[data-status]');
+
+  function applyStatus(status, persist=true){
+    if(!STATUS_CLASSES.includes(status)) status = 'not-started';
+    STATUS_CLASSES.forEach(c => pill.classList.remove(c));
+    pill.classList.add(status);
+    pill.firstChild.nodeValue = STATUS_LABELS[status] || status;
+    items.forEach(i => i.setAttribute('aria-checked', i.dataset.status === status ? 'true' : 'false'));
+    if(persist){
+      db.updateTask({ status }).then(rows => {
+        if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+      }).catch(e => console.warn('status save failed', e));
+    }
+  }
+  window._applyStatus = applyStatus;
+
+  function openMenu(){ menu.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+  function closeMenu(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+
+  btn.addEventListener('click', e => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
+  items.forEach(item => item.addEventListener('click', e => {
+    e.stopPropagation();
+    applyStatus(item.dataset.status);
+    closeMenu();
+  }));
+  document.addEventListener('click', e => { if(!menu.contains(e.target) && e.target !== btn) closeMenu(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Owner(s) multi-select (DB-backed)
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const trigger = document.getElementById('ownersTrigger');
+  const selected = document.getElementById('ownersSelected');
+  const menu = document.getElementById('ownersMenu');
+  const options = menu.querySelectorAll('.owner-option');
+
+  function renderSelected(){
+    const chosen = Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true');
+    if(chosen.length === 0){
+      selected.innerHTML = '<span class="owners-empty">+ Add Owner</span>';
+      return;
+    }
+    selected.innerHTML = chosen.map(o => {
+      const key = o.dataset.key;
+      const name = o.dataset.name;
+      const initials = o.querySelector('.avatar').textContent;
+      return `<span class="owner-chip"><span class="avatar ${key}">${initials}</span>${name}</span>`;
+    }).join('');
+  }
+
+  function applyOwners(keys, persist=true){
+    if(!Array.isArray(keys)) keys = [];
+    options.forEach(o => o.setAttribute('aria-checked', keys.includes(o.dataset.key) ? 'true' : 'false'));
+    renderSelected();
+    if(persist){
+      db.updateTask({ owners: keys }).then(rows => {
+        if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+      }).catch(e => console.warn('owners save failed', e));
+    }
+  }
+  window._applyOwners = applyOwners;
+
+  function currentKeys(){
+    return Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true').map(o => o.dataset.key);
+  }
+
+  function openMenu(){ menu.classList.add('open'); trigger.setAttribute('aria-expanded','true'); }
+  function closeMenu(){ menu.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
+
+  trigger.addEventListener('click', e => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
+  options.forEach(opt => opt.addEventListener('click', e => {
+    e.stopPropagation();
+    const cur = opt.getAttribute('aria-checked') === 'true';
+    opt.setAttribute('aria-checked', cur ? 'false' : 'true');
+    renderSelected();
+    db.updateTask({ owners: currentKeys() }).then(rows => {
+      if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+    }).catch(err => console.warn('owners save failed', err));
+  }));
+  document.addEventListener('click', e => { if(!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
+
+  renderSelected();
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Editor state
+// ────────────────────────────────────────────────────────────────────
+const state = {
+  lastUpdatedAt: null,
+  loadedDescription: '',
+  isStale: false,
+  saveTimer: null,
+  saveInFlight: false,
+  pendingSave: false,
+  lastSavedAt: null,
+  indicatorTimer: null,
+};
+
+const editor = document.getElementById('description');
+const indicator = document.getElementById('saveIndicator');
+const staleBanner = document.getElementById('staleBanner');
+
+// ────────────────────────────────────────────────────────────────────
+// Markdown render → editor
+// ────────────────────────────────────────────────────────────────────
+if(window.marked && marked.setOptions){
+  marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
+}
+
+function renderMarkdown(md){
+  const html = (window.marked ? marked.parse(md || '') : escapeHtml(md || ''));
+  editor.innerHTML = html;
+  // Wrap every <table> in a .table-wrap for affordance positioning
+  editor.querySelectorAll('table').forEach(t => wrapTable(t));
+  // Make every cell editable
+  editor.querySelectorAll('th,td').forEach(c => c.setAttribute('contenteditable','true'));
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ────────────────────────────────────────────────────────────────────
+// DOM → Markdown serializer
+// Handles: text, p, h1-h4, ul/ol/li, strong/em/code, a, br, table, blockquote, div passthrough
+// Strips everything else.
+// ────────────────────────────────────────────────────────────────────
+function escMdInline(s){
+  // Escape *, _, [, ], |, backtick, and backslash itself
+  return String(s).replace(/([\\\*_`\[\]|])/g, '\\$1');
+}
+
+function isSafeHref(href){
+  if(typeof href !== 'string') return false;
+  const h = href.trim().toLowerCase();
+  return h.startsWith('http://') || h.startsWith('https://');
+}
+
+function serializeInline(node){
+  // Returns a string of inline Markdown for a node (and its children)
+  if(node.nodeType === 3){
+    return escMdInline(node.nodeValue);
+  }
+  if(node.nodeType !== 1) return '';
+  const tag = node.tagName.toLowerCase();
+  const inner = serializeChildrenInline(node);
+  switch(tag){
+    case 'br': return '  \n';
+    case 'strong': case 'b': return inner ? `**${inner}**` : '';
+    case 'em': case 'i': return inner ? `*${inner}*` : '';
+    case 'code': {
+      // Use raw text content (no escaping inside code), wrapped in backticks
+      const raw = node.textContent || '';
+      return raw ? '`' + raw.replace(/`/g, '\\`') + '`' : '';
+    }
+    case 'a': {
+      const href = node.getAttribute('href') || '';
+      if(isSafeHref(href)){
+        return `[${inner}](${href})`;
+      }
+      return inner;
+    }
+    case 'span': case 'u': case 'small': case 'mark': case 'sub': case 'sup':
+      return inner;
+    default:
+      // Unknown inline-ish: just pass through inner content
+      return inner;
+  }
+}
+
+function serializeChildrenInline(parent){
+  let out = '';
+  for(const child of parent.childNodes){
+    out += serializeInline(child);
+  }
+  // Collapse internal newlines to spaces (inline)
+  return out.replace(/\s+\n/g, ' ').replace(/\n+/g, ' ').replace(/[ \t]+/g, ' ').trim();
+}
+
+function serializeListItem(li){
+  // Children of <li> may include block elements; flatten to inline + nested lists
+  let inlineParts = [];
+  let nested = '';
+  for(const child of li.childNodes){
+    if(child.nodeType === 1 && /^(ul|ol)$/i.test(child.tagName)){
+      nested += '\n' + serializeBlock(child).replace(/\n+$/,'').split('\n').map(l => '  ' + l).join('\n');
+    } else if(child.nodeType === 1 && /^p$/i.test(child.tagName)){
+      inlineParts.push(serializeChildrenInline(child));
+    } else {
+      inlineParts.push(serializeInline(child));
+    }
+  }
+  return inlineParts.join(' ').replace(/\s+/g,' ').trim() + nested;
+}
+
+function serializeTable(table){
+  const rows = [];
+  let header = null;
+  // Figure out header + body rows. Tolerate both <thead> and first-row-as-header.
+  const thead = table.querySelector(':scope > thead');
+  const tbodies = table.querySelectorAll(':scope > tbody');
+  const directRows = table.querySelectorAll(':scope > tr');
+  if(thead){
+    const hr = thead.querySelector('tr');
+    if(hr) header = Array.from(hr.children).map(c => serializeChildrenInline(c).replace(/\|/g,'\\|').replace(/\n/g,' '));
+  }
+  let bodyRows = [];
+  if(tbodies.length){
+    tbodies.forEach(tb => {
+      tb.querySelectorAll(':scope > tr').forEach(tr => bodyRows.push(tr));
+    });
+  } else if(directRows.length){
+    directRows.forEach(tr => bodyRows.push(tr));
+  }
+  // If no thead, treat first body row as header
+  if(!header && bodyRows.length){
+    const first = bodyRows.shift();
+    header = Array.from(first.children).map(c => serializeChildrenInline(c).replace(/\|/g,'\\|').replace(/\n/g,' '));
+  }
+  if(!header || header.length === 0) return '';
+  const cols = header.length;
+  let out = '| ' + header.join(' | ') + ' |\n';
+  out    += '| ' + Array(cols).fill('---').join(' | ') + ' |\n';
+  for(const tr of bodyRows){
+    const cells = Array.from(tr.children);
+    const padded = [];
+    for(let i = 0; i < cols; i++){
+      const c = cells[i];
+      const txt = c ? serializeChildrenInline(c).replace(/\|/g,'\\|').replace(/\n/g,' ') : '';
+      padded.push(txt);
+    }
+    out += '| ' + padded.join(' | ') + ' |\n';
+  }
+  return out + '\n';
+}
+
+function serializeBlock(node){
+  if(node.nodeType === 3){
+    const t = escMdInline(node.nodeValue);
+    return t.trim() ? t.trim() + '\n\n' : '';
+  }
+  if(node.nodeType !== 1) return '';
+  const tag = node.tagName.toLowerCase();
+  switch(tag){
+    case 'h1': return '# '   + serializeChildrenInline(node) + '\n\n';
+    case 'h2': return '## '  + serializeChildrenInline(node) + '\n\n';
+    case 'h3': return '### ' + serializeChildrenInline(node) + '\n\n';
+    case 'h4': return '#### '+ serializeChildrenInline(node) + '\n\n';
+    case 'p': {
+      const inner = serializeChildrenInline(node);
+      return inner ? inner + '\n\n' : '';
+    }
+    case 'ul': {
+      let out = '';
+      for(const li of node.children){
+        if(li.tagName.toLowerCase() === 'li'){
+          out += '- ' + serializeListItem(li) + '\n';
+        }
+      }
+      return out + '\n';
+    }
+    case 'ol': {
+      let out = '';
+      let i = 1;
+      for(const li of node.children){
+        if(li.tagName.toLowerCase() === 'li'){
+          out += `${i}. ` + serializeListItem(li) + '\n';
+          i++;
+        }
+      }
+      return out + '\n';
+    }
+    case 'blockquote': {
+      // Serialize children to MD, then prefix every line with "> "
+      let inner = '';
+      for(const c of node.childNodes){
+        inner += serializeBlock(c);
+      }
+      inner = inner.replace(/\n+$/, '');
+      const quoted = inner.split('\n').map(l => l.length ? '> ' + l : '>').join('\n');
+      return quoted + '\n\n';
+    }
+    case 'table': return serializeTable(node);
+    case 'div': case 'section': case 'article': case 'main': {
+      // Pass through children as blocks
+      let out = '';
+      for(const c of node.childNodes) out += serializeBlock(c);
+      return out;
+    }
+    case 'br': return '\n';
+    // Strip these entirely
+    case 'img': case 'script': case 'style': case 'iframe':
+    case 'input': case 'textarea': case 'select': case 'button':
+    case 'object': case 'embed': case 'video': case 'audio':
+    case 'svg': case 'form':
+      return '';
+    default: {
+      // Unknown block → treat as inline paragraph
+      const inner = serializeChildrenInline(node);
+      return inner ? inner + '\n\n' : '';
+    }
+  }
+}
+
+function domToMd(rootEl){
+  // Skip elements injected for affordances (delete handles, action buttons)
+  // Walk only meaningful children
+  let md = '';
+  for(const child of rootEl.childNodes){
+    // Skip floating action buttons / delete handles
+    if(child.nodeType === 1){
+      const cl = child.classList;
+      if(cl && (cl.contains('tbl-action') || cl.contains('row-delete') || cl.contains('col-delete'))) continue;
+      // Unwrap .table-wrap → its <table>
+      if(cl && cl.contains('table-wrap')){
+        const t = child.querySelector(':scope > table');
+        if(t) md += serializeTable(t);
+        continue;
+      }
+    }
+    md += serializeBlock(child);
+  }
+  // Normalize: collapse 3+ newlines to 2, trim trailing
+  return md.replace(/\n{3,}/g,'\n\n').replace(/\s+$/,'').trim();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Save indicator
+// ────────────────────────────────────────────────────────────────────
+function setIndicator(text, cls){
+  indicator.textContent = text;
+  indicator.classList.remove('saving','saved','error');
+  if(cls) indicator.classList.add(cls);
+}
+
+function relativeTime(ms){
+  const s = Math.round(ms / 1000);
+  if(s < 5) return 'just now';
+  if(s < 60) return `${s}s ago`;
+  return '1m ago';
+}
+
+function refreshIndicator(){
+  if(state.isStale) return;
+  if(state.saveInFlight){ setIndicator('Saving…', 'saving'); return; }
+  if(state.lastSavedAt){
+    const age = Date.now() - state.lastSavedAt;
+    if(age >= 60000){
+      setIndicator('Saved', 'saved');
+    } else {
+      setIndicator(`Saved · ${relativeTime(age)}`, 'saved');
+    }
+  }
+}
+
+// Tick the indicator's relative time every 5s (capped at 1m)
+setInterval(refreshIndicator, 5000);
+
+// ────────────────────────────────────────────────────────────────────
+// Save (with stale-data check)
+// ────────────────────────────────────────────────────────────────────
+async function saveNow(){
+  if(state.isStale) return;
+  if(state.saveInFlight){ state.pendingSave = true; return; }
+  state.saveInFlight = true;
+  refreshIndicator();
+  const md = domToMd(editor);
+  try {
+    const rows = await db.updateTask({ description: md }, { ifUpdatedAt: state.lastUpdatedAt });
+    if(!rows || rows.length === 0){
+      // Stale — someone else edited
+      state.isStale = true;
+      staleBanner.classList.add('show');
+      setIndicator('Conflict — reload', 'error');
+      return;
+    }
+    state.lastUpdatedAt = rows[0].updated_at;
+    state.loadedDescription = md;
+    state.lastSavedAt = Date.now();
+    refreshIndicator();
+  } catch(e){
+    console.warn('save failed', e);
+    setIndicator('Save failed — retrying', 'error');
+    // Will retry on next debounce / blur
+  } finally {
+    state.saveInFlight = false;
+    if(state.pendingSave){ state.pendingSave = false; saveNow(); }
+  }
+}
+
+function scheduleSave(){
+  if(state.isStale) return;
+  if(state.saveTimer) clearTimeout(state.saveTimer);
+  state.saveTimer = setTimeout(() => {
+    state.saveTimer = null;
+    saveNow();
+  }, 800);
+}
+
+function flushSave(){
+  if(state.saveTimer){ clearTimeout(state.saveTimer); state.saveTimer = null; }
+  saveNow();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Editor wiring
+// ────────────────────────────────────────────────────────────────────
+editor.addEventListener('input', () => {
+  if(state.isStale) return;
+  scheduleSave();
+});
+
+editor.addEventListener('blur', () => {
+  if(state.isStale) return;
+  if(state.saveTimer) flushSave();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden'){
+    if(state.saveTimer) flushSave();
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if(state.saveTimer){
+    // Best-effort sync flush via sendBeacon
+    try {
+      const md = domToMd(editor);
+      const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&updated_at=eq.${encodeURIComponent(state.lastUpdatedAt)}`;
+      const blob = new Blob([JSON.stringify({ description: md })], { type: 'application/json' });
+      // sendBeacon doesn't allow custom headers on most browsers; fall back to fetch keepalive
+      fetch(url, {
+        method: 'PATCH',
+        headers: { ...db.headers(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ description: md }),
+        keepalive: true,
+      }).catch(()=>{});
+    } catch(_){}
+  }
+});
+
+document.getElementById('staleReload').addEventListener('click', () => location.reload());
+
+// ────────────────────────────────────────────────────────────────────
+// Slash command (/table)
+// ────────────────────────────────────────────────────────────────────
+const slashMenu = document.getElementById('slashMenu');
+let slashOpen = false;
+
+function isCaretAtEmptyBlockStart(){
+  const sel = window.getSelection();
+  if(!sel || !sel.rangeCount) return false;
+  const range = sel.getRangeAt(0);
+  if(!range.collapsed) return false;
+  // Walk up to find the block container inside the editor
+  let node = range.startContainer;
+  let block = null;
+  while(node && node !== editor){
+    if(node.nodeType === 1 && /^(p|div|li|h[1-4])$/i.test(node.tagName)){
+      block = node; break;
+    }
+    node = node.parentNode;
+  }
+  if(!block) return false;
+  // Empty block: only contains <br> or empty text
+  const txt = (block.textContent || '').replace(/​/g,'').trim();
+  if(txt.length === 0) return true;
+  // Or caret at start of a non-empty block (then we still allow / at very beginning)
+  return false;
+}
+
+function openSlashMenu(){
+  const sel = window.getSelection();
+  if(!sel || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  // If rect is zero (caret in empty block), use the block's rect
+  let x = rect.left, y = rect.bottom;
+  if(rect.width === 0 && rect.height === 0){
+    const blockRect = (range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement).getBoundingClientRect();
+    x = blockRect.left; y = blockRect.bottom;
+  }
+  slashMenu.style.left = (x) + 'px';
+  slashMenu.style.top  = (y + 4) + 'px';
+  slashMenu.classList.add('open');
+  slashOpen = true;
+  // Clamp to viewport
+  requestAnimationFrame(() => {
+    const r = slashMenu.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let nx = parseFloat(slashMenu.style.left), ny = parseFloat(slashMenu.style.top);
+    if(r.right > vw - 8) nx = vw - r.width - 8;
+    if(r.bottom > vh - 8) ny = y - r.height - 4;
+    if(nx < 8) nx = 8;
+    slashMenu.style.left = nx + 'px';
+    slashMenu.style.top = ny + 'px';
+  });
+}
+
+function closeSlashMenu(){
+  slashMenu.classList.remove('open');
+  slashOpen = false;
+}
+
+editor.addEventListener('keydown', (e) => {
+  if(e.key === '/'){
+    if(isCaretAtEmptyBlockStart()){
+      // Open menu after the / is typed (so user sees natural feedback)
+      setTimeout(openSlashMenu, 0);
+    }
+    return;
+  }
+  if(slashOpen){
+    if(e.key === 'Escape'){ closeSlashMenu(); e.preventDefault(); return; }
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      insertTableAtCaret({ removeSlashChar: true });
+      closeSlashMenu();
+      return;
+    }
+    // Any other typing closes menu
+    if(e.key.length === 1 && e.key !== '/'){
+      closeSlashMenu();
+    }
+  }
+});
+
+slashMenu.querySelector('button[data-action="table"]').addEventListener('mousedown', (e) => {
+  e.preventDefault(); // keep selection
+  insertTableAtCaret({ removeSlashChar: true });
+  closeSlashMenu();
+});
+
+document.addEventListener('mousedown', (e) => {
+  if(slashOpen && !slashMenu.contains(e.target) && !editor.contains(e.target)) closeSlashMenu();
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Table insertion
+// ────────────────────────────────────────────────────────────────────
+function buildTable(headerCells, bodyRows){
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  for(const h of headerCells){
+    const th = document.createElement('th');
+    th.setAttribute('contenteditable','true');
+    th.textContent = h;
+    trh.appendChild(th);
+  }
+  thead.appendChild(trh);
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  for(const row of bodyRows){
+    const tr = document.createElement('tr');
+    for(const cellTxt of row){
+      const td = document.createElement('td');
+      td.setAttribute('contenteditable','true');
+      td.textContent = cellTxt;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  return table;
+}
+
+function findContainingBlock(node){
+  let n = node;
+  while(n && n !== editor){
+    if(n.nodeType === 1 && /^(p|div|li|h[1-4]|blockquote)$/i.test(n.tagName)) return n;
+    n = n.parentNode;
+  }
+  return null;
+}
+
+function insertTableAtCaret(opts = {}){
+  const sel = window.getSelection();
+  let range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+  let block = range ? findContainingBlock(range.startContainer) : null;
+
+  // Build the table
+  const table = buildTable(['Column 1','Column 2'], [['','']]);
+  const wrap = wrapTable(table, /*newlyInserted*/ true);
+
+  if(block && (block.textContent || '').replace(/​/g,'').trim() === '' && block !== editor){
+    // Replace the empty paragraph
+    block.parentNode.replaceChild(wrap, block);
+  } else if(range){
+    // Insert at caret: split the block boundary by inserting after the current block
+    if(block){
+      block.parentNode.insertBefore(wrap, block.nextSibling);
+    } else {
+      editor.appendChild(wrap);
+    }
+  } else {
+    editor.appendChild(wrap);
+  }
+
+  // Add an empty paragraph after the table for caret continuation
+  let after = wrap.nextSibling;
+  if(!after || !(after.nodeType === 1 && after.tagName.toLowerCase() === 'p')){
+    const p = document.createElement('p');
+    p.appendChild(document.createElement('br'));
+    wrap.parentNode.insertBefore(p, wrap.nextSibling);
+  }
+
+  // Place caret in the first header cell
+  const firstTh = table.querySelector('th');
+  if(firstTh){
+    const r = document.createRange();
+    r.selectNodeContents(firstTh);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+
+  // If we just typed "/", remove the leading "/" from the prior block (if it remained)
+  if(opts.removeSlashChar){
+    // Walk back: find the "/" character as the only content of the previous block
+    const prev = wrap.previousSibling;
+    if(prev && prev.nodeType === 1){
+      const t = (prev.textContent || '').replace(/​/g,'');
+      if(t === '/'){
+        prev.remove();
+      }
+    }
+  }
+
+  scheduleSave();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Table affordances (wrap, +row, +col, delete row, delete col)
+// ────────────────────────────────────────────────────────────────────
+function wrapTable(table, newlyInserted = false){
+  // If already wrapped, return the wrap
+  if(table.parentElement && table.parentElement.classList.contains('table-wrap')){
+    return table.parentElement;
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+  wrap.setAttribute('contenteditable','false');
+  table.setAttribute('contenteditable','true'); // table itself, but cells are editable
+  // Hold cells editable
+  table.querySelectorAll('th,td').forEach(c => c.setAttribute('contenteditable','true'));
+  // Replace in DOM
+  if(table.parentNode){
+    table.parentNode.insertBefore(wrap, table);
+  }
+  wrap.appendChild(table);
+  attachTableAffordances(wrap);
+  return wrap;
+}
+
+function attachTableAffordances(wrap){
+  const table = wrap.querySelector(':scope > table');
+  if(!table) return;
+  // +row
+  const addRowBtn = document.createElement('button');
+  addRowBtn.type = 'button';
+  addRowBtn.className = 'tbl-action add-row';
+  addRowBtn.innerHTML = '<span class="plus">+</span> row';
+  addRowBtn.addEventListener('mousedown', e => { e.preventDefault(); addRowToTable(table); scheduleSave(); });
+  wrap.appendChild(addRowBtn);
+  // +col
+  const addColBtn = document.createElement('button');
+  addColBtn.type = 'button';
+  addColBtn.className = 'tbl-action add-col';
+  addColBtn.innerHTML = '<span class="plus">+</span> col';
+  addColBtn.addEventListener('mousedown', e => { e.preventDefault(); addColToTable(table); scheduleSave(); });
+  wrap.appendChild(addColBtn);
+  // Row delete handles + col delete handles
+  refreshRowColHandles(wrap);
+  // Tab handling at last cell → add row
+  table.addEventListener('keydown', (e) => {
+    const cell = (e.target.closest && e.target.closest('th,td'));
+    if(!cell) return;
+    if(e.key === 'Tab' && !e.shiftKey){
+      const allCells = Array.from(table.querySelectorAll('th,td'));
+      const idx = allCells.indexOf(cell);
+      if(idx === allCells.length - 1){
+        e.preventDefault();
+        const newRow = addRowToTable(table);
+        const firstNew = newRow && newRow.querySelector('td');
+        if(firstNew){
+          const sel = window.getSelection();
+          const r = document.createRange();
+          r.selectNodeContents(firstNew);
+          r.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+        scheduleSave();
+      }
+    }
+    if(e.key === 'Backspace'){
+      const txt = (cell.textContent || '').replace(/​/g,'').trim();
+      const tbody = table.querySelector('tbody');
+      if(!tbody) return;
+      const rows = Array.from(tbody.children);
+      if(rows.length <= 1) return;
+      const lastRow = rows[rows.length - 1];
+      // Only kill row if every cell empty AND we're in last row
+      if(cell.parentElement === lastRow && txt === ''){
+        const allEmpty = Array.from(lastRow.children).every(c => (c.textContent || '').trim() === '');
+        if(allEmpty){
+          e.preventDefault();
+          const prev = lastRow.previousElementSibling || (table.querySelector('thead tr'));
+          lastRow.remove();
+          refreshRowColHandles(wrap);
+          if(prev){
+            const lastCell = prev.children[prev.children.length - 1];
+            const sel = window.getSelection();
+            const r = document.createRange();
+            r.selectNodeContents(lastCell);
+            r.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(r);
+          }
+          scheduleSave();
+        }
+      }
+    }
+  });
+  // Show row/col handles on hover
+  wrap.addEventListener('mouseenter', () => { wrap.classList.add('show-row-handles','show-col-handles'); });
+  wrap.addEventListener('mouseleave', () => { wrap.classList.remove('show-row-handles','show-col-handles'); });
+}
+
+function refreshRowColHandles(wrap){
+  // Clear existing
+  wrap.querySelectorAll(':scope > .row-delete, :scope > .col-delete').forEach(n => n.remove());
+  const table = wrap.querySelector(':scope > table');
+  if(!table) return;
+  const wrapRect = wrap.getBoundingClientRect();
+  // Row delete: one per body row, anchored to row's vertical center
+  const tbody = table.querySelector('tbody');
+  if(tbody){
+    Array.from(tbody.children).forEach((tr, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'row-delete';
+      btn.title = 'Delete row';
+      btn.textContent = '×';
+      btn.dataset.rowIdx = String(idx);
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const ok = btn.classList.contains('confirm');
+        if(!ok){
+          btn.classList.add('confirm');
+          btn.textContent = '!';
+          btn.title = 'Click again to confirm delete';
+          setTimeout(() => { btn.classList.remove('confirm'); btn.textContent = '×'; btn.title = 'Delete row'; }, 2200);
+          return;
+        }
+        const tbody = table.querySelector('tbody');
+        const target = tbody && tbody.children[parseInt(btn.dataset.rowIdx,10)];
+        if(target){ target.remove(); refreshRowColHandles(wrap); scheduleSave(); }
+      });
+      // Position relative to the row
+      const trRect = tr.getBoundingClientRect();
+      const top = trRect.top - wrapRect.top + (trRect.height/2) - 9;
+      btn.style.top = top + 'px';
+      wrap.appendChild(btn);
+    });
+  }
+  // Col delete: one per header cell, anchored to col's horizontal center
+  const thead = table.querySelector('thead');
+  if(thead){
+    const headerRow = thead.querySelector('tr');
+    if(headerRow){
+      Array.from(headerRow.children).forEach((th, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'col-delete';
+        btn.title = 'Delete column';
+        btn.textContent = '×';
+        btn.dataset.colIdx = String(idx);
+        btn.addEventListener('mousedown', e => {
+          e.preventDefault();
+          const ok = window.confirm('Delete column?');
+          if(!ok) return;
+          const ci = parseInt(btn.dataset.colIdx, 10);
+          // Remove cell at ci from every row
+          table.querySelectorAll('tr').forEach(tr => {
+            const cell = tr.children[ci];
+            if(cell) cell.remove();
+          });
+          refreshRowColHandles(wrap);
+          scheduleSave();
+        });
+        const thRect = th.getBoundingClientRect();
+        const left = thRect.left - wrapRect.left + (thRect.width/2) - 9;
+        btn.style.left = left + 'px';
+        wrap.appendChild(btn);
+      });
+    }
+  }
+}
+
+function addRowToTable(table){
+  let tbody = table.querySelector('tbody');
+  if(!tbody){
+    tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+  }
+  // Determine col count from header or last row
+  const thead = table.querySelector('thead tr');
+  const colCount = thead ? thead.children.length : (tbody.children[0] ? tbody.children[0].children.length : 1);
+  const tr = document.createElement('tr');
+  for(let i = 0; i < colCount; i++){
+    const td = document.createElement('td');
+    td.setAttribute('contenteditable','true');
+    tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+  const wrap = table.parentElement;
+  if(wrap && wrap.classList.contains('table-wrap')) refreshRowColHandles(wrap);
+  return tr;
+}
+
+function addColToTable(table){
+  // Add a header cell
+  const thead = table.querySelector('thead tr');
+  if(thead){
+    const th = document.createElement('th');
+    th.setAttribute('contenteditable','true');
+    th.textContent = 'New';
+    thead.appendChild(th);
+  }
+  const tbody = table.querySelector('tbody');
+  if(tbody){
+    Array.from(tbody.children).forEach(tr => {
+      const td = document.createElement('td');
+      td.setAttribute('contenteditable','true');
+      tr.appendChild(td);
+    });
+  }
+  const wrap = table.parentElement;
+  if(wrap && wrap.classList.contains('table-wrap')) refreshRowColHandles(wrap);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CSV drop
+// ────────────────────────────────────────────────────────────────────
+editor.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  editor.classList.add('drag-over');
+});
+editor.addEventListener('dragleave', (e) => {
+  if(e.target === editor) editor.classList.remove('drag-over');
+});
+editor.addEventListener('drop', (e) => {
+  e.preventDefault();
+  editor.classList.remove('drag-over');
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  const isCsv = file.type === 'text/csv'
+             || file.type === 'application/csv'
+             || (file.name && file.name.toLowerCase().endsWith('.csv'));
+  if(!isCsv){
+    showToast(`Only CSV files are supported. Got: ${file.type || 'unknown'}`);
+    return;
+  }
+  // Place caret at drop point if possible
+  let dropRange = null;
+  if(document.caretRangeFromPoint){
+    dropRange = document.caretRangeFromPoint(e.clientX, e.clientY);
+  } else if(document.caretPositionFromPoint){
+    const p = document.caretPositionFromPoint(e.clientX, e.clientY);
+    if(p){ dropRange = document.createRange(); dropRange.setStart(p.offsetNode, p.offset); dropRange.collapse(true); }
+  }
+  if(dropRange){
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(dropRange);
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = Papa.parse(String(reader.result), { skipEmptyLines: true });
+      const data = parsed.data;
+      if(!data || data.length === 0){
+        showToast('CSV had no rows.');
+        return;
+      }
+      const header = data[0].map(c => String(c == null ? '' : c));
+      const body = data.slice(1).map(row => {
+        const out = [];
+        for(let i = 0; i < header.length; i++){
+          out.push(String(row[i] == null ? '' : row[i]));
+        }
+        return out;
+      });
+      const table = buildTable(header, body.length ? body : [header.map(()=>'')]);
+      const wrap = wrapTable(table, true);
+      // Insert at caret block
+      const sel = window.getSelection();
+      const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+      const block = range ? findContainingBlock(range.startContainer) : null;
+      if(block && block !== editor){
+        block.parentNode.insertBefore(wrap, block.nextSibling);
+      } else {
+        editor.appendChild(wrap);
+      }
+      // Add trailing paragraph for caret continuation
+      const p = document.createElement('p');
+      p.appendChild(document.createElement('br'));
+      wrap.parentNode.insertBefore(p, wrap.nextSibling);
+      scheduleSave();
+    } catch(err){
+      console.error(err);
+      showToast('Could not parse CSV.');
+    }
+  };
+  reader.onerror = () => showToast('Could not read file.');
+  reader.readAsText(file);
+});
+
+// Block image drops via paste? Out of scope for spec.
+
+// ────────────────────────────────────────────────────────────────────
+// Boot
+// ────────────────────────────────────────────────────────────────────
+function showEmpty(title, msg){
+  document.body.classList.remove('loading','has-task');
+  document.body.classList.add('no-task');
+  document.getElementById('emptyPanel').hidden = false;
+  document.getElementById('emptyTitle').textContent = title;
+  document.getElementById('emptyMsg').innerHTML = msg;
+}
+
+function showTask(){
+  document.body.classList.remove('loading','no-task');
+  document.body.classList.add('has-task');
+  document.getElementById('taskHeader').hidden = false;
+  document.getElementById('descriptionSection').hidden = false;
+}
+
+(async function boot(){
+  if(!SUPABASE.slug){
+    showEmpty('Open a task from the Kanban', 'This page renders a task by URL. Add <code>?slug=&lt;your-task-slug&gt;</code> to view one.');
+    return;
+  }
+  try {
+    const task = await db.getTask();
+    if(!task){
+      showEmpty('Task not found', `No task with slug <code>${escapeHtml(SUPABASE.slug)}</code>. <br>It may have been renamed or deleted.`);
+      return;
+    }
+    document.title = `${task.title || 'Task'} · RunRec`;
+    document.getElementById('taskTitle').textContent = task.title || 'Untitled task';
+    if(task.status) window._applyStatus(task.status, false);
+    if(Array.isArray(task.owners)) window._applyOwners(task.owners, false);
+    state.lastUpdatedAt = task.updated_at;
+    state.loadedDescription = task.description || '';
+    renderMarkdown(state.loadedDescription);
+    showTask();
+    setIndicator('Loaded');
+  } catch(e){
+    console.error(e);
+    showEmpty('Could not load task', `Network error: ${escapeHtml(e.message || 'unknown')}.`);
+  }
+})();
+</script>
+</body>
+</html>

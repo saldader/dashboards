@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="googlebot" content="noindex,nofollow">
 <title>Franchise Prospectus — Eyad Brief · RunRec</title>
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -752,56 +754,62 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
 </div>
 
 <script>
+// ── Supabase client (lightweight fetch wrapper, no SDK) ──
+const SUPABASE = {
+  url: 'https://ivdzpptjtwoxdaxsbsqz.supabase.co',
+  key: 'sb_publishable_CLEzGz8hR3Z2cioPFSSu-g_33VtSdDb',
+  slug: 'eyad-prospectus'
+};
+const db = {
+  headers(){ return { apikey: SUPABASE.key, Authorization: `Bearer ${SUPABASE.key}`, 'Content-Type': 'application/json' }; },
+  async getTask(){
+    const r = await fetch(`${SUPABASE.url}/rest/v1/tasks?slug=eq.${SUPABASE.slug}&select=*`, { headers: this.headers() });
+    const rows = await r.json();
+    return rows[0] || null;
+  },
+  async updateTask(patch){
+    const r = await fetch(`${SUPABASE.url}/rest/v1/tasks?slug=eq.${SUPABASE.slug}`, {
+      method: 'PATCH',
+      headers: { ...this.headers(), Prefer: 'return=minimal' },
+      body: JSON.stringify(patch)
+    });
+    return r.ok;
+  }
+};
+
+// ── Status pill (DB-backed) ──
 (function(){
-  const STORAGE_KEY = 'eyad-prospectus-status';
   const btn = document.getElementById('statusPillBtn');
   const pill = document.getElementById('statusPill');
   const menu = document.getElementById('statusMenu');
   const items = menu.querySelectorAll('button[data-status]');
   const STATUS_CLASSES = ['not-started','in-progress','blocked','done'];
+  const LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progress', 'blocked': 'Blocked', 'done': 'Done' };
 
-  function applyStatus(status, label){
+  function applyStatus(status, persist=true){
     STATUS_CLASSES.forEach(c => pill.classList.remove(c));
     pill.classList.add(status);
-    pill.firstChild.nodeValue = label;
+    pill.firstChild.nodeValue = LABELS[status] || status;
     items.forEach(i => i.setAttribute('aria-checked', i.dataset.status === status ? 'true' : 'false'));
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({status, label})); }catch(e){}
+    if(persist) db.updateTask({ status }).catch(e => console.warn('status save failed', e));
   }
-
-  // Restore saved status
-  try{
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if(saved && saved.status) applyStatus(saved.status, saved.label);
-  }catch(e){}
+  window._applyStatus = applyStatus;
 
   function openMenu(){ menu.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
 
-  btn.addEventListener('click', e => {
+  btn.addEventListener('click', e => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
+  items.forEach(item => item.addEventListener('click', e => {
     e.stopPropagation();
-    menu.classList.contains('open') ? closeMenu() : openMenu();
-  });
-
-  items.forEach(item => {
-    item.addEventListener('click', e => {
-      e.stopPropagation();
-      applyStatus(item.dataset.status, item.dataset.label);
-      closeMenu();
-    });
-  });
-
-  document.addEventListener('click', e => {
-    if(!menu.contains(e.target) && e.target !== btn) closeMenu();
-  });
-
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape') closeMenu();
-  });
+    applyStatus(item.dataset.status);
+    closeMenu();
+  }));
+  document.addEventListener('click', e => { if(!menu.contains(e.target) && e.target !== btn) closeMenu(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
 })();
 
-// ── Owner(s) multi-select ──
+// ── Owner(s) multi-select (DB-backed) ──
 (function(){
-  const STORAGE_KEY = 'eyad-prospectus-owners';
   const trigger = document.getElementById('ownersTrigger');
   const selected = document.getElementById('ownersSelected');
   const menu = document.getElementById('ownersMenu');
@@ -821,48 +829,48 @@ details.faq-item[open] summary{border-bottom:1px solid var(--border)}
     }).join('');
   }
 
-  function persist(){
-    const keys = Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true').map(o => o.dataset.key);
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(keys)); }catch(e){}
+  function applyOwners(keys, persist=true){
+    options.forEach(o => o.setAttribute('aria-checked', keys.includes(o.dataset.key) ? 'true' : 'false'));
+    renderSelected();
+    if(persist) db.updateTask({ owners: keys }).catch(e => console.warn('owners save failed', e));
   }
+  window._applyOwners = applyOwners;
 
-  function restore(){
-    try{
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if(Array.isArray(saved)){
-        options.forEach(o => o.setAttribute('aria-checked', saved.includes(o.dataset.key) ? 'true' : 'false'));
-      }
-    }catch(e){}
+  function currentKeys(){
+    return Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true').map(o => o.dataset.key);
   }
 
   function openMenu(){ menu.classList.add('open'); trigger.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
 
-  restore();
-  renderSelected();
-
-  trigger.addEventListener('click', e => {
+  trigger.addEventListener('click', e => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
+  options.forEach(opt => opt.addEventListener('click', e => {
     e.stopPropagation();
-    menu.classList.contains('open') ? closeMenu() : openMenu();
-  });
+    const cur = opt.getAttribute('aria-checked') === 'true';
+    opt.setAttribute('aria-checked', cur ? 'false' : 'true');
+    renderSelected();
+    db.updateTask({ owners: currentKeys() }).catch(err => console.warn('owners save failed', err));
+  }));
+  document.addEventListener('click', e => { if(!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
 
-  options.forEach(opt => {
-    opt.addEventListener('click', e => {
-      e.stopPropagation();
-      const cur = opt.getAttribute('aria-checked') === 'true';
-      opt.setAttribute('aria-checked', cur ? 'false' : 'true');
-      renderSelected();
-      persist();
-    });
-  });
+  renderSelected();
+})();
 
-  document.addEventListener('click', e => {
-    if(!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) closeMenu();
-  });
-
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape') closeMenu();
-  });
+// ── Boot: load task from DB ──
+(async function(){
+  try {
+    const task = await db.getTask();
+    if(!task) return;
+    if(task.title){
+      const h1 = document.querySelector('h1');
+      if(h1 && h1.textContent !== task.title) h1.textContent = task.title;
+    }
+    if(task.status) window._applyStatus(task.status, false);
+    if(Array.isArray(task.owners)) window._applyOwners(task.owners, false);
+  } catch(e){
+    console.warn('DB load failed — falling back to defaults', e);
+  }
 })();
 </script>
 </body>

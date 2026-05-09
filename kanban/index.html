@@ -204,10 +204,18 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   word-break:break-word;
 }
 .card-owners{
-  display:flex;flex-wrap:wrap;align-items:center;gap:4px;
-  margin-top:10px;min-height:18px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+  margin-top:10px;min-height:22px;
 }
-.card-owners .avatar{box-shadow:0 0 0 2px #1E1E25}
+.card-owners .owner-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;
+  padding:2px 10px 2px 3px;
+  font-size:12.5px;line-height:1;color:var(--t2);font-weight:500;
+}
+.card-owners .owner-chip .avatar{box-shadow:0 0 0 2px #1E1E25}
 .card-owners-empty{
   font-size:11.5px;color:var(--t4);font-weight:500;
 }
@@ -475,6 +483,7 @@ const STATUS_LABELS = {
 const OWNER_KEYS = ['sal','izzy','rammah','brian','rob','eyad'];
 const OWNER_INITIALS = { sal:'SD', izzy:'IZ', rammah:'RH', brian:'BB', rob:'RS', eyad:'EA' };
 const OWNER_NAMES = { sal:'Sal Dader', izzy:'Izzy', rammah:'Rammah', brian:'Brian Bazely', rob:'Rob Salloum', eyad:'Eyad Attia' };
+const OWNER_FIRST = { sal:'Sal', izzy:'Izzy', rammah:'Rammah', brian:'Brian', rob:'Rob', eyad:'Eyad' };
 
 // ────────────────────────────────────────────────────────────────────
 // DB helper (parallel to /task/)
@@ -594,7 +603,7 @@ function buildCardHTML(t){
     ownersHTML = `<span class="card-owners-empty">+ Add Owner</span>`;
   } else {
     ownersHTML = owners.slice(0, 6).map(k =>
-      `<span class="avatar ${k}" title="${escapeHtml(OWNER_NAMES[k] || k)}" aria-label="${escapeHtml(OWNER_NAMES[k] || k)}">${OWNER_INITIALS[k] || ''}</span>`
+      `<span class="owner-chip" title="${escapeHtml(OWNER_NAMES[k] || k)}"><span class="avatar ${k}" aria-label="${escapeHtml(OWNER_NAMES[k] || k)}">${OWNER_INITIALS[k] || ''}</span>${escapeHtml(OWNER_FIRST[k] || OWNER_NAMES[k] || k)}</span>`
     ).join('');
   }
   const slug = encodeURIComponent(t.slug || '');

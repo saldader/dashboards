@@ -97,6 +97,8 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .avatar.brian{background:#22c55e}
 .avatar.rob{background:#ec4899}
 .avatar.eyad{background:#14b8a6}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar.has-photo{color:transparent;font-size:0}
 
 /* ── Board ── */
 .board{
@@ -379,7 +381,7 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
       <span class="avatar rob">RS</span><span>Rob Salloum</span>
     </button>
     <button type="button" class="filter-chip" data-key="eyad" aria-pressed="false">
-      <span class="avatar eyad">EA</span><span>Eyad Attia</span>
+      <span class="avatar eyad has-photo" aria-label="Eyad Attia"><img src="../avatars/eyad.jpg" alt=""></span><span>Eyad Attia</span>
     </button>
     <button type="button" class="filter-clear" id="filterClear" aria-label="Clear owner filter">× Clear</button>
   </div>
@@ -484,6 +486,15 @@ const OWNER_KEYS = ['sal','izzy','rammah','brian','rob','eyad'];
 const OWNER_INITIALS = { sal:'SD', izzy:'IZ', rammah:'RH', brian:'BB', rob:'RS', eyad:'EA' };
 const OWNER_NAMES = { sal:'Sal Dader', izzy:'Izzy', rammah:'Rammah', brian:'Brian Bazely', rob:'Rob Salloum', eyad:'Eyad Attia' };
 const OWNER_FIRST = { sal:'Sal', izzy:'Izzy', rammah:'Rammah', brian:'Brian', rob:'Rob', eyad:'Eyad' };
+const OWNER_PHOTO = { eyad: '../avatars/eyad.jpg' };
+function avatarHTML(k, label){
+  const photo = OWNER_PHOTO[k];
+  const cls = `avatar ${k}${photo ? ' has-photo' : ''}`;
+  const aria = label ? ` aria-label="${escapeHtml(label)}"` : '';
+  return photo
+    ? `<span class="${cls}"${aria}><img src="${photo}" alt=""></span>`
+    : `<span class="${cls}"${aria}>${OWNER_INITIALS[k] || ''}</span>`;
+}
 
 // ────────────────────────────────────────────────────────────────────
 // DB helper (parallel to /task/)
@@ -603,7 +614,7 @@ function buildCardHTML(t){
     ownersHTML = `<span class="card-owners-empty">+ Add Owner</span>`;
   } else {
     ownersHTML = owners.slice(0, 6).map(k =>
-      `<span class="owner-chip" title="${escapeHtml(OWNER_NAMES[k] || k)}"><span class="avatar ${k}" aria-label="${escapeHtml(OWNER_NAMES[k] || k)}">${OWNER_INITIALS[k] || ''}</span>${escapeHtml(OWNER_FIRST[k] || OWNER_NAMES[k] || k)}</span>`
+      `<span class="owner-chip" title="${escapeHtml(OWNER_NAMES[k] || k)}">${avatarHTML(k, OWNER_NAMES[k] || k)}${escapeHtml(OWNER_FIRST[k] || OWNER_NAMES[k] || k)}</span>`
     ).join('');
   }
   const slug = encodeURIComponent(t.slug || '');

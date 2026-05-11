@@ -208,7 +208,32 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .confirm-btn-danger:disabled{opacity:0.6;cursor:not-allowed}
 
 /* ── Owner(s) multi-select ── */
-.owners-block{margin-top:24px;display:flex;flex-direction:column;gap:8px;position:relative;max-width:420px}
+.meta-row{margin-top:24px;display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.owners-block{display:flex;flex-direction:column;gap:8px;position:relative;max-width:420px}
+.due-block{display:flex;flex-direction:column;gap:8px;position:relative}
+.due-block .due-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
+.due-row{display:flex;align-items:center;gap:6px}
+.due-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px 5px 10px;
+  font-size:13px;color:var(--text);font-weight:500;
+  cursor:pointer;transition:background .12s,border-color .12s,color .12s;
+  font-family:inherit;
+}
+.due-pill:hover{background:rgba(255,255,255,0.07);border-color:var(--border-strong)}
+.due-pill.empty{color:var(--t3);font-weight:500}
+.due-pill .cal-icon{width:14px;height:14px;color:currentColor;flex-shrink:0;display:inline-flex;align-items:center}
+.due-pill.due-soon{background:rgba(245,158,11,0.10);border-color:rgba(245,158,11,0.30);color:#fbbf24}
+.due-pill.due-now{background:rgba(255,107,53,0.12);border-color:rgba(255,107,53,0.35);color:var(--accent)}
+.due-pill.past-due{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.35);color:var(--red)}
+.due-clear{
+  background:none;border:none;color:var(--t4);padding:2px 8px;
+  font:inherit;cursor:pointer;border-radius:999px;font-size:16px;line-height:1;
+  transition:color .12s,background .12s;
+}
+.due-clear:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.due-input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .owners-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--t4);font-weight:500}
 .owners-trigger{
   background:none;border:none;padding:0;
@@ -637,19 +662,32 @@ body.has-task .empty-panel{display:none}
     </div>
     <h1 id="taskTitle" title="Click to rename">Loading…</h1>
 
-    <div class="owners-block">
-      <span class="owners-label">Owner(s)</span>
-      <button id="ownersTrigger" class="owners-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
-        <span id="ownersSelected" class="owners-selected"></span>
-        <span class="chev"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m7 10l5 5l5-5z"/></svg></span>
-      </button>
-      <div id="ownersMenu" class="owners-menu" role="listbox" aria-multiselectable="true">
-        <button type="button" class="owner-option" role="option" data-key="sal" data-name="Sal Dader" aria-checked="false"><span class="avatar sal">SD</span><span class="name">Sal Dader</span><span class="check">✓</span></button>
-        <button type="button" class="owner-option" role="option" data-key="izzy" data-name="Izzy" aria-checked="false"><span class="avatar izzy">IZ</span><span class="name">Izzy</span><span class="check">✓</span></button>
-        <button type="button" class="owner-option" role="option" data-key="rammah" data-name="Rammah" aria-checked="false"><span class="avatar rammah has-photo"><img src="../avatars/rammah.jpg" alt=""></span><span class="name">Rammah</span><span class="check">✓</span></button>
-        <button type="button" class="owner-option" role="option" data-key="brian" data-name="Brian Bazely" aria-checked="false"><span class="avatar brian">BB</span><span class="name">Brian Bazely</span><span class="check">✓</span></button>
-        <button type="button" class="owner-option" role="option" data-key="rob" data-name="Rob Salloum" aria-checked="false"><span class="avatar rob">RS</span><span class="name">Rob Salloum</span><span class="check">✓</span></button>
-        <button type="button" class="owner-option" role="option" data-key="eyad" data-name="Eyad Attia" aria-checked="false"><span class="avatar eyad has-photo"><img src="../avatars/eyad.jpg" alt=""></span><span class="name">Eyad Attia</span><span class="check">✓</span></button>
+    <div class="meta-row">
+      <div class="owners-block">
+        <span class="owners-label">Owner(s)</span>
+        <button id="ownersTrigger" class="owners-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="ownersSelected" class="owners-selected"></span>
+          <span class="chev"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m7 10l5 5l5-5z"/></svg></span>
+        </button>
+        <div id="ownersMenu" class="owners-menu" role="listbox" aria-multiselectable="true">
+          <button type="button" class="owner-option" role="option" data-key="sal" data-name="Sal Dader" aria-checked="false"><span class="avatar sal">SD</span><span class="name">Sal Dader</span><span class="check">✓</span></button>
+          <button type="button" class="owner-option" role="option" data-key="izzy" data-name="Izzy" aria-checked="false"><span class="avatar izzy">IZ</span><span class="name">Izzy</span><span class="check">✓</span></button>
+          <button type="button" class="owner-option" role="option" data-key="rammah" data-name="Rammah" aria-checked="false"><span class="avatar rammah has-photo"><img src="../avatars/rammah.jpg" alt=""></span><span class="name">Rammah</span><span class="check">✓</span></button>
+          <button type="button" class="owner-option" role="option" data-key="brian" data-name="Brian Bazely" aria-checked="false"><span class="avatar brian">BB</span><span class="name">Brian Bazely</span><span class="check">✓</span></button>
+          <button type="button" class="owner-option" role="option" data-key="rob" data-name="Rob Salloum" aria-checked="false"><span class="avatar rob">RS</span><span class="name">Rob Salloum</span><span class="check">✓</span></button>
+          <button type="button" class="owner-option" role="option" data-key="eyad" data-name="Eyad Attia" aria-checked="false"><span class="avatar eyad has-photo"><img src="../avatars/eyad.jpg" alt=""></span><span class="name">Eyad Attia</span><span class="check">✓</span></button>
+        </div>
+      </div>
+      <div class="due-block">
+        <span class="due-label">Due by</span>
+        <div class="due-row">
+          <button id="duePill" class="due-pill empty" type="button" aria-label="Set due date">
+            <span class="cal-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="label-text">+ Add due date</span>
+          </button>
+          <input type="date" id="dueInput" class="due-input" aria-label="Pick due date">
+          <button id="dueClear" class="due-clear" type="button" hidden aria-label="Clear due date">×</button>
+        </div>
       </div>
     </div>
   </div>
@@ -889,6 +927,96 @@ const STATUS_LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progres
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
 
   renderSelected();
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Due date (DB-backed)
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const pill = document.getElementById('duePill');
+  const input = document.getElementById('dueInput');
+  const clear = document.getElementById('dueClear');
+  const labelText = pill.querySelector('.label-text');
+  let currentISO = '';
+
+  const CAL_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+  function fmt(iso){
+    if(!iso) return '';
+    const [y,m,d] = iso.split('-').map(Number);
+    if(!y || !m || !d) return iso;
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  }
+  function dayDiff(iso){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [y,m,d] = iso.split('-').map(Number);
+    const dt = new Date(y, m-1, d); dt.setHours(0,0,0,0);
+    return Math.round((dt - today) / 86400000);
+  }
+  function stateClass(iso){
+    if(!iso) return '';
+    const diff = dayDiff(iso);
+    if(diff < 0) return 'past-due';
+    if(diff <= 1) return 'due-now';
+    if(diff <= 7) return 'due-soon';
+    return '';
+  }
+  function suffix(iso){
+    const diff = dayDiff(iso);
+    if(diff < -1) return ` · ${-diff}d late`;
+    if(diff === -1) return ' · 1d late';
+    if(diff === 0) return ' · today';
+    if(diff === 1) return ' · tomorrow';
+    if(diff <= 7) return ` · ${diff}d`;
+    return '';
+  }
+  function render(iso, persist){
+    currentISO = iso || '';
+    pill.classList.remove('empty','past-due','due-now','due-soon');
+    if(!iso){
+      pill.classList.add('empty');
+      pill.setAttribute('aria-label','Set due date');
+      labelText.textContent = '+ Add due date';
+      clear.hidden = true;
+    } else {
+      const cls = stateClass(iso);
+      if(cls) pill.classList.add(cls);
+      pill.setAttribute('aria-label', `Due ${fmt(iso)}`);
+      labelText.textContent = fmt(iso) + suffix(iso);
+      clear.hidden = false;
+    }
+    if(input.value !== (iso || '')) input.value = iso || '';
+    if(persist){
+      db.updateTask({ due_date: iso || null }).then(rows => {
+        if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+      }).catch(err => console.warn('due_date save failed', err));
+    }
+  }
+  pill.addEventListener('click', e => {
+    e.stopPropagation();
+    // Position the hidden input near the pill so the picker opens nearby
+    const r = pill.getBoundingClientRect();
+    input.style.position = 'fixed';
+    input.style.top = (r.bottom + 4) + 'px';
+    input.style.left = r.left + 'px';
+    input.style.opacity = '0';
+    input.style.pointerEvents = 'none';
+    if(typeof input.showPicker === 'function'){
+      try { input.showPicker(); return; } catch(err) {}
+    }
+    input.focus();
+    input.click();
+  });
+  input.addEventListener('change', () => {
+    render(input.value || '', true);
+  });
+  clear.addEventListener('click', e => {
+    e.stopPropagation();
+    render('', true);
+  });
+
+  window._applyDueDate = (iso) => render(iso || '', false);
 })();
 
 // ────────────────────────────────────────────────────────────────────
@@ -2004,6 +2132,7 @@ function showTask(){
     if(task.status) window._applyStatus(task.status, false);
     state.ownersDone = Array.isArray(task.owners_done) ? task.owners_done : [];
     if(Array.isArray(task.owners)) window._applyOwners(task.owners, false);
+    if(window._applyDueDate) window._applyDueDate(task.due_date || '');
     state.lastUpdatedAt = task.updated_at;
     state.loadedDescription = task.description || '';
     renderMarkdown(state.loadedDescription);

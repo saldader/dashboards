@@ -298,6 +298,51 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   display:none;
 }
 .description-panel.show-placeholder .description-placeholder{display:block}
+
+/* ── Resources strip (linked pages embedded inline) ── */
+.resources-strip{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.resources-strip:empty{display:none}
+.resource-block{
+  border:1px solid var(--border);border-radius:10px;
+  background:rgba(255,255,255,0.02);overflow:hidden;
+}
+.resource-pill{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;width:100%;text-align:left;
+  background:transparent;border:none;font:inherit;color:inherit;
+  cursor:pointer;transition:background .12s;
+}
+.resource-pill:hover{background:rgba(255,255,255,0.03)}
+.resource-pill .link-icon{
+  width:14px;height:14px;color:var(--accent);flex-shrink:0;
+  display:inline-flex;align-items:center;
+}
+.resource-pill .label{font-size:14px;font-weight:500;color:var(--text)}
+.resource-pill .url{font-size:11.5px;color:var(--t4);margin-left:auto;letter-spacing:0.02em}
+.resource-pill .chev{
+  width:14px;height:14px;color:var(--t4);flex-shrink:0;
+  transition:transform .15s;display:inline-flex;align-items:center;
+}
+.resource-block.open .resource-pill .chev{transform:rotate(180deg)}
+.resource-embed{
+  display:none;border-top:1px solid var(--border);
+  background:#fff;height:600px;position:relative;
+}
+.resource-block.open .resource-embed{display:block}
+.resource-embed iframe{width:100%;height:100%;border:none;display:block;background:#fff}
+.resource-embed .embed-actions{
+  position:absolute;top:8px;right:8px;z-index:2;
+  display:flex;gap:6px;
+}
+.resource-embed .embed-actions a{
+  background:rgba(0,0,0,0.6);color:#fff;
+  font-size:11px;font-weight:500;letter-spacing:0.04em;
+  padding:4px 8px;border-radius:6px;
+  text-decoration:none;backdrop-filter:blur(4px);
+  display:inline-flex;align-items:center;gap:4px;
+  transition:background .12s;
+}
+.resource-embed .embed-actions a:hover{background:rgba(0,0,0,0.8)}
 .save-indicator{
   display:inline-flex;align-items:center;gap:6px;
   transition:color .2s, opacity .2s;
@@ -604,6 +649,7 @@ body.has-task .empty-panel{display:none}
       <span class="save-indicator" id="saveIndicator">Loaded</span>
     </div>
     <div class="description-panel" id="descriptionPanel">
+      <div class="resources-strip" id="resourcesStrip"></div>
       <div class="description-placeholder" id="descriptionPlaceholder">Type / to insert a table, or paste text to start.</div>
       <div id="description" class="description-editor" contenteditable="true" spellcheck="true"></div>
     </div>
@@ -850,6 +896,51 @@ function escapeHtml(s){
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Resources (inline-embeddable linked URLs from tasks.resources jsonb) ──
+function renderResources(list){
+  const strip = document.getElementById('resourcesStrip');
+  if(!strip) return;
+  const items = Array.isArray(list) ? list.filter(r => r && r.url) : [];
+  if(items.length === 0){ strip.innerHTML = ''; return; }
+  strip.innerHTML = items.map(r => {
+    const url = String(r.url);
+    const label = String(r.label || url);
+    let host = '';
+    try { host = new URL(url).host.replace(/^www\./, ''); } catch(e) {}
+    return `<div class="resource-block">
+      <button type="button" class="resource-pill" aria-expanded="false">
+        <span class="link-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+        <span class="label">${escapeHtml(label)}</span>
+        <span class="url">${escapeHtml(host)}</span>
+        <span class="chev" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m7 10l5 5l5-5z"/></svg></span>
+      </button>
+      <div class="resource-embed" data-url="${escapeHtml(url)}">
+        <div class="embed-actions">
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Open in new tab">Open ↗</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  strip.querySelectorAll('.resource-block').forEach(block => {
+    const pill = block.querySelector('.resource-pill');
+    const embed = block.querySelector('.resource-embed');
+    pill.addEventListener('click', () => {
+      const willOpen = !block.classList.contains('open');
+      block.classList.toggle('open', willOpen);
+      pill.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if(willOpen && !embed.querySelector('iframe')){
+        const iframe = document.createElement('iframe');
+        iframe.src = embed.dataset.url;
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer';
+        iframe.title = pill.querySelector('.label').textContent;
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+        embed.appendChild(iframe);
+      }
+    });
+  });
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -1834,7 +1925,9 @@ editor.addEventListener('drop', (e) => {
     return txt.length === 0;
   }
   function refreshPlaceholder(){
-    if(isEditorEmpty()) panel.classList.add('show-placeholder');
+    const strip = document.getElementById('resourcesStrip');
+    const hasResources = strip && strip.children.length > 0;
+    if(isEditorEmpty() && !hasResources) panel.classList.add('show-placeholder');
     else panel.classList.remove('show-placeholder');
   }
   editor.addEventListener('input', refreshPlaceholder);
@@ -1879,6 +1972,7 @@ function showTask(){
     state.lastUpdatedAt = task.updated_at;
     state.loadedDescription = task.description || '';
     renderMarkdown(state.loadedDescription);
+    renderResources(task.resources);
     showTask();
     if(window._refreshPlaceholder) window._refreshPlaceholder();
     setIndicator('Loaded');

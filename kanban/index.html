@@ -372,7 +372,7 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
       <span class="avatar izzy">IZ</span><span>Izzy</span>
     </button>
     <button type="button" class="filter-chip" data-key="rammah" aria-pressed="false">
-      <span class="avatar rammah">RH</span><span>Rammah</span>
+      <span class="avatar rammah has-photo" aria-label="Rammah"><img src="../avatars/rammah.jpg" alt=""></span><span>Rammah</span>
     </button>
     <button type="button" class="filter-chip" data-key="brian" aria-pressed="false">
       <span class="avatar brian">BB</span><span>Brian Bazely</span>
@@ -486,7 +486,7 @@ const OWNER_KEYS = ['sal','izzy','rammah','brian','rob','eyad'];
 const OWNER_INITIALS = { sal:'SD', izzy:'IZ', rammah:'RH', brian:'BB', rob:'RS', eyad:'EA' };
 const OWNER_NAMES = { sal:'Sal Dader', izzy:'Izzy', rammah:'Rammah', brian:'Brian Bazely', rob:'Rob Salloum', eyad:'Eyad Attia' };
 const OWNER_FIRST = { sal:'Sal', izzy:'Izzy', rammah:'Rammah', brian:'Brian', rob:'Rob', eyad:'Eyad' };
-const OWNER_PHOTO = { eyad: '../avatars/eyad.jpg' };
+const OWNER_PHOTO = { eyad: '../avatars/eyad.jpg', rammah: '../avatars/rammah.jpg' };
 function avatarHTML(k, label){
   const photo = OWNER_PHOTO[k];
   const cls = `avatar ${k}${photo ? ' has-photo' : ''}`;

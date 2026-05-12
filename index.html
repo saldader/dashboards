@@ -68,6 +68,11 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .card-title{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin-bottom:6px;color:var(--text)}
 .card-desc{font-size:13.5px;color:var(--t3);line-height:1.55}
 
+.card-person{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:8px}
+.card-person img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.12);background:var(--panel)}
+.card-person .who{font-size:10.5px;color:var(--t4);text-align:right;line-height:1.2}
+.card-person .who b{display:block;color:var(--t3);font-weight:600;font-size:11px}
+
 .foot{margin-top:48px;color:var(--t4);font-size:12px;line-height:1.6}
 .foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
 </style>
@@ -95,6 +100,10 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 
     <a href="./task/?slug=eyad-prospectus" class="card">
       <span class="card-track live">● Live</span>
+      <div class="card-person">
+        <div class="who"><b>Brian Bazely</b>Source · May 7</div>
+        <img src="./assets/brian-bazely.webp" alt="Brian Bazely" loading="lazy">
+      </div>
       <div class="card-title">Create 6–7 page PDF for franchisees to receive</div>
       <div class="card-desc">Plug-and-play spec for the franchise prospectus PDF. Page-by-page direction from Brian's May 7 strategy call. Built for Eyad to follow without guessing.</div>
     </a>

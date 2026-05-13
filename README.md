@@ -1,6 +1,6 @@
-# Sal's Dashboards
+# RunRec
 
-Internal tools for RunRec and other projects. Hosted on GitHub Pages.
+Internal tools for RunRec. Hosted on GitHub Pages.
 
 Live: https://saldader.github.io/dashboards/
 

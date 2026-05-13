@@ -1052,6 +1052,19 @@ function renderMarkdown(md){
   editor.querySelectorAll('table').forEach(t => wrapTable(t));
   // Make every cell editable
   editor.querySelectorAll('th,td').forEach(c => c.setAttribute('contenteditable','true'));
+  // GFM task lists: marked emits <input type="checkbox" disabled>. Make them clickable.
+  editor.querySelectorAll('li > input[type="checkbox"]').forEach(cb => {
+    cb.disabled = false;
+    cb.removeAttribute('disabled');
+    cb.style.cursor = 'pointer';
+    cb.addEventListener('click', (e) => {
+      // Let the native toggle happen, then notify the input listener to save.
+      setTimeout(() => editor.dispatchEvent(new Event('input', { bubbles: true })), 0);
+    });
+    // Prevent the surrounding LI from being treated as plain text
+    const li = cb.parentElement;
+    if(li && li.tagName === 'LI') li.classList.add('task-list-item');
+  });
 }
 
 function escapeHtml(s){
@@ -1163,6 +1176,12 @@ function serializeChildrenInline(parent){
 }
 
 function serializeListItem(li){
+  // Detect GFM task-list item (starts with <input type="checkbox">). Emit [ ] / [x].
+  let taskPrefix = '';
+  const firstEl = li.querySelector(':scope > input[type="checkbox"], :scope > p > input[type="checkbox"]');
+  if(firstEl){
+    taskPrefix = firstEl.checked ? '[x] ' : '[ ] ';
+  }
   // Children of <li> may include block elements; flatten to inline + nested lists
   let inlineParts = [];
   let nested = '';
@@ -1170,12 +1189,18 @@ function serializeListItem(li){
     if(child.nodeType === 1 && /^(ul|ol)$/i.test(child.tagName)){
       nested += '\n' + serializeBlock(child).replace(/\n+$/,'').split('\n').map(l => '  ' + l).join('\n');
     } else if(child.nodeType === 1 && /^p$/i.test(child.tagName)){
-      inlineParts.push(serializeChildrenInline(child));
+      // Skip a leading checkbox inside the <p>, already captured by taskPrefix
+      const clone = child.cloneNode(true);
+      const cb = clone.querySelector(':scope > input[type="checkbox"]');
+      if(cb) cb.remove();
+      inlineParts.push(serializeChildrenInline(clone));
+    } else if(child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox'){
+      // Skip, already captured by taskPrefix
     } else {
       inlineParts.push(serializeInline(child));
     }
   }
-  return inlineParts.join(' ').replace(/\s+/g,' ').trim() + nested;
+  return taskPrefix + inlineParts.join(' ').replace(/\s+/g,' ').trim() + nested;
 }
 
 function serializeTable(table){

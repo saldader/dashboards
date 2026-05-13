@@ -180,6 +180,15 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   opacity:0.5;
   cursor:grabbing;
 }
+/* Drop indicator shown during within-column drag */
+.drop-indicator{
+  height:3px;
+  background:var(--accent);
+  border-radius:2px;
+  margin:6px 0;
+  box-shadow:0 0 8px rgba(255,107,53,0.6);
+  pointer-events:none;
+}
 /* Status accent: a 4px left bar inset, distinct from border */
 .task-card::before{
   content:"";
@@ -539,8 +548,14 @@ const db = {
     };
   },
   async listTasks(){
-    const url = `${SUPABASE.url}/rest/v1/tasks?select=*&order=status,updated_at.desc`;
-    const r = await fetch(url, { headers: this.headers() });
+    // Try ordering by position first (within-column reorder support).
+    // Falls back to updated_at if the position column doesn't exist yet.
+    let url = `${SUPABASE.url}/rest/v1/tasks?select=*&order=status.asc,position.asc.nullslast,updated_at.desc`;
+    let r = await fetch(url, { headers: this.headers() });
+    if(!r.ok && (r.status === 400 || r.status === 404)){
+      url = `${SUPABASE.url}/rest/v1/tasks?select=*&order=status,updated_at.desc`;
+      r = await fetch(url, { headers: this.headers() });
+    }
     if(!r.ok) throw new Error(`GET ${r.status}`);
     return await r.json();
   },
@@ -847,13 +862,32 @@ async function submitCreate(){
   try {
     const base = slugify(title);
     const slug = await uniqueSlug(base);
-    const row = await db.insertTask({
+    const targetStatus = state.modalStatus || 'not-started';
+    // Land at the bottom of its column. Falls back to 1000 if no peers.
+    const peerPositions = state.tasks
+      .filter(t => t.status === targetStatus && typeof t.position === 'number')
+      .map(t => t.position);
+    const newPosition = peerPositions.length ? Math.max(...peerPositions) + 1000 : 1000;
+    const newRow = {
       slug,
       title,
-      status: state.modalStatus || 'not-started',
+      status: targetStatus,
       owners: [],
-      description: ''
-    });
+      description: '',
+      position: newPosition
+    };
+    let row;
+    try {
+      row = await db.insertTask(newRow);
+    } catch(err){
+      // If position column doesn't exist yet, retry without it.
+      if(String(err.message || '').includes('position')){
+        delete newRow.position;
+        row = await db.insertTask(newRow);
+      } else {
+        throw err;
+      }
+    }
     const finalSlug = (row && row.slug) ? row.slug : slug;
     location.href = `../task/?slug=${encodeURIComponent(finalSlug)}`;
   } catch(e){
@@ -908,6 +942,70 @@ const dragState = {
 
 function clearDragHighlights(){
   board.querySelectorAll('.column.drag-active').forEach(c => c.classList.remove('drag-active'));
+  clearDropIndicator();
+}
+
+function clearDropIndicator(){
+  board.querySelectorAll('.drop-indicator').forEach(d => d.remove());
+}
+
+// Find which existing card the cursor is "above" inside a list, given vertical position.
+// Returns the card to insert BEFORE, or null to append to end.
+function findInsertTargetCard(list, clientY){
+  const cards = [...list.querySelectorAll('.task-card:not(.dragging)')];
+  for(const card of cards){
+    const rect = card.getBoundingClientRect();
+    if(clientY < rect.top + rect.height / 2) return card;
+  }
+  return null;
+}
+
+// Insert a single drop indicator into the list at the right position.
+function showDropIndicator(list, beforeCard){
+  clearDropIndicator();
+  const indicator = document.createElement('div');
+  indicator.className = 'drop-indicator';
+  if(beforeCard) list.insertBefore(indicator, beforeCard);
+  else {
+    // Append at end of list, but before .col-empty placeholder if any
+    const empty = list.querySelector('.col-empty');
+    if(empty) list.insertBefore(indicator, empty);
+    else list.appendChild(indicator);
+  }
+}
+
+// After a drop has updated the DOM, renumber the column's positions in steps of 1000
+// and PATCH only the rows whose position actually changed.
+async function persistColumnOrder(statusValue){
+  const col = board.querySelector(`.column[data-status="${statusValue}"]`);
+  if(!col) return;
+  const list = col.querySelector('[data-list]');
+  if(!list) return;
+  const cards = [...list.querySelectorAll('.task-card')];
+  const updates = [];
+  cards.forEach((card, idx) => {
+    const slug = card.dataset.slug;
+    if(!slug) return;
+    const row = state.tasks.find(t => t.slug === slug);
+    if(!row) return;
+    const expected = (idx + 1) * 1000;
+    if(row.position !== expected){
+      row.position = expected;
+      updates.push({ slug, position: expected });
+    }
+  });
+  for(const u of updates){
+    try {
+      await db.patchTaskBySlug(u.slug, { position: u.position });
+    } catch(err){
+      // If the position column doesn't exist yet, silently skip.
+      // Logged once for visibility but does not break the UX.
+      if(!persistColumnOrder._warned){
+        console.info('[kanban] position column not present, within-column order will not persist until migration runs');
+        persistColumnOrder._warned = true;
+      }
+    }
+  }
 }
 
 function updateColumnCounts(){
@@ -991,16 +1089,27 @@ board.addEventListener('dragend', () => {
   dragState.fromStatus = null;
 });
 
-// Allow dropping on columns
+// Allow dropping on columns (handles both cross-column status change and within-column reorder)
 board.querySelectorAll('.column').forEach(col => {
+  const list = col.querySelector('[data-list]');
+
   col.addEventListener('dragover', (e) => {
     if(!dragState.card) return;
     e.preventDefault();
     if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    // Show a drop indicator showing where the card will land within THIS column.
+    if(list){
+      const beforeCard = findInsertTargetCard(list, e.clientY);
+      showDropIndicator(list, beforeCard);
+    }
   });
   col.addEventListener('dragenter', (e) => {
     if(!dragState.card) return;
     e.preventDefault();
+  });
+  col.addEventListener('dragleave', (e) => {
+    // Only clear the indicator when leaving the column entirely.
+    if(!col.contains(e.relatedTarget)) clearDropIndicator();
   });
   col.addEventListener('drop', async (e) => {
     e.preventDefault();
@@ -1008,12 +1117,8 @@ board.querySelectorAll('.column').forEach(col => {
     if(!card) return;
     const newStatus = col.dataset.status;
     const oldStatus = dragState.fromStatus;
-    if(!STATUS_ORDER.includes(newStatus)) return;
-    if(newStatus === oldStatus){
-      // No-op — just clear highlights
-      card.classList.remove('dragging');
+    if(!STATUS_ORDER.includes(newStatus)){
       clearDragHighlights();
-      dragState.card = null;
       return;
     }
     const slug = card.dataset.slug;
@@ -1022,7 +1127,6 @@ board.querySelectorAll('.column').forEach(col => {
       clearDragHighlights();
       return;
     }
-    // Optimistic move
     const oldList = board.querySelector(`.column[data-status="${oldStatus}"] [data-list]`);
     const newList = col.querySelector('[data-list]');
     if(!newList){
@@ -1030,12 +1134,25 @@ board.querySelectorAll('.column').forEach(col => {
       clearDragHighlights();
       return;
     }
-    // Update card classes (status + visual)
-    card.classList.remove(oldStatus);
-    card.classList.add(newStatus);
-    card.dataset.status = newStatus;
-    // Move DOM node into new list
-    newList.appendChild(card);
+
+    // Where in the new list should the card land?
+    const beforeCard = findInsertTargetCard(newList, e.clientY);
+
+    // Capture old DOM neighbor so we can revert if persist fails.
+    const oldNextSibling = card.nextSibling;
+
+    // Optimistic move: update classes and insert at target position
+    if(newStatus !== oldStatus){
+      card.classList.remove(oldStatus);
+      card.classList.add(newStatus);
+      card.dataset.status = newStatus;
+    }
+    if(beforeCard) newList.insertBefore(card, beforeCard);
+    else {
+      const empty = newList.querySelector('.col-empty');
+      if(empty) newList.insertBefore(card, empty);
+      else newList.appendChild(card);
+    }
     card.classList.remove('dragging');
     clearDragHighlights();
     dragState.card = null;
@@ -1043,25 +1160,31 @@ board.querySelectorAll('.column').forEach(col => {
 
     // Update local state row
     const row = state.tasks.find(t => t.slug === slug);
-    if(row) row.status = newStatus;
+    if(row && newStatus !== oldStatus) row.status = newStatus;
 
-    // Persist
-    try {
-      const updated = await db.patchTaskBySlug(slug, { status: newStatus });
-      if(updated && updated.updated_at){
-        if(row) row.updated_at = updated.updated_at;
+    // Persist status change (only if it changed)
+    if(newStatus !== oldStatus){
+      try {
+        const updated = await db.patchTaskBySlug(slug, { status: newStatus });
+        if(updated && updated.updated_at && row) row.updated_at = updated.updated_at;
+      } catch(err){
+        console.warn('drag patch failed', err);
+        // Revert status + DOM position
+        card.classList.remove(newStatus);
+        card.classList.add(oldStatus);
+        card.dataset.status = oldStatus;
+        if(oldList) oldList.insertBefore(card, oldNextSibling);
+        if(row) row.status = oldStatus;
+        updateColumnCounts();
+        showToast('Could not update task. Reverted.');
+        return;
       }
-    } catch(err){
-      console.warn('drag patch failed', err);
-      // Revert
-      card.classList.remove(newStatus);
-      card.classList.add(oldStatus);
-      card.dataset.status = oldStatus;
-      if(oldList) oldList.appendChild(card);
-      if(row) row.status = oldStatus;
-      updateColumnCounts();
-      showToast('Could not update task. Reverted.');
     }
+
+    // Persist new order (within-column reorder). Affects both source and target columns
+    // when crossing columns, since source compacts after the card leaves.
+    await persistColumnOrder(newStatus);
+    if(newStatus !== oldStatus) await persistColumnOrder(oldStatus);
   });
 });
 

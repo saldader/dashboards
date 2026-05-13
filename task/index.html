@@ -459,6 +459,7 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 }
 .description-editor a{color:var(--accent);text-decoration:underline;text-decoration-color:rgba(255,107,53,0.4);text-underline-offset:2px}
 .description-editor a:hover{text-decoration-color:var(--accent)}
+.description-editor img{max-width:100%;height:auto;display:block;margin:12px 0;border-radius:8px;border:1px solid var(--border)}
 .description-editor blockquote{
   margin:14px 0;padding:12px 18px;
   background:rgba(255,107,53,0.06);
@@ -1158,6 +1159,14 @@ function serializeInline(node){
       }
       return inner;
     }
+    case 'img': {
+      const src = node.getAttribute('src') || '';
+      const alt = node.getAttribute('alt') || '';
+      if(!src) return '';
+      if(!isSafeHref(src)) return '';
+      const safeAlt = String(alt).replace(/[\[\]]/g,'');
+      return `![${safeAlt}](${src})`;
+    }
     case 'span': case 'u': case 'small': case 'mark': case 'sub': case 'sup':
       return inner;
     default:
@@ -1298,8 +1307,13 @@ function serializeBlock(node){
       return out;
     }
     case 'br': return '\n';
+    // Top-level img (rare; usually wrapped in <p>) — serialize as markdown image on its own line.
+    case 'img': {
+      const md = serializeInline(node);
+      return md ? md + '\n\n' : '';
+    }
     // Strip these entirely
-    case 'img': case 'script': case 'style': case 'iframe':
+    case 'script': case 'style': case 'iframe':
     case 'input': case 'textarea': case 'select': case 'button':
     case 'object': case 'embed': case 'video': case 'audio':
     case 'svg': case 'form':
@@ -1862,9 +1876,77 @@ function addColToTable(table){
 }
 
 // ────────────────────────────────────────────────────────────────────
-// CSV drop
+// File drop (CSV becomes a table, images get uploaded inline)
 // ────────────────────────────────────────────────────────────────────
 const descriptionPanel = document.getElementById('descriptionPanel');
+const ATTACHMENT_BUCKET = 'task-attachments';
+
+function placeCaretAtDrop(clientX, clientY){
+  let dropRange = null;
+  if(document.caretRangeFromPoint){
+    dropRange = document.caretRangeFromPoint(clientX, clientY);
+  } else if(document.caretPositionFromPoint){
+    const p = document.caretPositionFromPoint(clientX, clientY);
+    if(p){ dropRange = document.createRange(); dropRange.setStart(p.offsetNode, p.offset); dropRange.collapse(true); }
+  }
+  if(dropRange){
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(dropRange);
+  }
+}
+
+async function uploadImage(file){
+  const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [,'png'])[1].toLowerCase();
+  const safeSlug = String(SUPABASE.slug || 'misc').replace(/[^a-z0-9-]/gi,'-').toLowerCase();
+  const fname = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const path = `${safeSlug}/${fname}`;
+  const url = `${SUPABASE.url}/storage/v1/object/${ATTACHMENT_BUCKET}/${path}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE.key,
+      Authorization: `Bearer ${SUPABASE.key}`,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if(!r.ok){
+    const text = await r.text().catch(() => '');
+    throw new Error(`upload failed ${r.status} ${text}`);
+  }
+  return `${SUPABASE.url}/storage/v1/object/public/${ATTACHMENT_BUCKET}/${path}`;
+}
+
+function insertImageAtCaret(publicUrl, altText){
+  const img = document.createElement('img');
+  img.src = publicUrl;
+  img.alt = altText || '';
+  img.style.maxWidth = '100%';
+  img.style.borderRadius = '8px';
+  img.style.display = 'block';
+  img.style.margin = '12px 0';
+  const sel = window.getSelection();
+  const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+  if(range){
+    // Insert at the current block, not inside an inline node, to keep markdown clean.
+    const block = findContainingBlock(range.startContainer) || editor;
+    const p = document.createElement('p');
+    p.appendChild(img);
+    if(block === editor) editor.appendChild(p);
+    else block.parentNode.insertBefore(p, block.nextSibling);
+    // Add a trailing empty paragraph so the caret has somewhere to go.
+    const trail = document.createElement('p');
+    trail.appendChild(document.createElement('br'));
+    p.parentNode.insertBefore(trail, p.nextSibling);
+  } else {
+    const p = document.createElement('p');
+    p.appendChild(img);
+    editor.appendChild(p);
+  }
+}
+
 editor.addEventListener('dragover', (e) => {
   e.preventDefault();
   descriptionPanel.classList.add('drag-over');
@@ -1872,16 +1954,37 @@ editor.addEventListener('dragover', (e) => {
 editor.addEventListener('dragleave', (e) => {
   if(e.target === editor) descriptionPanel.classList.remove('drag-over');
 });
-editor.addEventListener('drop', (e) => {
+editor.addEventListener('drop', async (e) => {
   e.preventDefault();
   descriptionPanel.classList.remove('drag-over');
-  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if(!file) return;
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if(!files || files.length === 0) return;
+  placeCaretAtDrop(e.clientX, e.clientY);
+
+  // Image files (any number) go through the upload path.
+  const imageFiles = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+  if(imageFiles.length){
+    showToast(`Uploading ${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''}…`);
+    for(const f of imageFiles){
+      try {
+        const url = await uploadImage(f);
+        insertImageAtCaret(url, f.name.replace(/\.[a-z0-9]+$/i,''));
+      } catch(err){
+        console.error('image upload failed', err);
+        showToast(`Could not upload ${f.name}. Bucket setup may be missing.`);
+      }
+    }
+    scheduleSave();
+    return;
+  }
+
+  // Non-image: fall through to the CSV path (single file).
+  const file = files[0];
   const isCsv = file.type === 'text/csv'
              || file.type === 'application/csv'
              || (file.name && file.name.toLowerCase().endsWith('.csv'));
   if(!isCsv){
-    showToast(`Only CSV files are supported. Got: ${file.type || 'unknown'}`);
+    showToast(`Unsupported file type: ${file.type || 'unknown'}. Drop an image or CSV.`);
     return;
   }
   // Place caret at drop point if possible

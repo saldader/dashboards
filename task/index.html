@@ -263,16 +263,16 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .owner-chip:hover{background:rgba(255,255,255,0.07);border-color:var(--border-strong)}
 .owner-chip .done-check{
   display:none;width:14px;height:14px;border-radius:50%;
-  background:rgba(34,197,94,0.18);color:var(--green);
+  background:rgba(255,107,53,0.20);color:var(--accent);
   align-items:center;justify-content:center;font-size:10px;font-weight:700;
   margin-left:2px;
 }
 .owner-chip.is-done{
-  background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);
-  color:var(--t3);
+  background:rgba(255,107,53,0.10);border-color:rgba(255,107,53,0.30);
+  color:var(--text);
 }
 .owner-chip.is-done .done-check{display:inline-flex}
-.owner-chip.is-done:hover{background:rgba(34,197,94,0.12)}
+.owner-chip.is-done:hover{background:rgba(255,107,53,0.16)}
 .avatar{
   width:16px;height:16px;border-radius:2px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -874,21 +874,22 @@ const STATUS_LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progres
       const name = o.dataset.name;
       const avatar = o.querySelector('.avatar');
       const avatarHTML = `<span class="avatar ${avatar.className.replace('avatar','').trim()}">${avatar.innerHTML}</span>`;
-      const isDone = done.includes(key);
-      const cls = `owner-chip${isDone ? ' is-done' : ''}`;
-      const title = isDone ? `${name} marked done — click to undo` : `Click to mark ${name} done`;
+      const isActive = done.includes(key);
+      const cls = `owner-chip${isActive ? ' is-done' : ''}`;
+      const title = isActive ? `${name}'s turn. Click to clear.` : `Mark this as ${name}'s turn.`;
       return `<button type="button" class="${cls}" data-owner-key="${key}" title="${title}">${avatarHTML}${name}<span class="done-check" aria-hidden="true">✓</span></button>`;
     }).join('');
     selected.querySelectorAll('.owner-chip[data-owner-key]').forEach(chip => {
       chip.addEventListener('click', e => {
         e.stopPropagation();
         const key = chip.dataset.ownerKey;
-        const current = Array.isArray(state.ownersDone) ? state.ownersDone.slice() : [];
-        const idx = current.indexOf(key);
-        if(idx === -1) current.push(key); else current.splice(idx, 1);
-        state.ownersDone = current;
+        const current = Array.isArray(state.ownersDone) ? state.ownersDone : [];
+        // Single-active model: clicking the active owner clears it; clicking anyone else
+        // makes them the only active owner.
+        const next = (current.length === 1 && current[0] === key) ? [] : [key];
+        state.ownersDone = next;
         renderSelected();
-        db.updateTask({ owners_done: current }).then(rows => {
+        db.updateTask({ owners_done: next }).then(rows => {
           if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
         }).catch(err => console.warn('owners_done save failed', err));
       });

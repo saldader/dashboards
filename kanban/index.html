@@ -227,14 +227,14 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   font-size:12.5px;line-height:1;color:var(--t2);font-weight:500;
 }
 .card-owners .owner-chip.is-done{
-  background:rgba(34,197,94,0.10);
-  border-color:rgba(34,197,94,0.25);
-  color:var(--t3);
+  background:rgba(255,107,53,0.12);
+  border-color:rgba(255,107,53,0.30);
+  color:var(--text);
 }
 .card-owners .owner-chip .done-check{
   display:inline-flex;align-items:center;justify-content:center;
   width:12px;height:12px;border-radius:50%;
-  background:rgba(34,197,94,0.25);color:var(--green);
+  background:rgba(255,107,53,0.28);color:var(--accent);
   font-size:9px;font-weight:700;margin-left:2px;
 }
 .card-owners .owner-chip .avatar{box-shadow:0 0 0 2px #1E1E25}
@@ -661,19 +661,21 @@ function buildCardHTML(t){
     ownersHTML = `<span class="card-owners-empty">+ Add Owner</span>`;
   } else {
     ownersHTML = owners.slice(0, 6).map(k => {
-      const isDone = done.includes(k);
-      const cls = `owner-chip${isDone ? ' is-done' : ''}`;
-      const check = isDone ? '<span class="done-check" aria-hidden="true">✓</span>' : '';
-      return `<span class="${cls}" title="${escapeHtml(OWNER_NAMES[k] || k)}${isDone ? ' (done)' : ''}">${avatarHTML(k, OWNER_NAMES[k] || k)}${escapeHtml(OWNER_FIRST[k] || OWNER_NAMES[k] || k)}${check}</span>`;
+      const isActive = done.includes(k);
+      const cls = `owner-chip${isActive ? ' is-done' : ''}`;
+      const check = isActive ? '<span class="done-check" aria-hidden="true">✓</span>' : '';
+      const tip = `${OWNER_NAMES[k] || k}${isActive ? "'s turn" : ''}`;
+      return `<span class="${cls}" title="${escapeHtml(tip)}">${avatarHTML(k, OWNER_NAMES[k] || k)}${escapeHtml(OWNER_FIRST[k] || OWNER_NAMES[k] || k)}${check}</span>`;
     }).join('');
   }
-  // "→ next" hint when some owners are done but not all
-  const remaining = owners.filter(k => !done.includes(k));
+  // "→ X's turn" hint shows the currently-active owner (the one checked).
   let nextHint = '';
-  if(owners.length > 1 && done.length > 0 && remaining.length > 0){
-    const nextKey = remaining[0];
-    const nextName = OWNER_FIRST[nextKey] || OWNER_NAMES[nextKey] || nextKey;
-    nextHint = `<div class="card-next-hint">→ ${escapeHtml(nextName)}'s turn</div>`;
+  if(owners.length > 1 && done.length > 0){
+    const activeKey = done[0];
+    if(owners.includes(activeKey)){
+      const activeName = OWNER_FIRST[activeKey] || OWNER_NAMES[activeKey] || activeKey;
+      nextHint = `<div class="card-next-hint">→ ${escapeHtml(activeName)}'s turn</div>`;
+    }
   }
   // Due-date pill (hidden when task is done)
   let dueHTML = '';

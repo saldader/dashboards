@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
 <style>
 :root {
   --bg: #0a0a0c;
@@ -459,22 +461,26 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 }
 .description-editor pre{
   position:relative;
-  margin:14px 0;padding:14px 16px;
-  background:rgba(0,0,0,0.35);
+  margin:14px 0;padding:14px 44px 14px 16px;
+  background:#0d1117;
   border:1px solid var(--border);
   border-radius:8px;
   overflow-x:auto;
   font-family:"SF Mono","Menlo",ui-monospace,monospace;
   font-size:13px;line-height:1.55;
-  color:var(--t2);
+  color:#c9d1d9;
   white-space:pre;
 }
-.description-editor pre code{
+.description-editor pre code,
+.description-editor pre code.hljs{
   background:transparent;border:none;padding:0;border-radius:0;
-  font-size:inherit;color:inherit;
+  font-size:inherit;
   white-space:pre;
   display:block;
+  color:inherit;
 }
+/* Override hljs theme bg — we set our own on <pre> */
+.description-editor pre code.hljs{background:transparent}
 .description-editor pre .copy-code{
   position:absolute;top:8px;right:8px;
   display:inline-flex;align-items:center;gap:5px;
@@ -1084,8 +1090,9 @@ function renderMarkdown(md){
   editor.querySelectorAll('table').forEach(t => wrapTable(t));
   // Make every cell editable
   editor.querySelectorAll('th,td').forEach(c => c.setAttribute('contenteditable','true'));
-  // Attach Copy button to every code block
+  // Attach Copy button + syntax highlighting to every code block
   editor.querySelectorAll('pre').forEach(pre => {
+    if(typeof highlightPre === 'function') highlightPre(pre);
     if(typeof attachCopyButton === 'function') attachCopyButton(pre);
   });
   // GFM task lists: marked emits <input type="checkbox" disabled>. Make them clickable.
@@ -1513,6 +1520,7 @@ function insertCodeBlockAtCaret(rawText){
   const code = document.createElement('code');
   code.textContent = rawText;
   pre.appendChild(code);
+  highlightPre(pre);
   attachCopyButton(pre);
   const sel = window.getSelection();
   if(sel && sel.rangeCount){
@@ -1545,6 +1553,47 @@ function insertCodeBlockAtCaret(rawText){
   r.setStart(p, 0); r.collapse(true);
   const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
   scheduleSave();
+}
+
+function getCodeRawText(pre){
+  const codeEl = pre.querySelector(':scope > code') || pre;
+  const clone = codeEl.cloneNode(true);
+  clone.querySelectorAll('.copy-code').forEach(b => b.remove());
+  return clone.textContent || '';
+}
+
+function highlightPre(pre){
+  if(!window.hljs) return;
+  let codeEl = pre.querySelector(':scope > code');
+  if(!codeEl){
+    // Wrap text content in a <code> element so we can highlight it
+    const copyBtn = pre.querySelector(':scope > .copy-code');
+    const text = getCodeRawText(pre);
+    pre.textContent = '';
+    codeEl = document.createElement('code');
+    codeEl.textContent = text;
+    pre.appendChild(codeEl);
+    if(copyBtn) pre.appendChild(copyBtn);
+  }
+  const raw = getCodeRawText(pre);
+  // Detect language from existing class, else auto-detect
+  let lang = '';
+  const cls = codeEl.getAttribute('class') || '';
+  const m = cls.match(/language-([\w-]+)/);
+  if(m) lang = m[1];
+  let result;
+  try {
+    if(lang && window.hljs.getLanguage(lang)){
+      result = window.hljs.highlight(raw, { language: lang, ignoreIllegals: true });
+    } else {
+      result = window.hljs.highlightAuto(raw);
+      if(result.language){
+        codeEl.classList.add('language-' + result.language);
+      }
+    }
+  } catch(_){ return; }
+  codeEl.innerHTML = result.value;
+  codeEl.classList.add('hljs');
 }
 
 function attachCopyButton(pre){
@@ -1580,6 +1629,29 @@ editor.addEventListener('paste', (e) => {
   if(!cd) return;
   const text = cd.getData('text/plain') || '';
   const html = cd.getData('text/html') || '';
+  // If caret is already inside a <pre>, paste raw text into it (don't create a new block)
+  const sel = window.getSelection();
+  if(sel && sel.rangeCount){
+    let node = sel.getRangeAt(0).startContainer;
+    while(node && node !== editor && !(node.nodeType === 1 && node.tagName === 'PRE')) node = node.parentNode;
+    if(node && node.tagName === 'PRE' && text){
+      e.preventDefault();
+      document.execCommand('insertText', false, text);
+      // Re-highlight (debounced via input listener) — but trigger immediately too
+      const pre = node;
+      setTimeout(() => {
+        // Save caret offset before re-highlight
+        const codeEl = pre.querySelector(':scope > code') || pre;
+        const r = window.getSelection().getRangeAt(0);
+        const mr = document.createRange(); mr.selectNodeContents(codeEl); mr.setEnd(r.endContainer, r.endOffset);
+        const offset = mr.toString().length;
+        highlightPre(pre);
+        // Restore caret by walking text nodes
+        restoreCaretInPre(pre, offset);
+      }, 0);
+      return;
+    }
+  }
   // Strong signal: clipboard HTML contains a <pre> or the text looks like code
   const isCode = /<\s*pre\b/i.test(html) || looksLikeCode(text);
   if(isCode && text){
@@ -1587,6 +1659,91 @@ editor.addEventListener('paste', (e) => {
     insertCodeBlockAtCaret(text);
   }
   // Otherwise let browser handle paste normally
+});
+
+// Walk text nodes to place caret at the Nth character within the <pre>'s <code>
+function restoreCaretInPre(pre, offset){
+  const codeEl = pre.querySelector(':scope > code') || pre;
+  const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => {
+      // Skip text inside the copy button
+      let p = n.parentNode;
+      while(p && p !== codeEl){
+        if(p.classList && p.classList.contains('copy-code')) return NodeFilter.FILTER_REJECT;
+        p = p.parentNode;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let remaining = offset;
+  let node;
+  while((node = walker.nextNode())){
+    const len = node.nodeValue.length;
+    if(remaining <= len){
+      const r = document.createRange();
+      r.setStart(node, remaining);
+      r.collapse(true);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      return;
+    }
+    remaining -= len;
+  }
+  // Fallback: place at end
+  const r = document.createRange();
+  r.selectNodeContents(codeEl); r.collapse(false);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+
+// ── Enter inside <pre>: insert literal \n, don't split the block. Double-Enter at end exits. ──
+editor.addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+  const sel = window.getSelection();
+  if(!sel || !sel.rangeCount) return;
+  let pre = sel.getRangeAt(0).startContainer;
+  while(pre && pre !== editor && !(pre.nodeType === 1 && pre.tagName === 'PRE')) pre = pre.parentNode;
+  if(!pre || pre === editor || pre.tagName !== 'PRE') return;
+  e.preventDefault();
+  const codeEl = pre.querySelector(':scope > code') || pre;
+  const r = sel.getRangeAt(0);
+  // Measure caret offset within code (ignoring copy button text)
+  const measure = document.createRange();
+  measure.selectNodeContents(codeEl);
+  measure.setEnd(r.endContainer, r.endOffset);
+  const beforeCaret = measure.toString();
+  const fullText = getCodeRawText(pre);
+  const atEnd = beforeCaret.length >= fullText.length;
+  // Double-Enter at end → exit pre to a new paragraph
+  if(atEnd && beforeCaret.endsWith('\n')){
+    const stripped = fullText.replace(/\n$/, '');
+    const copyBtn = pre.querySelector(':scope > .copy-code');
+    pre.textContent = '';
+    const newCode = document.createElement('code');
+    newCode.textContent = stripped;
+    pre.appendChild(newCode);
+    if(copyBtn) pre.appendChild(copyBtn);
+    highlightPre(pre);
+    const p = document.createElement('p');
+    p.appendChild(document.createElement('br'));
+    pre.parentNode.insertBefore(p, pre.nextSibling);
+    const nr = document.createRange();
+    nr.setStart(p, 0); nr.collapse(true);
+    sel.removeAllRanges(); sel.addRange(nr);
+    scheduleSave();
+    return;
+  }
+  // Otherwise insert a literal newline at caret, then re-highlight & restore caret
+  const newOffset = beforeCaret.length + 1;
+  const after = fullText.slice(beforeCaret.length);
+  const newText = beforeCaret + '\n' + after;
+  const copyBtn = pre.querySelector(':scope > .copy-code');
+  pre.textContent = '';
+  const newCode = document.createElement('code');
+  newCode.textContent = newText;
+  pre.appendChild(newCode);
+  if(copyBtn) pre.appendChild(copyBtn);
+  highlightPre(pre);
+  restoreCaretInPre(pre, newOffset);
+  scheduleSave();
 });
 
 document.addEventListener('visibilitychange', () => {

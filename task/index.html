@@ -1752,14 +1752,15 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('beforeunload', (e) => {
+  // If there's a pending debounced save OR a save currently in flight,
+  // (1) fire a best-effort keepalive flush so we don't lose data, and
+  // (2) ask the browser to show the native "Leave site?" confirmation.
+  const hasPendingChanges = !!state.saveTimer || !!state.saveInFlight || !!state.pendingSave;
   if(state.saveTimer){
-    // Best-effort sync flush via sendBeacon
     try {
       const md = domToMd(editor);
       const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&updated_at=eq.${encodeURIComponent(state.lastUpdatedAt)}`;
-      const blob = new Blob([JSON.stringify({ description: md })], { type: 'application/json' });
-      // sendBeacon doesn't allow custom headers on most browsers; fall back to fetch keepalive
       fetch(url, {
         method: 'PATCH',
         headers: { ...db.headers(), Prefer: 'return=minimal' },
@@ -1767,6 +1768,14 @@ window.addEventListener('beforeunload', () => {
         keepalive: true,
       }).catch(()=>{});
     } catch(_){}
+  }
+  if(hasPendingChanges){
+    // Modern browsers ignore the custom message and show their own generic
+    // "Changes you made may not be saved" dialog. Both lines are required
+    // for cross-browser support.
+    e.preventDefault();
+    e.returnValue = 'Changes are still saving. Leave anyway?';
+    return 'Changes are still saving. Leave anyway?';
   }
 });
 

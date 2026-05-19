@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>RunRec HQ — Sign in</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{
+  --bg:#0a0a0c;
+  --panel:#131318;
+  --card:#1a1a20;
+  --border:rgba(255,255,255,0.08);
+  --text:#f4f4f6;
+  --t3:#a3a3a8;
+  --accent:#0c93e0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{min-height:100vh;display:grid;place-items:center;padding:32px}
+.card{
+  width:100%;max-width:380px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:18px;padding:36px 32px 32px;
+  display:flex;flex-direction:column;align-items:center;
+  box-shadow:0 24px 60px rgba(0,0,0,0.35);
+}
+.logo{
+  width:72px;height:72px;border-radius:16px;overflow:hidden;
+  background:#0c93e0;display:grid;place-items:center;margin-bottom:18px;
+}
+.logo img{width:100%;height:100%;display:block;object-fit:cover}
+h1{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;text-align:center}
+.lead{font-size:14px;color:var(--t3);margin:0 0 28px;text-align:center;line-height:1.5}
+button.slack{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:#4A154B;color:white;border:0;
+  padding:13px 16px;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:transform .08s ease, background .15s ease;
+}
+button.slack:hover{background:#611f63}
+button.slack:active{transform:translateY(1px)}
+button.slack:disabled{opacity:0.6;cursor:wait}
+button.slack svg{width:18px;height:18px}
+.error{
+  margin-top:14px;padding:10px 12px;border-radius:8px;
+  background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);
+  color:#fca5a5;font-size:12.5px;text-align:center;display:none;
+}
+.error.show{display:block}
+.foot{
+  margin-top:28px;font-size:11px;color:#666;text-align:center;line-height:1.6;
+}
+.foot a{color:#888;text-decoration:none}
+.foot a:hover{color:var(--accent)}
+</style>
+<script>window.__RUNREC_PUBLIC = true;</script>
+<script src="../assets/js/auth.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo"><img src="../assets/runrec-logo.png" alt="RunRec"></div>
+    <h1>RunRec HQ</h1>
+    <p class="lead">Internal command center. Sign in with your RunRec Slack account to continue.</p>
+    <button type="button" class="slack" id="signinBtn">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M6 15a2 2 0 110-4h2v4H6zm1-6a2 2 0 110-4 2 2 0 012 2v2H7zm6 0V5a2 2 0 114 0v4h-4zm-2 0H7a2 2 0 010-4h4a2 2 0 110 4zm6 0a2 2 0 110-4h2a2 2 0 010 4h-2zm0 6V9h-2a2 2 0 110-4h2a2 2 0 012 2v8a2 2 0 11-2 0zm-6 0a2 2 0 110-4h4a2 2 0 110 4h-4z" fill="currentColor"/>
+      </svg>
+      <span>Sign in with Slack</span>
+    </button>
+    <div class="error" id="errorBox"></div>
+    <div class="foot">
+      Only members of the RunRec Slack workspace can access this.<br>
+      Need access? Ask Sal.
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('runrec:auth-ready', () => {
+  const btn = document.getElementById('signinBtn');
+  const err = document.getElementById('errorBox');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    err.classList.remove('show');
+    try {
+      const baseUrl = new URL('../', location.href).href;
+      const { error } = await window.RUNREC.supabase.auth.signInWithOAuth({
+        provider: 'slack_oidc',
+        options: { redirectTo: baseUrl }
+      });
+      if(error) throw error;
+    } catch(e){
+      console.error(e);
+      err.textContent = e.message || 'Could not sign in. The Slack provider may not be configured yet.';
+      err.classList.add('show');
+      btn.disabled = false;
+    }
+  });
+});
+</script>
+</body>
+</html>

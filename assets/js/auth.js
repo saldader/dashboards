@@ -27,7 +27,25 @@
     });
   }
 
+  // Hard switch: when this is true, the dashboards REQUIRE a Slack sign-in.
+  // Flip to true after the Supabase Slack OIDC provider is configured.
+  // Source of truth lives at /dashboards/assets/js/auth-config.js (a separate
+  // file so flipping the flag is a one-line change, not a multi-file edit).
+  async function loadConfig(){
+    try {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = BASE + 'assets/js/auth-config.js';
+        s.onload = res;
+        s.onerror = res;  // missing config = treat as defaults
+        document.head.appendChild(s);
+      });
+    } catch(_){}
+    return Object.assign({ enforce: false }, window.__RUNREC_AUTH_CONFIG || {});
+  }
+
   async function init(){
+    const cfg = await loadConfig();
     await loadSupabaseSdk();
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
@@ -38,15 +56,9 @@
     const { data: { session } } = await client.auth.getSession();
     const isPublic = !!window.__RUNREC_PUBLIC;
 
-    if(!session && !isPublic){
-      // Not authenticated, redirect to the gate.
-      location.replace(LOGIN_URL);
-      return;
-    }
-    if(session && isPublic){
-      // Already signed in, skip the gate.
-      location.replace(BASE);
-      return;
+    if(cfg.enforce){
+      if(!session && !isPublic){ location.replace(LOGIN_URL); return; }
+      if(session && isPublic){ location.replace(BASE); return; }
     }
     if(session){
       window.RUNREC.session = session;
@@ -55,7 +67,7 @@
     }
     document.documentElement.classList.add('runrec-auth-ready');
     // Fire a custom event so page scripts can wait for auth.
-    document.dispatchEvent(new CustomEvent('runrec:auth-ready', { detail: { session } }));
+    document.dispatchEvent(new CustomEvent('runrec:auth-ready', { detail: { session, enforced: cfg.enforce } }));
   }
 
   function decorateHeader(user){

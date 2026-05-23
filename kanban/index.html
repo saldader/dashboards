@@ -542,9 +542,15 @@ function avatarHTML(k, label){
 // ────────────────────────────────────────────────────────────────────
 const db = {
   headers(){
+    // Use the signed-in user's token when available so Supabase RLS treats
+    // the request as an authenticated team member. Falls back to the
+    // publishable (anon) key when nobody is signed in — identical to the
+    // previous behaviour, so this is a no-op until login is enforced.
+    const session = window.RUNREC && window.RUNREC.session;
+    const token = (session && session.access_token) || SUPABASE.key;
     return {
       apikey: SUPABASE.key,
-      Authorization: `Bearer ${SUPABASE.key}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
   },

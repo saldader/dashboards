@@ -803,7 +803,7 @@ const SUPABASE = {
 // DB helper (parallel to eyad-prospectus)
 // ────────────────────────────────────────────────────────────────────
 const db = {
-  headers(){ return { apikey: SUPABASE.key, Authorization: `Bearer ${SUPABASE.key}`, 'Content-Type': 'application/json' }; },
+  headers(){ const s = window.RUNREC && window.RUNREC.session; const token = (s && s.access_token) || SUPABASE.key; return { apikey: SUPABASE.key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }; },
   async getTask(){
     if(!SUPABASE.slug) return null;
     const r = await fetch(`${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&select=*`, { headers: this.headers() });

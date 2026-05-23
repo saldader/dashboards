@@ -33,27 +33,41 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-a
 }
 .logo img{width:100%;height:100%;display:block;object-fit:cover}
 h1{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;text-align:center}
-.lead{font-size:14px;color:var(--t3);margin:0 0 28px;text-align:center;line-height:1.5}
-button.slack{
+.lead{font-size:14px;color:var(--t3);margin:0 0 24px;text-align:center;line-height:1.5}
+form{width:100%;display:flex;flex-direction:column;gap:12px}
+label{font-size:12px;color:var(--t3);margin-bottom:-6px}
+input[type=email]{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  color:var(--text);padding:13px 14px;border-radius:10px;font-size:14px;
+  outline:none;transition:border-color .15s ease;
+}
+input[type=email]:focus{border-color:var(--accent)}
+button.primary{
   width:100%;
   display:flex;align-items:center;justify-content:center;gap:10px;
-  background:#4A154B;color:white;border:0;
+  background:var(--accent);color:white;border:0;
   padding:13px 16px;border-radius:10px;
   font-size:14px;font-weight:600;cursor:pointer;
-  transition:transform .08s ease, background .15s ease;
+  transition:transform .08s ease, filter .15s ease;
 }
-button.slack:hover{background:#611f63}
-button.slack:active{transform:translateY(1px)}
-button.slack:disabled{opacity:0.6;cursor:wait}
-button.slack svg{width:18px;height:18px}
+button.primary:hover{filter:brightness(1.08)}
+button.primary:active{transform:translateY(1px)}
+button.primary:disabled{opacity:0.6;cursor:wait}
 .error{
   margin-top:14px;padding:10px 12px;border-radius:8px;
   background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);
   color:#fca5a5;font-size:12.5px;text-align:center;display:none;
 }
 .error.show{display:block}
+.success{
+  width:100%;margin-top:4px;padding:18px 16px;border-radius:12px;
+  background:rgba(12,147,224,0.08);border:1px solid rgba(12,147,224,0.30);
+  color:#cfe9fb;font-size:13.5px;text-align:center;line-height:1.55;display:none;
+}
+.success.show{display:block}
+.success strong{color:#fff}
 .foot{
-  margin-top:28px;font-size:11px;color:#666;text-align:center;line-height:1.6;
+  margin-top:24px;font-size:11px;color:#666;text-align:center;line-height:1.6;
 }
 .foot a{color:#888;text-decoration:none}
 .foot a:hover{color:var(--accent)}
@@ -66,16 +80,24 @@ button.slack svg{width:18px;height:18px}
   <div class="card">
     <div class="logo"><img src="../assets/runrec-logo.png" alt="RunRec"></div>
     <h1>RunRec HQ</h1>
-    <p class="lead">Internal command center. Sign in with your RunRec Slack account to continue.</p>
-    <button type="button" class="slack" id="signinBtn">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M6 15a2 2 0 110-4h2v4H6zm1-6a2 2 0 110-4 2 2 0 012 2v2H7zm6 0V5a2 2 0 114 0v4h-4zm-2 0H7a2 2 0 010-4h4a2 2 0 110 4zm6 0a2 2 0 110-4h2a2 2 0 010 4h-2zm0 6V9h-2a2 2 0 110-4h2a2 2 0 012 2v8a2 2 0 11-2 0zm-6 0a2 2 0 110-4h4a2 2 0 110 4h-4z" fill="currentColor"/>
-      </svg>
-      <span>Sign in with Slack</span>
-    </button>
+    <p class="lead">Internal command center. Enter your email and we'll send you a one-tap sign-in link.</p>
+
+    <form id="signinForm" autocomplete="on">
+      <label for="email">Work email</label>
+      <input type="email" id="email" name="email" placeholder="you@therunrec.com" required autofocus>
+      <button type="submit" class="primary" id="signinBtn">Send me a login link</button>
+    </form>
+
+    <div class="success" id="successBox">
+      <strong>Check your inbox.</strong><br>
+      We sent a sign-in link to <span id="sentTo"></span>.<br>
+      Tap it and you're in — no password needed.
+    </div>
+
     <div class="error" id="errorBox"></div>
+
     <div class="foot">
-      Only members of the RunRec Slack workspace can access this.<br>
+      Access is limited to the RunRec team.<br>
       Need access? Ask Sal.
     </div>
   </div>
@@ -83,23 +105,37 @@ button.slack svg{width:18px;height:18px}
 
 <script>
 document.addEventListener('runrec:auth-ready', () => {
-  const btn = document.getElementById('signinBtn');
-  const err = document.getElementById('errorBox');
-  btn.addEventListener('click', async () => {
+  const form = document.getElementById('signinForm');
+  const btn  = document.getElementById('signinBtn');
+  const err  = document.getElementById('errorBox');
+  const ok   = document.getElementById('successBox');
+  const sentTo = document.getElementById('sentTo');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    if(!email) return;
     btn.disabled = true;
+    btn.textContent = 'Sending…';
     err.classList.remove('show');
     try {
-      const baseUrl = new URL('../', location.href).href;
-      const { error } = await window.RUNREC.supabase.auth.signInWithOAuth({
-        provider: 'slack_oidc',
-        options: { redirectTo: baseUrl }
+      // Where the magic link lands. Tokens in the URL are consumed by auth.js
+      // (detectSessionInUrl), establishing the session, then it routes inward.
+      const redirectTo = new URL('../', location.href).href;
+      const { error } = await window.RUNREC.supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo, shouldCreateUser: true }
       });
       if(error) throw error;
-    } catch(e){
-      console.error(e);
-      err.textContent = e.message || 'Could not sign in. The Slack provider may not be configured yet.';
+      form.style.display = 'none';
+      sentTo.textContent = email;
+      ok.classList.add('show');
+    } catch(e2){
+      console.error(e2);
+      err.textContent = e2.message || 'Could not send the link. Please try again.';
       err.classList.add('show');
       btn.disabled = false;
+      btn.textContent = 'Send me a login link';
     }
   });
 });

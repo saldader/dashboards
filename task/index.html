@@ -276,6 +276,19 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 }
 .owner-chip.is-turn .turn-tag{display:inline-flex}
 .owner-chip.is-turn:hover{background:rgba(255,107,53,0.16)}
+.ping-block{display:flex;flex-direction:column;gap:8px;margin-left:auto}
+.ping-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:999px;padding:7px 14px;
+  font-size:13px;font-weight:500;color:var(--t2);
+  cursor:pointer;white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.ping-btn:hover{background:rgba(255,255,255,0.07);border-color:var(--border-strong);color:var(--text)}
+.ping-btn.confirming{background:rgba(255,107,53,0.12);border-color:rgba(255,107,53,0.45);color:var(--text)}
+.ping-btn.sent{background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.40);color:#fff}
+.ping-btn:disabled{opacity:0.6;cursor:default}
 .avatar{
   width:16px;height:16px;border-radius:2px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -727,6 +740,10 @@ body.has-task .empty-panel{display:none}
           <button id="dueClear" class="due-clear" type="button" hidden aria-label="Clear due date">×</button>
         </div>
       </div>
+      <div class="ping-block">
+        <span class="owners-label">Status check</span>
+        <button id="pingBtn" class="ping-btn" type="button" title="Ping the owner(s) for an update">📨 Ping for update</button>
+      </div>
     </div>
   </div>
 
@@ -850,6 +867,92 @@ function showToast(msg, ms = 4000){
   if(toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
 }
+
+// ────────────────────────────────────────────────────────────────────
+// Ping for update — sends a "where are we at?" nudge DM to the task's
+// owner(s) via slack_notification_queue (kind=nudge). Two-tap confirm so
+// it can't fire by accident. The webhook + edge fn deliver the Slack ping.
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  const btn = document.getElementById('pingBtn');
+  if(!btn) return;
+  const ownerOpts = document.querySelectorAll('#ownersMenu .owner-option');
+  const DEFAULT_LABEL = '📨 Ping for update';
+  let me = null;                 // { key, first } of the signed-in user
+  let confirming = false, confirmTimer = null, busy = false;
+
+  // Resolve who I am. RLS self-read returns only the caller's team_members row.
+  async function loadMe(){
+    try{
+      const r = await fetch(`${SUPABASE.url}/rest/v1/team_members?select=owner_key,display_name`, { headers: db.headers() });
+      if(r.ok){
+        const rows = await r.json();
+        if(rows && rows[0]) me = { key: rows[0].owner_key, first: (String(rows[0].display_name || '').split(/\s+/)[0] || 'A teammate') };
+      }
+    }catch(_){ /* fallback handled below */ }
+  }
+  document.addEventListener('runrec:auth-ready', loadMe);
+  loadMe();
+
+  function selectedOwners(){
+    return Array.from(ownerOpts)
+      .filter(o => o.getAttribute('aria-checked') === 'true')
+      .map(o => ({ key: o.dataset.key, name: o.dataset.name }));
+  }
+  function recipients(){
+    const sel = selectedOwners();
+    return me ? sel.filter(o => o.key !== me.key) : sel; // never ping yourself
+  }
+  function reset(){
+    confirming = false;
+    if(confirmTimer){ clearTimeout(confirmTimer); confirmTimer = null; }
+    btn.classList.remove('confirming','sent');
+    btn.textContent = DEFAULT_LABEL;
+    btn.disabled = false;
+  }
+
+  btn.addEventListener('click', async () => {
+    if(busy) return;
+    const recips = recipients();
+    if(recips.length === 0){
+      showToast(selectedOwners().length ? "You're the only owner — no one to ping." : 'Add an owner first, then ping them.');
+      return;
+    }
+    const names = recips.map(r => r.name.split(/\s+/)[0]).join(', ');
+
+    if(!confirming){
+      confirming = true;
+      btn.classList.add('confirming');
+      btn.textContent = `Ping ${names}? Tap to confirm`;
+      confirmTimer = setTimeout(reset, 4000);
+      return;
+    }
+
+    if(confirmTimer){ clearTimeout(confirmTimer); confirmTimer = null; }
+    busy = true; btn.disabled = true; btn.classList.remove('confirming'); btn.textContent = 'Pinging…';
+    const title = (document.getElementById('taskTitle')?.textContent || 'a task').trim();
+    const actor = me ? me.first : 'A teammate';
+    const rows = recips.map(r => ({ task_slug: SUPABASE.slug, task_title: title, owner_key: r.key, kind: 'nudge', actor }));
+    try{
+      const r = await fetch(`${SUPABASE.url}/rest/v1/slack_notification_queue`, {
+        method: 'POST',
+        headers: { ...db.headers(), 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rows),
+      });
+      if(!r.ok) throw new Error(`${r.status} ${await r.text().catch(() => '')}`);
+      btn.classList.add('sent');
+      btn.textContent = `Pinged ${names} ✓`;
+      showToast(`Pinged ${names} for an update.`);
+      busy = false;
+      setTimeout(reset, 2500);
+    }catch(err){
+      console.error('ping failed', err);
+      showToast('Could not send the ping. Please try again.');
+      busy = false;
+      reset();
+    }
+  });
+})();
 
 // ────────────────────────────────────────────────────────────────────
 // Status pill (DB-backed)

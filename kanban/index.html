@@ -380,6 +380,93 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 /* ── Footer (matches /task/) ── */
 .foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
 .foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+
+/* ── View tabs (Board | Archive) ── */
+.view-tabs{
+  display:inline-flex;align-items:center;gap:2px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:999px;padding:3px;margin-bottom:28px;
+}
+.view-tab{
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--t3);
+  padding:6px 16px;border-radius:999px;
+  transition:background .15s, color .15s;outline:none;
+}
+.view-tab:hover{color:var(--text)}
+.view-tab:focus-visible{box-shadow:0 0 0 2px rgba(255,107,53,0.5)}
+.view-tab.active{background:var(--hover);color:var(--text)}
+.view-tab-count{
+  font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--t4);background:rgba(255,255,255,0.05);
+  border-radius:999px;min-width:20px;height:18px;padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1;
+}
+.view-tab.active .view-tab-count{color:var(--t2)}
+
+/* ── Per-card Archive button (Done cards) ── */
+.card-archive{
+  position:absolute;top:8px;right:8px;z-index:2;
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:7px;padding:4px 9px;
+  font-size:11px;font-weight:600;color:var(--t3);
+  cursor:pointer;opacity:0;
+  transition:opacity .12s, background .12s, color .12s, border-color .12s;
+}
+.task-card:hover .card-archive,
+.task-card:focus-within .card-archive{opacity:1}
+.card-archive:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.card-archive svg{width:12px;height:12px}
+
+/* ── "Archive all done" button (Done column) ── */
+.archive-all{
+  display:none;align-items:center;justify-content:center;gap:6px;
+  width:100%;background:transparent;
+  border:1px solid var(--border);border-radius:10px;
+  padding:9px 14px;cursor:pointer;
+  color:var(--t4);font-size:12.5px;font-weight:600;
+  transition:border-color .15s, color .15s, background .15s;
+}
+.archive-all.show{display:flex}
+.archive-all:hover{color:var(--t2);border-color:var(--border-strong);background:rgba(255,255,255,0.02)}
+.archive-all.confirm{color:var(--accent);border-color:rgba(255,107,53,0.45);background:rgba(255,107,53,0.06)}
+.archive-all svg{width:13px;height:13px}
+
+/* ── Archive view ── */
+.archive-view{margin-top:4px}
+.archive-head{margin-bottom:20px}
+.archive-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.01em}
+.archive-sub{display:block;margin-top:4px;font-size:13.5px;color:var(--t4)}
+.archive-list{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:12px;align-items:start;
+}
+.archive-empty{
+  color:var(--t4);font-size:14px;padding:40px 0;text-align:center;
+  border:1px dashed var(--border);border-radius:12px;
+}
+.archive-card{
+  position:relative;background:#16161b;
+  border:1px solid var(--border);border-radius:10px;padding:14px;
+  transition:border-color .15s;
+}
+.archive-card:hover{border-color:var(--border-strong)}
+.archive-card .card-open{position:absolute;inset:0;border-radius:inherit;z-index:1}
+.archive-card .card-title{color:var(--t2);font-size:14px;font-weight:600;line-height:19px;word-break:break-word;padding-right:96px}
+.archive-card .archive-meta{margin-top:8px;font-size:11.5px;color:var(--t4);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.archive-card .archive-owners{display:flex;align-items:center;gap:4px}
+.card-unarchive{
+  position:absolute;top:10px;right:10px;z-index:2;
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:7px;padding:4px 9px;
+  font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;
+  transition:background .12s, color .12s, border-color .12s;
+}
+.card-unarchive:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.card-unarchive svg{width:12px;height:12px}
 </style>
 </head>
 <body>
@@ -401,6 +488,12 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   <div class="page-head">
     <h1>RunRec Tasks</h1>
     <p class="lead">All tasks across the project. Click a card to open. Click an avatar above to filter by owner.</p>
+  </div>
+
+  <!-- View tabs: Board | Archive -->
+  <div class="view-tabs" role="tablist" aria-label="Switch view">
+    <button type="button" class="view-tab active" data-view="board" role="tab" aria-selected="true">Board</button>
+    <button type="button" class="view-tab" data-view="archive" role="tab" aria-selected="false">Archive <span class="view-tab-count" id="archiveCount">0</span></button>
   </div>
 
   <!-- Owner filter row -->
@@ -472,10 +565,23 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
         <span class="col-count" data-count>0</span>
       </div>
       <div class="col-list" data-list></div>
+      <button type="button" class="archive-all" id="archiveAllBtn" aria-label="Archive all done tasks">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>
+        <span data-archive-all-label>Archive all done</span>
+      </button>
       <button type="button" class="add-card" data-add="done" aria-label="Add a task to Done">
         <span class="plus">+</span><span>Add a task</span>
       </button>
     </div>
+  </div>
+
+  <!-- Archive view -->
+  <div class="archive-view" id="archiveView" hidden>
+    <div class="archive-head">
+      <span class="archive-title">Archived tasks</span>
+      <span class="archive-sub">Done tasks you've filed away — kept for the record, off your board. Click one to open it, or unarchive to send it back to Done.</span>
+    </div>
+    <div class="archive-list" id="archiveList" aria-live="polite"></div>
   </div>
 
   <div class="board-status" id="boardStatus">Loading tasks…</div>
@@ -517,6 +623,7 @@ const SUPABASE = {
 };
 
 const STATUS_ORDER = ['not-started','in-progress','blocked','done'];
+const ARCHIVED = 'archived';
 const STATUS_LABELS = {
   'not-started': 'Not Started',
   'in-progress': 'In Progress',
@@ -650,6 +757,7 @@ const state = {
   filterOwner: null,  // null | one of OWNER_KEYS
   loaded: false,
   modalOpen: false,
+  view: 'board',      // 'board' | 'archive'
   modalStatus: null
 };
 
@@ -658,6 +766,24 @@ const state = {
 // ────────────────────────────────────────────────────────────────────
 const board = document.getElementById('board');
 const boardStatus = document.getElementById('boardStatus');
+const archiveView = document.getElementById('archiveView');
+const archiveListEl = document.getElementById('archiveList');
+const archiveCountEl = document.getElementById('archiveCount');
+const archiveAllBtn = document.getElementById('archiveAllBtn');
+const viewTabs = document.querySelectorAll('.view-tab');
+
+// "Archive all done" two-click confirm state
+let archiveAllArmed = false;
+let archiveAllTimer = null;
+function resetArchiveAllConfirm(){
+  archiveAllArmed = false;
+  if(archiveAllTimer){ clearTimeout(archiveAllTimer); archiveAllTimer = null; }
+  if(archiveAllBtn){
+    archiveAllBtn.classList.remove('confirm');
+    const label = archiveAllBtn.querySelector('[data-archive-all-label]');
+    if(label) label.textContent = 'Archive all done';
+  }
+}
 
 function buildCardHTML(t){
   const status = STATUS_ORDER.includes(t.status) ? t.status : 'not-started';
@@ -709,6 +835,7 @@ function buildCardHTML(t){
   return `
     <div class="task-card ${status}" draggable="true" data-slug="${slugAttr}" data-status="${status}" tabindex="0" aria-label="Task: ${title}. Drag to a different column to change status.">
       <a class="card-open" href="../task/?slug=${slug}" aria-label="Open task: ${title}" tabindex="-1" draggable="false"></a>
+      ${status === 'done' ? `<button type="button" class="card-archive" data-archive="${slugAttr}" draggable="false" title="Archive this task" aria-label="Archive task"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>Archive</button>` : ''}
       <div class="card-title">${title}</div>
       <div class="card-owners">${ownersHTML}</div>
       ${dueHTML}
@@ -720,16 +847,22 @@ function buildCardHTML(t){
 function render(){
   if(!state.loaded) return;
 
-  const filtered = state.filterOwner
-    ? state.tasks.filter(t => ownersArray(t.owners).includes(state.filterOwner))
-    : state.tasks;
+  // Archived tasks NEVER appear on the board — split them out before grouping
+  // (otherwise the unknown-status fallback would dump them into Not Started).
+  const archivedAll = state.tasks.filter(t => t.status === ARCHIVED);
+  const activeAll   = state.tasks.filter(t => t.status !== ARCHIVED);
 
+  // Owner filter applies to whichever view is showing.
+  const ownerMatch = t => !state.filterOwner || ownersArray(t.owners).includes(state.filterOwner);
+  const active   = activeAll.filter(ownerMatch);
+  const archived = archivedAll.filter(ownerMatch);
+
+  // ----- Board columns -----
   const groups = { 'not-started': [], 'in-progress': [], 'blocked': [], 'done': [] };
-  filtered.forEach(t => {
+  active.forEach(t => {
     const s = STATUS_ORDER.includes(t.status) ? t.status : 'not-started';
     groups[s].push(t);
   });
-
   STATUS_ORDER.forEach(status => {
     const col = board.querySelector(`.column[data-status="${status}"]`);
     if(!col) return;
@@ -737,7 +870,6 @@ function render(){
     const count = col.querySelector('[data-count]');
     const rows = groups[status];
     count.textContent = rows.length;
-
     if(rows.length === 0){
       list.innerHTML = `<div class="col-empty">No tasks</div>`;
     } else {
@@ -745,7 +877,167 @@ function render(){
     }
   });
 
+  // ----- "Archive all done" button (only on the board, only when there are done tasks) -----
+  if(archiveAllBtn){
+    const showAll = groups['done'].length > 0 && state.view === 'board';
+    archiveAllBtn.classList.toggle('show', showAll);
+    if(groups['done'].length === 0) resetArchiveAllConfirm();
+  }
+
+  // ----- Archive view (newest archived first) -----
+  archived.sort((a,b) => String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
+  if(archiveCountEl) archiveCountEl.textContent = archivedAll.length;
+  if(archiveListEl){
+    if(archived.length === 0){
+      archiveListEl.innerHTML = `<div class="archive-empty">${state.filterOwner ? 'No archived tasks for this owner.' : 'Nothing archived yet. Archive a Done task and it shows up here.'}</div>`;
+    } else {
+      archiveListEl.innerHTML = archived.map(buildArchiveCardHTML).join('');
+    }
+  }
+
+  applyViewVisibility();
   boardStatus.style.display = 'none';
+}
+
+function applyViewVisibility(){
+  const isArchive = state.view === 'archive';
+  board.style.display = isArchive ? 'none' : '';
+  if(archiveView) archiveView.hidden = !isArchive;
+  viewTabs.forEach(tab => {
+    const on = tab.dataset.view === state.view;
+    tab.classList.toggle('active', on);
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+
+function buildArchiveCardHTML(t){
+  const owners = ownersArray(t.owners);
+  const ownersHTML = owners.slice(0, 6).map(k => avatarHTML(k, OWNER_NAMES[k] || k)).join('');
+  const slug = encodeURIComponent(t.slug || '');
+  const slugAttr = escapeHtml(t.slug || '');
+  const title = escapeHtml(t.title || '(untitled)');
+  let when = '';
+  if(t.updated_at){
+    const d = new Date(t.updated_at);
+    if(!isNaN(d.getTime())) when = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+  return `
+    <div class="archive-card" data-slug="${slugAttr}">
+      <a class="card-open" href="../task/?slug=${slug}" aria-label="Open task: ${title}"></a>
+      <button type="button" class="card-unarchive" data-unarchive="${slugAttr}" title="Send back to Done" aria-label="Unarchive task">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M12 17v-5"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
+        Unarchive
+      </button>
+      <div class="card-title">${title}</div>
+      <div class="archive-meta">
+        ${ownersHTML ? `<span class="archive-owners">${ownersHTML}</span>` : ''}
+        ${when ? `<span>Archived ${escapeHtml(when)}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ----- Archive / Unarchive actions -----
+async function archiveOne(slug){
+  const row = state.tasks.find(t => t.slug === slug);
+  if(!row) return;
+  const prev = row.status;
+  row.status = ARCHIVED;            // optimistic
+  render();
+  try {
+    await db.patchTaskBySlug(slug, { status: ARCHIVED });
+    showToast('Task archived — find it in the Archive tab.');
+  } catch(err){
+    console.warn('archive failed', err);
+    row.status = prev;             // revert
+    render();
+    showToast('Could not archive. Try again.');
+  }
+}
+
+async function unarchiveOne(slug){
+  const row = state.tasks.find(t => t.slug === slug);
+  if(!row) return;
+  const prev = row.status;
+  row.status = 'done';             // optimistic — back to Done
+  render();
+  try {
+    await db.patchTaskBySlug(slug, { status: 'done' });
+    showToast('Task moved back to Done.');
+  } catch(err){
+    console.warn('unarchive failed', err);
+    row.status = prev;
+    render();
+    showToast('Could not unarchive. Try again.');
+  }
+}
+
+// View tab switching
+viewTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const v = tab.dataset.view === 'archive' ? 'archive' : 'board';
+    if(state.view === v) return;
+    state.view = v;
+    resetArchiveAllConfirm();
+    if(state.loaded) render(); else applyViewVisibility();
+  });
+});
+
+// Per-card Archive button (board)
+board.addEventListener('click', (e) => {
+  const btn = e.target.closest('.card-archive');
+  if(!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  archiveOne(btn.dataset.archive);
+});
+// Don't let a press on the Archive button arm a card drag
+board.addEventListener('mousedown', (e) => {
+  if(e.target.closest('.card-archive')){ dragState.suppress = true; e.stopPropagation(); }
+}, true);
+
+// Per-card Unarchive button (archive view)
+if(archiveListEl){
+  archiveListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.card-unarchive');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    unarchiveOne(btn.dataset.unarchive);
+  });
+}
+
+// "Archive all done" — two-click confirm, then batch archive
+if(archiveAllBtn){
+  archiveAllBtn.addEventListener('click', async () => {
+    const doneRows = state.tasks.filter(t => t.status === 'done'
+      && (!state.filterOwner || ownersArray(t.owners).includes(state.filterOwner)));
+    if(doneRows.length === 0){ resetArchiveAllConfirm(); return; }
+    if(!archiveAllArmed){
+      archiveAllArmed = true;
+      archiveAllBtn.classList.add('confirm');
+      const label = archiveAllBtn.querySelector('[data-archive-all-label]');
+      if(label) label.textContent = `Archive ${doneRows.length} task${doneRows.length > 1 ? 's' : ''}? Click again`;
+      archiveAllTimer = setTimeout(resetArchiveAllConfirm, 3500);
+      return;
+    }
+    resetArchiveAllConfirm();
+    const slugs = doneRows.map(t => t.slug).filter(Boolean);
+    doneRows.forEach(r => { r._prevStatus = r.status; r.status = ARCHIVED; }); // optimistic
+    render();
+    let ok = 0, fail = 0;
+    for(const slug of slugs){
+      try { await db.patchTaskBySlug(slug, { status: ARCHIVED }); ok++; }
+      catch(err){
+        fail++;
+        const r = state.tasks.find(t => t.slug === slug);
+        if(r) r.status = r._prevStatus || 'done';
+      }
+    }
+    state.tasks.forEach(r => { delete r._prevStatus; });
+    render();
+    showToast(fail === 0 ? `Archived ${ok} task${ok > 1 ? 's' : ''}.` : `Archived ${ok}, ${fail} failed — reverted those.`);
+  });
 }
 
 function setBoardStatus(msg, isError){
@@ -946,7 +1238,8 @@ const dragState = {
   fromStatus: null,  // its origin column status
   pressX: 0, pressY: 0,
   moved: false,
-  pressed: false
+  pressed: false,
+  suppress: false    // true when press started on a non-drag control (e.g. Archive button)
 };
 
 function clearDragHighlights(){
@@ -1060,7 +1353,7 @@ board.addEventListener('mousemove', (e) => {
 
 window.addEventListener('mouseup', () => {
   // Reset on next tick so click handler sees correct state
-  setTimeout(() => { dragState.pressed = false; dragState.moved = false; }, 0);
+  setTimeout(() => { dragState.pressed = false; dragState.moved = false; dragState.suppress = false; }, 0);
 });
 
 // Suppress click navigation if a drag actually happened
@@ -1073,6 +1366,7 @@ board.addEventListener('click', (e) => {
 }, true);
 
 board.addEventListener('dragstart', (e) => {
+  if(dragState.suppress){ e.preventDefault(); return; } // press began on a control, not the card body
   const card = findCardEl(e.target);
   if(!card){ return; }
   // Only allow drag if it started from a card body (not a click on its inner <a> being blocked)

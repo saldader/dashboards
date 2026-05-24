@@ -949,18 +949,43 @@ const STATUS_LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progres
     return Array.from(options).filter(o => o.getAttribute('aria-checked') === 'true').map(o => o.dataset.key);
   }
 
+  // Persist an owners change. When adding an owner to a task that has no active
+  // turn, that owner automatically becomes the active turn (owners_done[0]) — so
+  // assigning someone to a task notifies them, which is what people expect from
+  // "add owner". The DB trigger fires the Slack DM only when owners_done[0]
+  // actually changes, so this never double-fires. Removing the active owner
+  // clears the turn so no stale/false turn lingers.
+  function saveOwners(keys, addedKey){
+    const patch = { owners: keys };
+    let done = Array.isArray(state.ownersDone) ? state.ownersDone.slice() : [];
+    // Drop any active-turn owners that are no longer owners at all.
+    done = done.filter(k => keys.includes(k));
+    if(addedKey && keys.includes(addedKey) && done.length === 0){
+      // First/only active owner becomes the active turn → triggers their DM.
+      done = [addedKey];
+    }
+    const prev = Array.isArray(state.ownersDone) ? state.ownersDone : [];
+    const changed = done.length !== prev.length || done.some((k,i) => k !== prev[i]);
+    if(changed){
+      patch.owners_done = done;
+      state.ownersDone = done;
+    }
+    renderSelected();
+    db.updateTask(patch).then(rows => {
+      if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
+    }).catch(err => console.warn('owners save failed', err));
+  }
+
   function openMenu(){ menu.classList.add('open'); trigger.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
 
   trigger.addEventListener('click', e => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
   options.forEach(opt => opt.addEventListener('click', e => {
     e.stopPropagation();
-    const cur = opt.getAttribute('aria-checked') === 'true';
-    opt.setAttribute('aria-checked', cur ? 'false' : 'true');
-    renderSelected();
-    db.updateTask({ owners: currentKeys() }).then(rows => {
-      if(rows && rows[0] && rows[0].updated_at) state.lastUpdatedAt = rows[0].updated_at;
-    }).catch(err => console.warn('owners save failed', err));
+    const wasChecked = opt.getAttribute('aria-checked') === 'true';
+    opt.setAttribute('aria-checked', wasChecked ? 'false' : 'true');
+    const addedKey = wasChecked ? null : opt.dataset.key; // checking = adding
+    saveOwners(currentKeys(), addedKey);
   }));
   document.addEventListener('click', e => { if(!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) closeMenu(); });
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });

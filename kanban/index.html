@@ -623,7 +623,6 @@ const SUPABASE = {
 };
 
 const STATUS_ORDER = ['not-started','in-progress','blocked','done'];
-const ARCHIVED = 'archived';
 const STATUS_LABELS = {
   'not-started': 'Not Started',
   'in-progress': 'In Progress',
@@ -847,10 +846,10 @@ function buildCardHTML(t){
 function render(){
   if(!state.loaded) return;
 
-  // Archived tasks NEVER appear on the board — split them out before grouping
-  // (otherwise the unknown-status fallback would dump them into Not Started).
-  const archivedAll = state.tasks.filter(t => t.status === ARCHIVED);
-  const activeAll   = state.tasks.filter(t => t.status !== ARCHIVED);
+  // Archived tasks NEVER appear on the board — split them out first.
+  // (status stays whatever it was, e.g. 'done'; the `archived` flag hides it.)
+  const archivedAll = state.tasks.filter(t => t.archived === true);
+  const activeAll   = state.tasks.filter(t => t.archived !== true);
 
   // Owner filter applies to whichever view is showing.
   const ownerMatch = t => !state.filterOwner || ownersArray(t.owners).includes(state.filterOwner);
@@ -924,7 +923,7 @@ function buildArchiveCardHTML(t){
   return `
     <div class="archive-card" data-slug="${slugAttr}">
       <a class="card-open" href="../task/?slug=${slug}" aria-label="Open task: ${title}"></a>
-      <button type="button" class="card-unarchive" data-unarchive="${slugAttr}" title="Send back to Done" aria-label="Unarchive task">
+      <button type="button" class="card-unarchive" data-unarchive="${slugAttr}" title="Restore to the board" aria-label="Unarchive task">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M12 17v-5"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
         Unarchive
       </button>
@@ -941,15 +940,15 @@ function buildArchiveCardHTML(t){
 async function archiveOne(slug){
   const row = state.tasks.find(t => t.slug === slug);
   if(!row) return;
-  const prev = row.status;
-  row.status = ARCHIVED;            // optimistic
+  const prev = row.archived === true;
+  row.archived = true;             // optimistic
   render();
   try {
-    await db.patchTaskBySlug(slug, { status: ARCHIVED });
+    await db.patchTaskBySlug(slug, { archived: true });
     showToast('Task archived — find it in the Archive tab.');
   } catch(err){
     console.warn('archive failed', err);
-    row.status = prev;             // revert
+    row.archived = prev;           // revert
     render();
     showToast('Could not archive. Try again.');
   }
@@ -958,15 +957,15 @@ async function archiveOne(slug){
 async function unarchiveOne(slug){
   const row = state.tasks.find(t => t.slug === slug);
   if(!row) return;
-  const prev = row.status;
-  row.status = 'done';             // optimistic — back to Done
+  const prev = row.archived === true;
+  row.archived = false;            // optimistic — back onto the board (its status is unchanged)
   render();
   try {
-    await db.patchTaskBySlug(slug, { status: 'done' });
-    showToast('Task moved back to Done.');
+    await db.patchTaskBySlug(slug, { archived: false });
+    showToast('Task restored to the board.');
   } catch(err){
     console.warn('unarchive failed', err);
-    row.status = prev;
+    row.archived = prev;
     render();
     showToast('Could not unarchive. Try again.');
   }
@@ -1010,7 +1009,7 @@ if(archiveListEl){
 // "Archive all done" — two-click confirm, then batch archive
 if(archiveAllBtn){
   archiveAllBtn.addEventListener('click', async () => {
-    const doneRows = state.tasks.filter(t => t.status === 'done'
+    const doneRows = state.tasks.filter(t => t.status === 'done' && t.archived !== true
       && (!state.filterOwner || ownersArray(t.owners).includes(state.filterOwner)));
     if(doneRows.length === 0){ resetArchiveAllConfirm(); return; }
     if(!archiveAllArmed){
@@ -1023,18 +1022,18 @@ if(archiveAllBtn){
     }
     resetArchiveAllConfirm();
     const slugs = doneRows.map(t => t.slug).filter(Boolean);
-    doneRows.forEach(r => { r._prevStatus = r.status; r.status = ARCHIVED; }); // optimistic
+    doneRows.forEach(r => { r._prevArchived = r.archived === true; r.archived = true; }); // optimistic
     render();
     let ok = 0, fail = 0;
     for(const slug of slugs){
-      try { await db.patchTaskBySlug(slug, { status: ARCHIVED }); ok++; }
+      try { await db.patchTaskBySlug(slug, { archived: true }); ok++; }
       catch(err){
         fail++;
         const r = state.tasks.find(t => t.slug === slug);
-        if(r) r.status = r._prevStatus || 'done';
+        if(r) r.archived = r._prevArchived === true;
       }
     }
-    state.tasks.forEach(r => { delete r._prevStatus; });
+    state.tasks.forEach(r => { delete r._prevArchived; });
     render();
     showToast(fail === 0 ? `Archived ${ok} task${ok > 1 ? 's' : ''}.` : `Archived ${ok}, ${fail} failed — reverted those.`);
   });

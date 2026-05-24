@@ -71,16 +71,52 @@ async function processOne(row: {
   const taskUrl = `${DASHBOARD_BASE_URL}/task/?slug=${encodeURIComponent(row.task_slug)}`;
   const firstName = (member.display_name ?? row.owner_key).split(/\s+/)[0];
 
-  // Post the message.
+  // Best-effort enrichment with status + due date. Never blocks the send.
+  let statusLabel = "";
+  let dueLabel = "";
+  try {
+    const { data: t } = await sb
+      .from("tasks")
+      .select("status, due_date")
+      .eq("slug", row.task_slug)
+      .limit(1)
+      .maybeSingle();
+    const STATUS: Record<string, string> = {
+      "not-started": "Not started",
+      "in-progress": "In progress",
+      "blocked": "Blocked",
+      "done": "Done",
+    };
+    if (t?.status) statusLabel = STATUS[t.status as string] ?? String(t.status);
+    if (t?.due_date) {
+      dueLabel = new Date(`${t.due_date}T00:00:00`).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+  } catch (_) {
+    /* enrichment is optional */
+  }
+
+  const meta = [
+    statusLabel ? `Status: *${statusLabel}*` : null,
+    dueLabel ? `Due: *${dueLabel}*` : null,
+  ].filter(Boolean).join("   ·   ");
+
+  // Post the message. `text` is the lock-screen / push preview — keep it crisp.
   await slack("chat.postMessage", {
     channel: channelId,
-    text: `Hey ${firstName} — your turn on *${row.task_title}*. <${taskUrl}|Open task>`,
+    text: `🔔 Your turn — ${row.task_title}`,
     blocks: [
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: `:bell:  *Your turn, ${firstName}*` },
+      },
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Hey *${firstName}* — your turn on *${row.task_title}*.`,
+          text: `*${row.task_title}*${meta ? `\n${meta}` : ""}`,
         },
       },
       {
@@ -88,9 +124,18 @@ async function processOne(row: {
         elements: [
           {
             type: "button",
-            text: { type: "plain_text", text: "Open task" },
+            text: { type: "plain_text", text: "Open task  →", emoji: true },
             url: taskUrl,
             style: "primary",
+          },
+        ],
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "RunRec HQ  ·  open the task, then check your name off when you're done.",
           },
         ],
       },

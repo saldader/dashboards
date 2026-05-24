@@ -98,6 +98,8 @@ async function processOne(row: {
   task_slug: string;
   task_title: string;
   owner_key: string;
+  kind: string | null;
+  actor: string | null;
 }): Promise<void> {
   // Find the team member for this owner_key.
   const { data: members, error: mErr } = await sb
@@ -178,20 +180,53 @@ async function processOne(row: {
     dueLabel ? dueLabel : null, // dueLabel already includes "Due: *date* (countdown)"
   ].filter(Boolean).join("   ·   ");
 
+  // Message wording varies by kind (turn / nudge / due). All three keep the same
+  // one-tap auto-login button and the status/due meta line. Unknown/legacy kinds
+  // (including null) fall through to "turn" so existing behavior never changes.
+  const actorLabel = (row.actor && row.actor.trim()) ? row.actor.trim() : "Someone";
+  const titleBold = `*${row.task_title}*`;
+  let pushText: string;
+  let headerLine: string;
+  let bodyText: string;
+  let contextLine: string;
+  let buttonLabel = "Open task  →";
+  switch (row.kind) {
+    case "nudge":
+      pushText = `👋 ${actorLabel} is checking in — ${row.task_title}`;
+      headerLine = `:wave:  *${actorLabel} is checking in, ${firstName}*`;
+      bodyText = `Where are we at with ${titleBold}?`;
+      contextLine = "RunRec HQ  ·  tap to open, then reply with a quick update.";
+      buttonLabel = "Open & update  →";
+      break;
+    case "due":
+      pushText = `⏰ Due today — ${row.task_title}`;
+      headerLine = `:alarm_clock:  *Due today, ${firstName}*`;
+      bodyText = `${titleBold} is due today.`;
+      contextLine = "RunRec HQ  ·  open the task to finish it or update its status.";
+      break;
+    case "turn":
+    default:
+      pushText = `🔔 Your turn — ${row.task_title}`;
+      headerLine = `:bell:  *Your turn, ${firstName}*`;
+      bodyText = titleBold;
+      contextLine = "RunRec HQ  ·  open the task, then check your name off when you're done.";
+      break;
+  }
+
   // Post the message. `text` is the lock-screen / push preview — keep it crisp.
   await slack("chat.postMessage", {
     channel: channelId,
-    text: `🔔 Your turn — ${row.task_title}`,
+    text: pushText,
     blocks: [
       {
         type: "section",
-        text: { type: "mrkdwn", text: `:bell:  *Your turn, ${firstName}*` },
+        text: { type: "mrkdwn", text: headerLine },
       },
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*${row.task_title}*${meta ? `\n${meta}` : ""}`,
+          text: `${bodyText}${meta ? `\n${meta}` : ""}`,
         },
       },
       {
@@ -199,7 +234,7 @@ async function processOne(row: {
         elements: [
           {
             type: "button",
-            text: { type: "plain_text", text: "Open task  →", emoji: true },
+            text: { type: "plain_text", text: buttonLabel, emoji: true },
             url: buttonUrl,
             style: "primary",
           },
@@ -210,7 +245,7 @@ async function processOne(row: {
         elements: [
           {
             type: "mrkdwn",
-            text: "RunRec HQ  ·  open the task, then check your name off when you're done.",
+            text: contextLine,
           },
         ],
       },
@@ -225,7 +260,7 @@ async function processOne(row: {
 Deno.serve(async (_req: Request) => {
   const { data: rows, error } = await sb
     .from("slack_notification_queue")
-    .select("id, task_slug, task_title, owner_key")
+    .select("id, task_slug, task_title, owner_key, kind, actor")
     .is("sent_at", null)
     .order("created_at", { ascending: true })
     .limit(25);

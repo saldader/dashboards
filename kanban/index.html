@@ -1209,7 +1209,15 @@ document.addEventListener('visibilitychange', () => {
 // ────────────────────────────────────────────────────────────────────
 // Boot
 // ────────────────────────────────────────────────────────────────────
-refresh();
+(function bootWhenReady(){
+  // Wait for auth so the first fetch carries the signed-in user's token
+  // (required once the board is locked to logged-in members). Falls back to
+  // an immediate load so nothing breaks if auth never initializes.
+  let booted = false;
+  const go = () => { if(booted) return; booted = true; refresh(); };
+  if(document.documentElement.classList.contains('runrec-auth-ready')) go();
+  else { document.addEventListener('runrec:auth-ready', go, { once:true }); setTimeout(go, 4000); }
+})();
 </script>
 </body>
 </html>

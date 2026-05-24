@@ -2562,6 +2562,13 @@ function showTask(){
 }
 
 (async function boot(){
+  // Wait for auth so DB reads carry the signed-in user's token (required once
+  // the board is locked to logged-in members). Falls back after 4s so it never hangs.
+  await new Promise(res => {
+    if(document.documentElement.classList.contains('runrec-auth-ready')) return res();
+    document.addEventListener('runrec:auth-ready', res, { once:true });
+    setTimeout(res, 4000);
+  });
   if(!SUPABASE.slug){
     showEmpty('Open a task from the Kanban', 'This page renders a task by URL. Add <code>?slug=&lt;your-task-slug&gt;</code> to view one.');
     return;

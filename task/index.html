@@ -264,18 +264,18 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   user-select:none;
 }
 .owner-chip:hover{background:rgba(255,255,255,0.07);border-color:var(--border-strong)}
-.owner-chip .done-check{
-  display:none;width:14px;height:14px;border-radius:50%;
-  background:rgba(255,107,53,0.20);color:var(--accent);
-  align-items:center;justify-content:center;font-size:10px;font-weight:700;
-  margin-left:2px;
+.owner-chip .turn-tag{
+  display:none;align-items:center;
+  font-size:9.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--accent);background:rgba(255,107,53,0.18);
+  padding:1px 6px;border-radius:999px;margin-left:2px;
 }
-.owner-chip.is-done{
+.owner-chip.is-turn{
   background:rgba(255,107,53,0.10);border-color:rgba(255,107,53,0.30);
   color:var(--text);
 }
-.owner-chip.is-done .done-check{display:inline-flex}
-.owner-chip.is-done:hover{background:rgba(255,107,53,0.16)}
+.owner-chip.is-turn .turn-tag{display:inline-flex}
+.owner-chip.is-turn:hover{background:rgba(255,107,53,0.16)}
 .avatar{
   width:16px;height:16px;border-radius:2px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -912,9 +912,9 @@ const STATUS_LABELS = { 'not-started': 'Not Started', 'in-progress': 'In Progres
       const avatar = o.querySelector('.avatar');
       const avatarHTML = `<span class="avatar ${avatar.className.replace('avatar','').trim()}">${avatar.innerHTML}</span>`;
       const isActive = done.includes(key);
-      const cls = `owner-chip${isActive ? ' is-done' : ''}`;
+      const cls = `owner-chip${isActive ? ' is-turn' : ''}`;
       const title = isActive ? `${name}'s turn. Click to clear.` : `Mark this as ${name}'s turn.`;
-      return `<button type="button" class="${cls}" data-owner-key="${key}" title="${title}">${avatarHTML}${name}<span class="done-check" aria-hidden="true">✓</span></button>`;
+      return `<button type="button" class="${cls}" data-owner-key="${key}" title="${title}">${avatarHTML}${name}<span class="turn-tag">turn</span></button>`;
     }).join('');
     selected.querySelectorAll('.owner-chip[data-owner-key]').forEach(chip => {
       chip.addEventListener('click', e => {

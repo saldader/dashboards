@@ -9,68 +9,40 @@
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <style>
 :root{
-  --bg:#0a0a0c;
-  --panel:#131318;
-  --card:#1a1a20;
-  --border:rgba(255,255,255,0.08);
-  --text:#f4f4f6;
-  --t3:#a3a3a8;
-  --accent:#0c93e0;
+  --bg:#0a0a0c; --panel:#131318; --card:#1a1a20;
+  --border:rgba(255,255,255,0.08); --text:#f4f4f6; --t3:#a3a3a8; --accent:#0c93e0;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{min-height:100vh;display:grid;place-items:center;padding:32px}
-.card{
-  width:100%;max-width:380px;
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:18px;padding:36px 32px 32px;
-  display:flex;flex-direction:column;align-items:center;
-  box-shadow:0 24px 60px rgba(0,0,0,0.35);
-}
-.logo{
-  width:72px;height:72px;border-radius:16px;overflow:hidden;
-  background:#0c93e0;display:grid;place-items:center;margin-bottom:18px;
-}
+.card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);
+  border-radius:18px;padding:36px 32px 32px;display:flex;flex-direction:column;align-items:center;
+  box-shadow:0 24px 60px rgba(0,0,0,0.35);}
+.logo{width:72px;height:72px;border-radius:16px;overflow:hidden;background:#0c93e0;display:grid;place-items:center;margin-bottom:18px;}
 .logo img{width:100%;height:100%;display:block;object-fit:cover}
 h1{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:0 0 6px;text-align:center}
 .lead{font-size:14px;color:var(--t3);margin:0 0 24px;text-align:center;line-height:1.5}
 form{width:100%;display:flex;flex-direction:column;gap:12px}
 label{font-size:12px;color:var(--t3);margin-bottom:-6px}
-input[type=email]{
-  width:100%;background:var(--card);border:1px solid var(--border);
-  color:var(--text);padding:13px 14px;border-radius:10px;font-size:14px;
-  outline:none;transition:border-color .15s ease;
-}
-input[type=email]:focus{border-color:var(--accent)}
-button.primary{
-  width:100%;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  background:var(--accent);color:white;border:0;
-  padding:13px 16px;border-radius:10px;
-  font-size:14px;font-weight:600;cursor:pointer;
-  transition:transform .08s ease, filter .15s ease;
-}
+input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);
+  padding:13px 14px;border-radius:10px;font-size:14px;outline:none;transition:border-color .15s ease;}
+input:focus{border-color:var(--accent)}
+input#code{font-size:22px;letter-spacing:8px;text-align:center;font-family:monospace}
+button.primary{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--accent);color:white;border:0;padding:13px 16px;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer;transition:transform .08s ease, filter .15s ease;}
 button.primary:hover{filter:brightness(1.08)}
 button.primary:active{transform:translateY(1px)}
 button.primary:disabled{opacity:0.6;cursor:wait}
-.error{
-  margin-top:14px;padding:10px 12px;border-radius:8px;
-  background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);
-  color:#fca5a5;font-size:12.5px;text-align:center;display:none;
-}
+.linkbtn{background:none;border:0;color:var(--t3);font-size:12px;cursor:pointer;text-decoration:underline;margin-top:4px}
+.linkbtn:hover{color:var(--accent)}
+.error{margin-top:14px;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,0.10);
+  border:1px solid rgba(239,68,68,0.30);color:#fca5a5;font-size:12.5px;text-align:center;display:none;}
 .error.show{display:block}
-.success{
-  width:100%;margin-top:4px;padding:18px 16px;border-radius:12px;
-  background:rgba(12,147,224,0.08);border:1px solid rgba(12,147,224,0.30);
-  color:#cfe9fb;font-size:13.5px;text-align:center;line-height:1.55;display:none;
-}
-.success.show{display:block}
-.success strong{color:#fff}
-.foot{
-  margin-top:24px;font-size:11px;color:#666;text-align:center;line-height:1.6;
-}
-.foot a{color:#888;text-decoration:none}
-.foot a:hover{color:var(--accent)}
+.note{margin-top:10px;font-size:12.5px;color:var(--t3);text-align:center;line-height:1.5}
+.note b{color:var(--text)}
+.foot{margin-top:24px;font-size:11px;color:#666;text-align:center;line-height:1.6;}
+.hidden{display:none}
 </style>
 <script>window.__RUNREC_PUBLIC = true;</script>
 <script src="../assets/js/auth.js"></script>
@@ -80,19 +52,23 @@ button.primary:disabled{opacity:0.6;cursor:wait}
   <div class="card">
     <div class="logo"><img src="../assets/runrec-logo.png" alt="RunRec"></div>
     <h1>RunRec HQ</h1>
-    <p class="lead">Internal command center. Enter your email and we'll send you a one-tap sign-in link.</p>
+    <p class="lead" id="lead">Internal command center. Enter your email and we'll send you a one-time code.</p>
 
-    <form id="signinForm" autocomplete="on">
+    <!-- Step 1: email -->
+    <form id="emailForm" autocomplete="on">
       <label for="email">Work email</label>
       <input type="email" id="email" name="email" placeholder="you@therunrec.com" required autofocus>
-      <button type="submit" class="primary" id="signinBtn">Send me a login link</button>
+      <button type="submit" class="primary" id="sendBtn">Send me a code</button>
     </form>
 
-    <div class="success" id="successBox">
-      <strong>Check your inbox.</strong><br>
-      We sent a sign-in link to <span id="sentTo"></span>.<br>
-      Tap it and you're in — no password needed.
-    </div>
+    <!-- Step 2: code -->
+    <form id="codeForm" class="hidden">
+      <p class="note">We emailed a code to <b id="sentTo"></b>.<br>Enter it below — no password needed.</p>
+      <label for="code">6–8 digit code</label>
+      <input type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="••••••" required>
+      <button type="submit" class="primary" id="verifyBtn">Sign in</button>
+      <button type="button" class="linkbtn" id="changeEmail">Use a different email</button>
+    </form>
 
     <div class="error" id="errorBox"></div>
 
@@ -105,38 +81,74 @@ button.primary:disabled{opacity:0.6;cursor:wait}
 
 <script>
 document.addEventListener('runrec:auth-ready', () => {
-  const form = document.getElementById('signinForm');
-  const btn  = document.getElementById('signinBtn');
-  const err  = document.getElementById('errorBox');
-  const ok   = document.getElementById('successBox');
-  const sentTo = document.getElementById('sentTo');
+  const sb        = window.RUNREC.supabase;
+  const emailForm = document.getElementById('emailForm');
+  const codeForm  = document.getElementById('codeForm');
+  const sendBtn   = document.getElementById('sendBtn');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const err       = document.getElementById('errorBox');
+  const sentTo    = document.getElementById('sentTo');
+  const lead      = document.getElementById('lead');
+  let currentEmail = '';
 
-  form.addEventListener('submit', async (e) => {
+  const showErr = (m) => { err.textContent = m; err.classList.add('show'); };
+  const clearErr = () => err.classList.remove('show');
+
+  // Step 1 — request a one-time code (no link, so email scanners can't burn it).
+  emailForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    if(!email) return;
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
-    err.classList.remove('show');
+    currentEmail = document.getElementById('email').value.trim().toLowerCase();
+    if(!currentEmail) return;
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; clearErr();
     try {
-      // Where the magic link lands. Tokens in the URL are consumed by auth.js
-      // (detectSessionInUrl), establishing the session, then it routes inward.
-      const redirectTo = new URL('../', location.href).href;
-      const { error } = await window.RUNREC.supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo, shouldCreateUser: true }
+      // shouldCreateUser:false => only pre-authorized team emails can get a code.
+      const { error } = await sb.auth.signInWithOtp({
+        email: currentEmail,
+        options: { shouldCreateUser: false }
       });
       if(error) throw error;
-      form.style.display = 'none';
-      sentTo.textContent = email;
-      ok.classList.add('show');
+      sentTo.textContent = currentEmail;
+      lead.classList.add('hidden');
+      emailForm.classList.add('hidden');
+      codeForm.classList.remove('hidden');
+      document.getElementById('code').focus();
     } catch(e2){
       console.error(e2);
-      err.textContent = e2.message || 'Could not send the link. Please try again.';
-      err.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'Send me a login link';
+      const msg = (e2 && e2.message || '').toLowerCase();
+      if(msg.includes('signups') || msg.includes('not allowed') || msg.includes('not found')){
+        showErr("That email isn't on the RunRec team list. Ask Sal to add you.");
+      } else {
+        showErr(e2.message || 'Could not send the code. Try again.');
+      }
+      sendBtn.disabled = false; sendBtn.textContent = 'Send me a code';
     }
+  });
+
+  // Step 2 — verify the code → creates the session → into the board.
+  codeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = document.getElementById('code').value.trim();
+    if(!token) return;
+    verifyBtn.disabled = true; verifyBtn.textContent = 'Signing in…'; clearErr();
+    try {
+      const { error } = await sb.auth.verifyOtp({ email: currentEmail, token, type: 'email' });
+      if(error) throw error;
+      // Session is set + persisted. Head into the board.
+      location.replace(new URL('../', location.href).href);
+    } catch(e2){
+      console.error(e2);
+      showErr('That code didn’t work or expired. Double-check it, or request a new one.');
+      verifyBtn.disabled = false; verifyBtn.textContent = 'Sign in';
+    }
+  });
+
+  document.getElementById('changeEmail').addEventListener('click', () => {
+    clearErr();
+    codeForm.classList.add('hidden');
+    lead.classList.remove('hidden');
+    emailForm.classList.remove('hidden');
+    sendBtn.disabled = false; sendBtn.textContent = 'Send me a code';
+    document.getElementById('email').focus();
   });
 });
 </script>

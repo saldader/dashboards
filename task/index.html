@@ -2244,11 +2244,15 @@ async function uploadImage(file){
   const fname = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
   const path = `${safeSlug}/${fname}`;
   const url = `${SUPABASE.url}/storage/v1/object/${ATTACHMENT_BUCKET}/${path}`;
+  // Storage RLS requires the logged-in user's JWT (anon was dropped at cutover).
+  // Mirror db.headers(): user access_token if present, fall back to publishable key.
+  const s = window.RUNREC && window.RUNREC.session;
+  const token = (s && s.access_token) || SUPABASE.key;
   const r = await fetch(url, {
     method: 'POST',
     headers: {
       apikey: SUPABASE.key,
-      Authorization: `Bearer ${SUPABASE.key}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': file.type || 'application/octet-stream',
       'x-upsert': 'true'
     },

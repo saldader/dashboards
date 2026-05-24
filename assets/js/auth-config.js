@@ -8,5 +8,5 @@
 // the login page still works (errors gracefully when you click Sign in),
 // and the auth code is exercised so we know it works before locking the door.
 window.__RUNREC_AUTH_CONFIG = {
-  enforce: false
+  enforce: true
 };

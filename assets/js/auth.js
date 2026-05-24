@@ -1,6 +1,11 @@
 // RunRec HQ — shared auth helper.
-// Loaded on every page. Enforces sign-in via Supabase + Slack OIDC.
-// Pages that should be public (currently just /login/) set window.__RUNREC_PUBLIC = true
+// Loaded on every page. Enforces sign-in via Supabase email OTP (one-time code)
+// and supports one-tap auto-login links (magic links minted per-recipient in the
+// Slack ping). detectSessionInUrl:true picks up the session from the URL fragment
+// that an auto-login link lands with, so tapping "Open task" logs you in with zero
+// typing — even inside Slack's isolated in-app browser.
+// Pages that should be public (currently just /login/, and the standalone
+// /eyad-prospectus/ which omits this script) set window.__RUNREC_PUBLIC = true
 // BEFORE this script loads.
 
 (function(){

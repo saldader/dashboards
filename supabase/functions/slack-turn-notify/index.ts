@@ -40,6 +40,59 @@ async function slack<T = any>(method: string, body: Record<string, unknown>): Pr
   return json as T;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// One-tap auto-login link.
+//
+// Mints a fresh, single-use magic-link for THIS recipient via the GoTrue admin
+// API (generate_link). Tapping it logs them in AND lands them on the task —
+// zero typing, regardless of browser or session. This is the whole point: a
+// teammate tapping "Open task" from a Slack mobile push opens Slack's in-app
+// browser (an isolated webview with no prior session), so without this they'd
+// hit the email-code wall every single time.
+//
+// CRITICAL: redirect_to MUST be a TOP-LEVEL field in the request body. If it is
+// nested under `options` (the supabase-js client shape), the GoTrue admin
+// endpoint ignores it and silently falls back to site_url — verified 2026-05-23.
+// The redirect target must also match the project's URI allow-list (currently
+// https://saldader.github.io/dashboards/**).
+//
+// Security: the link lands only in the user's private Slack DM, is single-use,
+// and expires in ~1h (mailer_otp_exp=3600). Pings are timely, so a 1h TTL is
+// ample. If minting fails for any reason, we fall back to the plain task URL
+// (which still works — it just shows the login screen). Never blocks the send.
+// ─────────────────────────────────────────────────────────────────────────
+async function mintAutoLoginUrl(email: string, taskUrl: string): Promise<string | null> {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+      },
+      body: JSON.stringify({
+        type: "magiclink",
+        email,
+        redirect_to: taskUrl, // TOP-LEVEL — see note above.
+      }),
+    });
+    if (!r.ok) {
+      console.error(`generate_link http ${r.status}: ${await r.text().catch(() => "")}`);
+      return null;
+    }
+    const json = await r.json();
+    const link = json?.action_link as string | undefined;
+    if (!link) {
+      console.error("generate_link: no action_link in response");
+      return null;
+    }
+    return link;
+  } catch (e) {
+    console.error("mintAutoLoginUrl failed:", (e as Error).message ?? e);
+    return null;
+  }
+}
+
 async function processOne(row: {
   id: number;
   task_slug: string;
@@ -70,6 +123,15 @@ async function processOne(row: {
   const channelId = open.channel.id;
   const taskUrl = `${DASHBOARD_BASE_URL}/task/?slug=${encodeURIComponent(row.task_slug)}`;
   const firstName = (member.display_name ?? row.owner_key).split(/\s+/)[0];
+
+  // One-tap auto-login: mint a fresh magic link for this recipient that logs
+  // them in AND lands on the task. Falls back to the plain task URL (which shows
+  // the login screen) if the member has no email on file or minting fails.
+  let buttonUrl = taskUrl;
+  if (member.email) {
+    const autoLogin = await mintAutoLoginUrl(member.email, taskUrl);
+    if (autoLogin) buttonUrl = autoLogin;
+  }
 
   // Best-effort enrichment with status + due date. Never blocks the send.
   let statusLabel = "";
@@ -125,7 +187,7 @@ async function processOne(row: {
           {
             type: "button",
             text: { type: "plain_text", text: "Open task  →", emoji: true },
-            url: taskUrl,
+            url: buttonUrl,
             style: "primary",
           },
         ],

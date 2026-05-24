@@ -15,11 +15,11 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Prefer the USER token (xoxp) so DMs arrive as a normal direct message from
-// the tech account (info@ / "Admin") in each person's regular DM list — NOT
-// under the "Apps" section the way a bot token (xoxb) delivers them.
-// Falls back to the bot token if the user token isn't set.
-const SLACK_TOKEN = Deno.env.get("SLACK_USER_TOKEN") ?? Deno.env.get("SLACK_BOT_TOKEN")!;
+// IMPORTANT: use the BOT token (xoxb). Confirmed empirically that bot DMs
+// reliably trigger iPhone push notifications, while user-token (xoxp) DMs do
+// NOT push (a Slack quirk). Bot DMs appear under "Apps > RunRec HQ" rather
+// than the normal DM list — an acceptable trade for a reliable ping.
+const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN")!;
 const DASHBOARD_BASE_URL = Deno.env.get("DASHBOARD_BASE_URL") ?? "https://saldader.github.io/dashboards";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

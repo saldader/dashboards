@@ -15,7 +15,11 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN")!;
+// Prefer the USER token (xoxp) so DMs arrive as a normal direct message from
+// the tech account (info@ / "Admin") in each person's regular DM list — NOT
+// under the "Apps" section the way a bot token (xoxb) delivers them.
+// Falls back to the bot token if the user token isn't set.
+const SLACK_TOKEN = Deno.env.get("SLACK_USER_TOKEN") ?? Deno.env.get("SLACK_BOT_TOKEN")!;
 const DASHBOARD_BASE_URL = Deno.env.get("DASHBOARD_BASE_URL") ?? "https://saldader.github.io/dashboards";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -27,7 +31,7 @@ async function slack<T = any>(method: string, body: Record<string, unknown>): Pr
     method: "POST",
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+      Authorization: `Bearer ${SLACK_TOKEN}`,
     },
     body: JSON.stringify(body),
   });

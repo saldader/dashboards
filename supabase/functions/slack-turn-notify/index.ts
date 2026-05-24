@@ -151,10 +151,23 @@ async function processOne(row: {
     };
     if (t?.status) statusLabel = STATUS[t.status as string] ?? String(t.status);
     if (t?.due_date) {
-      dueLabel = new Date(`${t.due_date}T00:00:00`).toLocaleDateString("en-US", {
+      const dateStr = new Date(`${t.due_date}T00:00:00`).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
+      // Countdown relative to "today" in the team's timezone (America/Toronto),
+      // so "X days left" matches what people see on their own calendar.
+      const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+      const days = Math.round(
+        (Date.parse(`${t.due_date}T00:00:00Z`) - Date.parse(`${todayStr}T00:00:00Z`)) / 86400000,
+      );
+      let countdown: string;
+      if (days < 0) countdown = `⚠️ ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`;
+      else if (days === 0) countdown = "⏳ due today";
+      else if (days === 1) countdown = "⏳ due tomorrow";
+      else countdown = `⏳ ${days} days left`;
+      // Date stays bold; the countdown rides outside the asterisks in parentheses.
+      dueLabel = `Due: *${dateStr}* (${countdown})`;
     }
   } catch (_) {
     /* enrichment is optional */
@@ -162,7 +175,7 @@ async function processOne(row: {
 
   const meta = [
     statusLabel ? `Status: *${statusLabel}*` : null,
-    dueLabel ? `Due: *${dueLabel}*` : null,
+    dueLabel ? dueLabel : null, // dueLabel already includes "Due: *date* (countdown)"
   ].filter(Boolean).join("   ·   ");
 
   // Post the message. `text` is the lock-screen / push preview — keep it crisp.

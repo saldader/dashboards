@@ -1212,9 +1212,10 @@ if(window.marked && marked.setOptions){
   marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
 }
 
-function renderMarkdown(md){
-  const html = (window.marked ? marked.parse(md || '') : escapeHtml(md || ''));
-  editor.innerHTML = html;
+// Re-attach interactive affordances to whatever HTML is currently in the editor.
+// Runs after BOTH load paths (verbatim HTML and legacy markdown) so tables,
+// code blocks and task-list checkboxes behave identically regardless of source.
+function hydrateEditor(){
   // Wrap every <table> in a .table-wrap for affordance positioning
   editor.querySelectorAll('table').forEach(t => wrapTable(t));
   // Make every cell editable
@@ -1237,6 +1238,67 @@ function renderMarkdown(md){
     const li = cb.parentElement;
     if(li && li.tagName === 'LI') li.classList.add('task-list-item');
   });
+}
+
+function renderMarkdown(md){
+  const html = (window.marked ? marked.parse(md || '') : escapeHtml(md || ''));
+  editor.innerHTML = html;
+  hydrateEditor();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Verbatim HTML storage (WYSIWYG)
+//
+// Descriptions are now persisted as the editor's own HTML, prefixed with a
+// sentinel, so pasted content renders back EXACTLY as it appeared — spacing,
+// line breaks, fonts and colours included. Legacy rows (plain markdown, no
+// sentinel) still load via renderMarkdown for backward compatibility.
+// ────────────────────────────────────────────────────────────────────
+const HTML_SENTINEL = '<!--rr:html-->';
+
+// Decide how to render a stored description value.
+function renderDescription(stored){
+  const raw = stored || '';
+  if(raw.startsWith(HTML_SENTINEL)){
+    editor.innerHTML = raw.slice(HTML_SENTINEL.length);
+    hydrateEditor();
+  } else {
+    renderMarkdown(raw);
+  }
+}
+
+// Snapshot the editor as clean, safe, verbatim HTML for storage.
+// Removes only the injected UI affordances and unsafe nodes — all real
+// formatting and whitespace is preserved untouched.
+function serializeEditorHtml(){
+  const clone = editor.cloneNode(true);
+  // Drop affordance UI that we re-attach on load
+  clone.querySelectorAll('.copy-code, .tbl-action, .row-delete, .col-delete, .description-placeholder')
+    .forEach(n => n.remove());
+  // Unwrap table wrappers → keep the bare <table>
+  clone.querySelectorAll('.table-wrap').forEach(w => {
+    const t = w.querySelector(':scope > table');
+    if(t) w.replaceWith(t); else w.remove();
+  });
+  // Strip unsafe / non-content nodes
+  clone.querySelectorAll('script, style, iframe, object, embed, form, noscript')
+    .forEach(n => n.remove());
+  // Strip event handlers, javascript: urls, and stale editing attrs
+  clone.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(attr => {
+      const name = attr.name.toLowerCase();
+      const val = (attr.value || '').trim().toLowerCase();
+      if(name.startsWith('on')) el.removeAttribute(attr.name);
+      else if((name === 'href' || name === 'src') && val.startsWith('javascript:')) el.removeAttribute(attr.name);
+      else if(name === 'contenteditable') el.removeAttribute(attr.name);
+    });
+  });
+  return clone.innerHTML;
+}
+
+// Full payload written to the `description` column.
+function serializeForStore(){
+  return HTML_SENTINEL + serializeEditorHtml();
 }
 
 function escapeHtml(s){
@@ -1576,9 +1638,9 @@ async function saveNow(){
   if(state.saveInFlight){ state.pendingSave = true; return; }
   state.saveInFlight = true;
   refreshIndicator();
-  const md = domToMd(editor);
+  const payload = serializeForStore();
   try {
-    const rows = await db.updateTask({ description: md }, { ifUpdatedAt: state.lastUpdatedAt });
+    const rows = await db.updateTask({ description: payload }, { ifUpdatedAt: state.lastUpdatedAt });
     if(!rows || rows.length === 0){
       // Stale — someone else edited
       state.isStale = true;
@@ -1587,7 +1649,7 @@ async function saveNow(){
       return;
     }
     state.lastUpdatedAt = rows[0].updated_at;
-    state.loadedDescription = md;
+    state.loadedDescription = payload;
     state.lastSavedAt = Date.now();
     refreshIndicator();
   } catch(e){
@@ -1888,12 +1950,12 @@ window.addEventListener('beforeunload', (e) => {
   const hasPendingChanges = !!state.saveTimer || !!state.saveInFlight || !!state.pendingSave;
   if(state.saveTimer){
     try {
-      const md = domToMd(editor);
+      const payload = serializeForStore();
       const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&updated_at=eq.${encodeURIComponent(state.lastUpdatedAt)}`;
       fetch(url, {
         method: 'PATCH',
         headers: { ...db.headers(), Prefer: 'return=minimal' },
-        body: JSON.stringify({ description: md }),
+        body: JSON.stringify({ description: payload }),
         keepalive: true,
       }).catch(()=>{});
     } catch(_){}
@@ -2719,7 +2781,7 @@ function showTask(){
     if(window._applyDueDate) window._applyDueDate(task.due_date || '');
     state.lastUpdatedAt = task.updated_at;
     state.loadedDescription = task.description || '';
-    renderMarkdown(state.loadedDescription);
+    renderDescription(state.loadedDescription);
     renderResources(task.resources);
     showTask();
     if(window._refreshPlaceholder) window._refreshPlaceholder();

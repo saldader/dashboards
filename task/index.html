@@ -1293,12 +1293,59 @@ function serializeEditorHtml(){
       else if(name === 'contenteditable') el.removeAttribute(attr.name);
     });
   });
+  // Match style: never persist cosmetic styling (colours, sizes, fonts, bg)
+  stripCosmeticStyling(clone);
   return clone.innerHTML;
 }
 
 // Full payload written to the `description` column.
 function serializeForStore(){
   return HTML_SENTINEL + serializeEditorHtml();
+}
+
+// ────────────────────────────────────────────────────────────────────
+// "Paste and match style"
+//
+// Inline CSS properties we KEEP when matching style. Everything else
+// (color, background, font-size, font-family, line-height, …) is dropped so
+// pasted text inherits the dashboard's own typography. Structural rich-text
+// formatting survives because it lives in semantic tags (<strong>, <em>,
+// <h2>, <ul>, <a>, …) or in these whitelisted properties — e.g. Google Docs
+// expresses bold/italic as font-weight / font-style on a <span>.
+// ────────────────────────────────────────────────────────────────────
+const KEEP_STYLE_PROPS = new Set(['font-weight','font-style','text-decoration','text-decoration-line']);
+
+// Strip cosmetic styling from a DOM subtree, in place.
+function stripCosmeticStyling(root){
+  if(!root || !root.querySelectorAll) return;
+  root.querySelectorAll('*').forEach(el => {
+    el.removeAttribute('class');   // references the source site's stylesheet
+    el.removeAttribute('id');
+    el.removeAttribute('color');   // legacy <font color>
+    el.removeAttribute('bgcolor');
+    el.removeAttribute('face');    // legacy <font face>
+    el.removeAttribute('size');    // legacy <font size>
+    const style = el.getAttribute('style');
+    if(style){
+      const kept = style.split(';').map(s => s.trim()).filter(Boolean).filter(decl => {
+        const idx = decl.indexOf(':');
+        const prop = (idx === -1 ? decl : decl.slice(0, idx)).trim().toLowerCase();
+        return KEEP_STYLE_PROPS.has(prop);
+      });
+      if(kept.length) el.setAttribute('style', kept.join('; '));
+      else el.removeAttribute('style');
+    }
+  });
+}
+
+// Clean clipboard HTML for a "paste and match style" insert: keep structure
+// and spacing, drop cosmetic styling.
+function cleanPastedHtml(html){
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  tpl.content.querySelectorAll('style, script, meta, link, title').forEach(n => n.remove());
+  stripCosmeticStyling(tpl.content);
+  return tpl.innerHTML;
 }
 
 function escapeHtml(s){
@@ -1848,8 +1895,20 @@ editor.addEventListener('paste', (e) => {
   if(isCode && text){
     e.preventDefault();
     insertCodeBlockAtCaret(text);
+    return;
   }
-  // Otherwise let browser handle paste normally
+  // Rich text → "paste and match style": keep structure, lists, links, spacing
+  // and line breaks, but drop cosmetic styling (background, font colour/size/
+  // family) so pasted text adopts the dashboard's own typography.
+  if(html){
+    e.preventDefault();
+    const cleaned = cleanPastedHtml(html);
+    document.execCommand('insertHTML', false, cleaned);
+    if(/<table\b/i.test(cleaned)) hydrateEditor();
+    scheduleSave();
+    return;
+  }
+  // Plain-text-only paste → let the browser handle it normally
 });
 
 // Walk text nodes to place caret at the Nth character within the <pre>'s <code>

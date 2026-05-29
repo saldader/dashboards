@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="googlebot" content="noindex,nofollow">
+<title>RunRec Content</title>
+<script src="../assets/js/auth.js"></script>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #131318;
+  --card: #1a1a20;
+  --hover: #24242c;
+  --text: #ffffff;
+  --t2: #d4d4dc;
+  --t3: #b0b0b8;
+  --t4: #6c6c74;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #ff6b35;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --purple: #a855f7;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@supports (font-variation-settings: normal) { html { font-family: "Inter var", sans-serif; } }
+html,body{background:var(--bg);color:var(--t2);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"cv02","cv03","cv11"}
+body{padding:60px 24px 100px;background:radial-gradient(ellipse at top,rgba(255,107,53,0.05),transparent 60%),var(--bg);min-height:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+
+.wrap{width:100%;max-width:1600px;margin:0 auto}
+
+/* Top bar (matches /kanban/) */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+.brand{display:inline-flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;background:var(--accent);border-radius:10px;display:grid;place-items:center;color:white;font-weight:700;font-size:19px;letter-spacing:-0.02em}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--t4);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;margin-top:2px}
+.back{font-size:13px;color:var(--t4);transition:color .15s}
+.back:hover{color:var(--t2)}
+
+/* Page header */
+.page-head{margin-bottom:28px}
+h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin-bottom:10px;color:var(--text)}
+.lead{color:var(--t3);font-size:16px;max-width:680px;line-height:1.55}
+
+/* Filter row */
+.filter-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin-bottom:32px;padding-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.filter-label{
+  font-size:11px;text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--t4);font-weight:600;margin-right:6px;
+}
+.filter-label.next{margin-left:14px}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px;
+  font-size:13px;color:var(--t2);font-weight:500;
+  cursor:pointer;transition:background .15s, border-color .15s, color .15s;
+  outline:none;
+}
+.filter-chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.filter-chip:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.filter-chip:focus-visible{border-color:var(--accent)}
+.filter-chip[aria-pressed="true"]{
+  background:rgba(255,107,53,0.10);
+  border-color:rgba(255,107,53,0.45);
+  color:var(--text);
+}
+.filter-clear{
+  margin-left:4px;background:none;border:none;cursor:pointer;
+  font-size:12.5px;color:var(--t4);font-weight:500;padding:6px 8px;
+  display:none;align-items:center;gap:4px;
+  transition:color .15s;
+}
+.filter-clear:hover{color:var(--t2)}
+.filter-clear.show{display:inline-flex}
+
+/* Vertical badge colors */
+.dot.v-franchise{background:var(--purple)}
+.dot.v-basketball{background:var(--amber)}
+.dot.v-lifestyle{background:var(--green)}
+
+/* Board */
+.board{
+  display:grid;
+  grid-template-columns:repeat(7, minmax(0, 1fr));
+  gap:14px;
+  align-items:start;
+}
+@media (max-width: 1400px){
+  .board{grid-template-columns:repeat(4, minmax(0, 1fr))}
+}
+@media (max-width: 1000px){
+  .board{grid-template-columns:repeat(2, minmax(0, 1fr))}
+}
+@media (max-width: 640px){
+  .board{grid-template-columns:1fr}
+}
+
+.column{
+  background:#131318;
+  border:1px solid rgba(255,255,255,0.20);
+  border-radius:14px;
+  padding:14px 12px 16px 12px;
+  min-width:0;min-height:200px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:border-color .15s, background .15s;
+}
+.column.drag-active{
+  border-color:rgba(255,107,53,0.55);
+  background:rgba(255,107,53,0.04);
+}
+.col-head{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 6px 10px 6px;
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  margin-bottom:2px;
+}
+.col-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
+.col-dot.idea{background:#b0b0b8}
+.col-dot.scripting{background:#60a5fa}
+.col-dot.shooting{background:#a855f7}
+.col-dot.editing{background:#f59e0b}
+.col-dot.approval{background:#fbbf24}
+.col-dot.scheduled{background:#38bdf8}
+.col-dot.posted{background:#22c55e}
+.col-name{
+  font-size:11px;font-weight:600;letter-spacing:0.088em;
+  text-transform:uppercase;color:#D4D4DC;
+}
+.col-count{
+  margin-left:auto;
+  font-size:11px;font-weight:600;
+  color:#6C6C74;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;
+  width:22px;height:20px;
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+
+.col-list{display:flex;flex-direction:column;gap:8px;min-height:4px}
+
+/* Card */
+.content-card{
+  position:relative;
+  display:block;
+  background:#1E1E25;
+  border:1px solid rgba(255,255,255,0.20);
+  border-radius:10px;
+  padding:14px;
+  color:inherit;
+  transition:background .15s, border-color .15s, transform .15s, box-shadow .15s;
+  user-select:none;
+  cursor:grab;
+}
+.content-card:active{cursor:grabbing}
+.content-card:hover{
+  border-color:rgba(255,255,255,0.28);
+  transform:translateY(-1px);
+}
+.content-card.dragging{
+  opacity:0.5;
+  cursor:grabbing;
+}
+.drop-indicator{
+  height:3px;
+  background:var(--accent);
+  border-radius:2px;
+  margin:6px 0;
+  box-shadow:0 0 8px rgba(255,107,53,0.6);
+  pointer-events:none;
+}
+/* Status accent: left bar inset */
+.content-card::before{
+  content:"";
+  position:absolute;left:0;top:10px;bottom:10px;width:2px;
+  border-radius:0 2px 2px 0;
+  background:transparent;
+  transition:background .15s;
+}
+.content-card.idea::before{background:#b0b0b8}
+.content-card.scripting::before{background:#60a5fa}
+.content-card.shooting::before{background:#a855f7}
+.content-card.editing::before{background:#f59e0b}
+.content-card.approval::before{background:#fbbf24}
+.content-card.scheduled::before{background:#38bdf8}
+.content-card.posted::before{background:#22c55e}
+
+.card-title{
+  font-size:14.5px;font-weight:600;
+  line-height:20px;color:#FFFFFF;
+  letter-spacing:-0.072px;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  word-break:break-word;
+  padding-right:4px;
+}
+
+/* Badge / pill row */
+.card-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:600;line-height:1;
+  letter-spacing:0.02em;
+  padding:4px 9px;border-radius:999px;
+  border:1px solid transparent;
+}
+.badge.v-franchise{background:rgba(168,85,247,0.14);color:#c98bff;border-color:rgba(168,85,247,0.30)}
+.badge.v-basketball{background:rgba(245,158,11,0.14);color:#fbbf24;border-color:rgba(245,158,11,0.30)}
+.badge.v-lifestyle{background:rgba(34,197,94,0.14);color:#4ade80;border-color:rgba(34,197,94,0.30)}
+.badge.format{background:rgba(255,255,255,0.05);color:var(--t2);border-color:var(--border)}
+
+/* Reshare pill */
+.reshare{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:600;line-height:1;letter-spacing:0.02em;
+  padding:4px 9px;border-radius:999px;border:1px solid transparent;
+}
+.reshare.r-na{background:rgba(255,255,255,0.05);color:var(--t4);border-color:var(--border)}
+.reshare.r-asked{background:rgba(245,158,11,0.12);color:#fbbf24;border-color:rgba(245,158,11,0.30)}
+.reshare.r-reshared{background:rgba(34,197,94,0.14);color:#4ade80;border-color:rgba(34,197,94,0.30)}
+.reshare.r-declined{background:rgba(239,68,68,0.14);color:#f87171;border-color:rgba(239,68,68,0.30)}
+
+/* Meta line: channels, owner, date */
+.card-meta{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin-top:10px;
+  font-size:11.5px;font-weight:500;color:var(--t3);
+}
+.card-meta .meta-item{display:inline-flex;align-items:center;gap:5px}
+.card-meta .meta-sep{color:var(--t4);opacity:0.6}
+.card-meta .meta-icon{width:11px;height:11px;display:inline-flex;align-items:center}
+.card-owner-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;
+  padding:2px 9px;
+  font-size:11.5px;color:var(--t2);font-weight:500;
+}
+
+/* The card's open/edit anchor */
+.content-card .card-open{
+  position:absolute;inset:0;
+  border-radius:inherit;
+  z-index:1;
+  cursor:pointer;
+}
+
+/* Add card affordance */
+.add-card{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:transparent;
+  border:1px dashed rgba(255,255,255,0.20);
+  border-radius:10px;
+  padding:0 14px;
+  height:44px;
+  cursor:pointer;color:#6C6C74;
+  font-size:13px;font-weight:500;
+  transition:border-color .15s, color .15s, background .15s;
+  width:100%;
+  margin-top:auto;
+}
+.add-card:hover{
+  border-color:var(--accent);
+  border-style:solid;
+  color:var(--text);
+}
+.add-card .plus{font-size:14px;font-weight:500;line-height:1;color:inherit}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--t2);font-size:13px;padding:10px 16px;border-radius:8px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.5);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s, transform .18s;
+  z-index:300;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Empty placeholder */
+.col-empty{
+  font-size:12px;color:var(--t4);
+  text-align:center;padding:8px 6px;
+  font-style:italic;
+}
+
+/* Loading / error states */
+.board-status{
+  text-align:center;color:var(--t4);font-size:13px;
+  padding:32px 0;
+}
+.board-status.error{color:var(--red)}
+
+/* Modal */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;z-index:200;
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  width:100%;max-width:480px;
+  max-height:calc(100vh - 48px);
+  overflow-y:auto;
+  background:var(--panel);
+  border:1px solid var(--border-strong);
+  border-radius:14px;
+  padding:28px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;gap:16px;
+}
+.modal-head{display:flex;flex-direction:column;gap:4px}
+.modal-eyebrow{
+  font-size:10.5px;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--t4);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.modal-eyebrow .dot{width:6px;height:6px;border-radius:50%}
+.modal-eyebrow .dot.idea{background:#b0b0b8}
+.modal-eyebrow .dot.scripting{background:#60a5fa}
+.modal-eyebrow .dot.shooting{background:#a855f7}
+.modal-eyebrow .dot.editing{background:#f59e0b}
+.modal-eyebrow .dot.approval{background:#fbbf24}
+.modal-eyebrow .dot.scheduled{background:#38bdf8}
+.modal-eyebrow .dot.posted{background:#22c55e}
+.modal-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field-label{
+  font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--t4);
+}
+.field-row{display:flex;gap:12px}
+.field-row .field{flex:1;min-width:0}
+
+.modal-input, .modal-select, .modal-textarea{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 13px;
+  font:inherit;font-size:15px;color:var(--text);
+  width:100%;outline:none;
+  transition:border-color .15s;
+}
+.modal-input:focus, .modal-select:focus, .modal-textarea:focus{border-color:var(--accent)}
+.modal-input::placeholder, .modal-textarea::placeholder{color:var(--t4)}
+.modal-textarea{resize:vertical;min-height:64px;line-height:1.5}
+.modal-select{appearance:none;-webkit-appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236c6c74' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;
+}
+
+/* Channel checkbox group */
+.channel-group{display:flex;flex-wrap:wrap;gap:8px}
+.channel-opt{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:999px;padding:7px 13px;
+  font-size:13px;font-weight:500;color:var(--t3);
+  cursor:pointer;transition:background .15s, border-color .15s, color .15s;
+  user-select:none;
+}
+.channel-opt:hover{border-color:var(--border-strong);color:var(--t2)}
+.channel-opt input{position:absolute;opacity:0;width:0;height:0}
+.channel-opt.checked{
+  background:rgba(255,107,53,0.10);border-color:rgba(255,107,53,0.45);color:var(--text);
+}
+
+.modal-error{
+  font-size:12.5px;color:var(--red);
+  display:none;
+}
+.modal-error.show{display:block}
+.modal-actions{display:flex;align-items:center;gap:8px;margin-top:4px}
+.modal-actions .spacer{flex:1}
+.btn{
+  font:inherit;font-size:13.5px;font-weight:600;
+  padding:9px 16px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;
+  transition:background .15s, border-color .15s, opacity .15s, color .15s;
+}
+.btn-secondary{background:none;color:var(--t3)}
+.btn-secondary:hover{color:var(--text)}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{opacity:0.92}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-danger{background:none;color:var(--t4);border:1px solid var(--border)}
+.btn-danger:hover{color:var(--red);border-color:rgba(239,68,68,0.40)}
+.btn-danger.confirm{color:var(--red);border-color:rgba(239,68,68,0.55);background:rgba(239,68,68,0.06)}
+
+/* Footer (matches /kanban/) */
+.foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
+.foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="../" class="brand">
+      <div class="mark" style="background:transparent;padding:0;overflow:hidden"><img src="../assets/runrec-logo.png" alt="RunRec" style="width:100%;height:100%;display:block;object-fit:cover" /></div>
+      <div>
+        <div class="brand-name">RunRec</div>
+        <div class="brand-sub">Internal tools</div>
+      </div>
+    </a>
+    <a href="../" class="back">← All dashboards</a>
+  </div>
+
+  <!-- Page header -->
+  <div class="page-head">
+    <h1>RunRec Content</h1>
+    <p class="lead">RunRec x PGC social content pipeline. Drag a card to move it through the stages.</p>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row" id="filterRow" role="toolbar" aria-label="Filter content">
+    <span class="filter-label">Vertical</span>
+    <button type="button" class="filter-chip" data-fkey="vertical" data-fval="Franchise ownership" aria-pressed="false">
+      <span class="dot v-franchise"></span><span>Franchise ownership</span>
+    </button>
+    <button type="button" class="filter-chip" data-fkey="vertical" data-fval="Basketball culture" aria-pressed="false">
+      <span class="dot v-basketball"></span><span>Basketball culture</span>
+    </button>
+    <button type="button" class="filter-chip" data-fkey="vertical" data-fval="RunRec lifestyle" aria-pressed="false">
+      <span class="dot v-lifestyle"></span><span>RunRec lifestyle</span>
+    </button>
+
+    <span class="filter-label next">Owner</span>
+    <button type="button" class="filter-chip" data-fkey="owner" data-fval="RunRec" aria-pressed="false"><span>RunRec</span></button>
+    <button type="button" class="filter-chip" data-fkey="owner" data-fval="Izzy" aria-pressed="false"><span>Izzy</span></button>
+    <button type="button" class="filter-chip" data-fkey="owner" data-fval="Sal" aria-pressed="false"><span>Sal</span></button>
+    <button type="button" class="filter-chip" data-fkey="owner" data-fval="Mano" aria-pressed="false"><span>Mano</span></button>
+    <button type="button" class="filter-chip" data-fkey="owner" data-fval="PGC" aria-pressed="false"><span>PGC</span></button>
+
+    <button type="button" class="filter-clear" id="filterClear" aria-label="Clear filters">× Clear</button>
+  </div>
+
+  <!-- Board -->
+  <div class="board" id="board" aria-live="polite">
+    <!-- columns injected by buildBoardShell() so order/labels stay in one place -->
+  </div>
+
+  <div class="board-status" id="boardStatus">Loading content…</div>
+
+  <!-- Footer -->
+  <div class="foot">
+    <p>All content lives in one Supabase table. Click any card to edit. Click <code>+ Add a piece</code> to insert into a column.</p>
+    <p style="margin-top:6px">Hosted on GitHub Pages · auto-deploys on push to <code>main</code> · github.com/saldader/dashboards</p>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Create / edit modal -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <span class="modal-eyebrow"><span class="dot" id="modalDot"></span><span id="modalEyebrowLabel">New piece</span></span>
+      <span class="modal-title" id="modalTitle">Add a content piece</span>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="fTitle">Title</label>
+      <input type="text" class="modal-input" id="fTitle" placeholder="What's the piece?" autocomplete="off" maxlength="300">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="fVertical">Vertical</label>
+        <select class="modal-select" id="fVertical">
+          <option value="Franchise ownership">Franchise ownership</option>
+          <option value="Basketball culture">Basketball culture</option>
+          <option value="RunRec lifestyle">RunRec lifestyle</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="fFormat">Format</label>
+        <select class="modal-select" id="fFormat">
+          <option value="Reel">Reel</option>
+          <option value="Carousel">Carousel</option>
+          <option value="Text">Text</option>
+          <option value="Story">Story</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Channel</label>
+      <div class="channel-group" id="fChannelGroup">
+        <label class="channel-opt"><input type="checkbox" value="IG"><span>IG</span></label>
+        <label class="channel-opt"><input type="checkbox" value="TikTok"><span>TikTok</span></label>
+        <label class="channel-opt"><input type="checkbox" value="LinkedIn"><span>LinkedIn</span></label>
+        <label class="channel-opt"><input type="checkbox" value="X"><span>X</span></label>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="fOwner">Owner</label>
+        <select class="modal-select" id="fOwner">
+          <option value="RunRec">RunRec</option>
+          <option value="Izzy">Izzy</option>
+          <option value="Sal">Sal</option>
+          <option value="Mano">Mano</option>
+          <option value="PGC">PGC</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="fStatus">Status</label>
+        <select class="modal-select" id="fStatus">
+          <option value="Idea">Idea</option>
+          <option value="Scripting">Scripting</option>
+          <option value="Shooting">Shooting</option>
+          <option value="Editing">Editing</option>
+          <option value="Approval">Approval</option>
+          <option value="Scheduled">Scheduled</option>
+          <option value="Posted">Posted</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="fReshare">Reshare status</label>
+        <select class="modal-select" id="fReshare">
+          <option value="N/A">N/A</option>
+          <option value="Asked">Asked</option>
+          <option value="Reshared">Reshared</option>
+          <option value="Declined">Declined</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="fPostDate">Post date</label>
+        <input type="date" class="modal-input" id="fPostDate">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="fPerformance">Performance</label>
+      <input type="text" class="modal-input" id="fPerformance" placeholder="e.g. 12k views, 340 saves" autocomplete="off" maxlength="300">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="fNotes">Notes</label>
+      <textarea class="modal-textarea" id="fNotes" placeholder="Hook, script notes, references…" maxlength="2000"></textarea>
+    </div>
+
+    <span class="modal-error" id="modalError"></span>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-danger" id="modalDelete" style="display:none">Archive</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-secondary" id="modalCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="modalSave">Add piece</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────────────
+// Config
+// ────────────────────────────────────────────────────────────────────
+const SUPABASE = {
+  url: 'https://ivdzpptjtwoxdaxsbsqz.supabase.co',
+  key: 'sb_publishable_CLEzGz8hR3Z2cioPFSSu-g_33VtSdDb'
+};
+
+const STATUS_ORDER = ['Idea','Scripting','Shooting','Editing','Approval','Scheduled','Posted'];
+const STATUS_SLUG = {
+  'Idea':'idea','Scripting':'scripting','Shooting':'shooting','Editing':'editing',
+  'Approval':'approval','Scheduled':'scheduled','Posted':'posted'
+};
+
+const VERTICALS = ['Franchise ownership','Basketball culture','RunRec lifestyle'];
+const VERTICAL_CLASS = {
+  'Franchise ownership':'v-franchise',
+  'Basketball culture':'v-basketball',
+  'RunRec lifestyle':'v-lifestyle'
+};
+const VERTICAL_SHORT = {
+  'Franchise ownership':'Franchise',
+  'Basketball culture':'Basketball',
+  'RunRec lifestyle':'Lifestyle'
+};
+
+const RESHARE_VALUES = ['N/A','Asked','Reshared','Declined'];
+const RESHARE_CLASS = { 'N/A':'r-na','Asked':'r-asked','Reshared':'r-reshared','Declined':'r-declined' };
+
+const OWNERS = ['RunRec','Izzy','Sal','Mano','PGC'];
+
+// ────────────────────────────────────────────────────────────────────
+// DB helper (parallel to /kanban/)
+// ────────────────────────────────────────────────────────────────────
+const db = {
+  headers(){
+    // Use the signed-in user's token when available so Supabase RLS treats
+    // the request as an authenticated team member. Falls back to the
+    // publishable (anon) key when nobody is signed in, identical to /kanban/.
+    const session = window.RUNREC && window.RUNREC.session;
+    const token = (session && session.access_token) || SUPABASE.key;
+    return {
+      apikey: SUPABASE.key,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  },
+  async listContent(){
+    let url = `${SUPABASE.url}/rest/v1/content_pieces?select=*&order=status.asc,position.asc.nullslast,updated_at.desc`;
+    let r = await fetch(url, { headers: this.headers() });
+    if(!r.ok && (r.status === 400 || r.status === 404)){
+      url = `${SUPABASE.url}/rest/v1/content_pieces?select=*&order=status,updated_at.desc`;
+      r = await fetch(url, { headers: this.headers() });
+    }
+    if(!r.ok) throw new Error(`GET ${r.status}`);
+    return await r.json();
+  },
+  async insertContent(row){
+    const url = `${SUPABASE.url}/rest/v1/content_pieces`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { ...this.headers(), Prefer: 'return=representation' },
+      body: JSON.stringify(row)
+    });
+    if(!r.ok){
+      const text = await r.text().catch(() => '');
+      throw new Error(`POST ${r.status} ${text}`);
+    }
+    const rows = await r.json();
+    return rows[0] || null;
+  },
+  async patchContentById(id, patch){
+    const url = `${SUPABASE.url}/rest/v1/content_pieces?id=eq.${encodeURIComponent(id)}`;
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...this.headers(), Prefer: 'return=representation' },
+      body: JSON.stringify(patch)
+    });
+    if(!r.ok){
+      const text = await r.text().catch(() => '');
+      throw new Error(`PATCH ${r.status} ${text}`);
+    }
+    const rows = await r.json();
+    return rows[0] || null;
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Utilities
+// ────────────────────────────────────────────────────────────────────
+function escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normStatus(s){ return STATUS_ORDER.includes(s) ? s : 'Idea'; }
+function normVertical(v){ return VERTICALS.includes(v) ? v : 'RunRec lifestyle'; }
+function normReshare(r){ return RESHARE_VALUES.includes(r) ? r : 'N/A'; }
+
+// channel stored comma-separated in DB; surface as an array for chips.
+function channelArray(raw){
+  if(Array.isArray(raw)) return raw.filter(Boolean);
+  return String(raw || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────────────────────────
+const state = {
+  items: [],            // raw rows from DB
+  filterVertical: null, // null | one of VERTICALS
+  filterOwner: null,    // null | one of OWNERS
+  loaded: false,
+  modalOpen: false,
+  modalStatus: null,    // status for a NEW piece
+  editId: null          // id when editing an existing piece, else null
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Board shell: build the 7 columns from STATUS_ORDER
+// ────────────────────────────────────────────────────────────────────
+const board = document.getElementById('board');
+const boardStatus = document.getElementById('boardStatus');
+
+function buildBoardShell(){
+  board.innerHTML = STATUS_ORDER.map(status => {
+    const slug = STATUS_SLUG[status];
+    return `
+    <div class="column" data-status="${escapeHtml(status)}">
+      <div class="col-head">
+        <span class="col-dot ${slug}"></span>
+        <span class="col-name">${escapeHtml(status)}</span>
+        <span class="col-count" data-count>0</span>
+      </div>
+      <div class="col-list" data-list></div>
+      <button type="button" class="add-card" data-add="${escapeHtml(status)}" aria-label="Add a content piece to ${escapeHtml(status)}">
+        <span class="plus">+</span><span>Add a piece</span>
+      </button>
+    </div>`;
+  }).join('');
+}
+buildBoardShell();
+
+// ────────────────────────────────────────────────────────────────────
+// Render
+// ────────────────────────────────────────────────────────────────────
+function fmtDate(iso){
+  if(!iso) return '';
+  const [yy,mm,dd] = String(iso).split('-').map(Number);
+  if(!yy || !mm || !dd) return '';
+  const dt = new Date(yy, mm-1, dd);
+  if(isNaN(dt.getTime())) return '';
+  return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function buildCardHTML(t){
+  const status = normStatus(t.status);
+  const slug = STATUS_SLUG[status];
+  const vertical = normVertical(t.vertical);
+  const vClass = VERTICAL_CLASS[vertical];
+  const reshare = normReshare(t.reshare_status);
+  const rClass = RESHARE_CLASS[reshare];
+  const title = escapeHtml(t.title || '(untitled)');
+  const channels = channelArray(t.channel);
+
+  const badges = [
+    `<span class="badge ${vClass}"><span class="dot ${vClass}"></span>${escapeHtml(VERTICAL_SHORT[vertical] || vertical)}</span>`
+  ];
+  if(t.format) badges.push(`<span class="badge format">${escapeHtml(t.format)}</span>`);
+  // Only show a reshare pill when it's meaningful (skip the noisy default "N/A").
+  if(reshare !== 'N/A') badges.push(`<span class="reshare ${rClass}">${escapeHtml(reshare)}</span>`);
+
+  const metaParts = [];
+  if(channels.length) metaParts.push(`<span class="meta-item">${escapeHtml(channels.join(' · '))}</span>`);
+  const datePretty = fmtDate(t.post_date);
+  if(datePretty){
+    metaParts.push(`<span class="meta-item"><span class="meta-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>${escapeHtml(datePretty)}</span>`);
+  }
+  const metaHTML = metaParts.length
+    ? `<div class="card-meta">${metaParts.join('<span class="meta-sep">·</span>')}</div>` : '';
+
+  const ownerHTML = t.owner
+    ? `<div class="card-meta"><span class="card-owner-tag">${escapeHtml(t.owner)}</span></div>` : '';
+
+  return `
+    <div class="content-card ${slug}" draggable="true" data-id="${escapeHtml(t.id)}" data-status="${escapeHtml(status)}" tabindex="0" aria-label="Content: ${title}. Drag to a different column to change stage.">
+      <div class="card-open" data-open="${escapeHtml(t.id)}" role="button" aria-label="Edit: ${title}"></div>
+      <div class="card-title">${title}</div>
+      <div class="card-badges">${badges.join('')}</div>
+      ${metaHTML}
+      ${ownerHTML}
+    </div>
+  `;
+}
+
+function passesFilter(t){
+  if(state.filterVertical && normVertical(t.vertical) !== state.filterVertical) return false;
+  if(state.filterOwner && (t.owner || '') !== state.filterOwner) return false;
+  return true;
+}
+
+function render(){
+  if(!state.loaded) return;
+
+  // Archived pieces never appear on the board.
+  const active = state.items.filter(t => t.archived !== true).filter(passesFilter);
+
+  const groups = {};
+  STATUS_ORDER.forEach(s => { groups[s] = []; });
+  active.forEach(t => { groups[normStatus(t.status)].push(t); });
+
+  STATUS_ORDER.forEach(status => {
+    const col = board.querySelector(`.column[data-status="${cssAttr(status)}"]`);
+    if(!col) return;
+    const list = col.querySelector('[data-list]');
+    const count = col.querySelector('[data-count]');
+    const rows = groups[status];
+    // Sort by position (nulls last), then newest-first, mirrors listContent()'s
+    // DB ordering so a just-dragged card doesn't snap back on a filter re-render.
+    rows.sort((a,b) => {
+      const pa = typeof a.position === 'number' ? a.position : Infinity;
+      const pb = typeof b.position === 'number' ? b.position : Infinity;
+      if(pa !== pb) return pa - pb;
+      return String(b.updated_at||'').localeCompare(String(a.updated_at||''));
+    });
+    count.textContent = rows.length;
+    if(rows.length === 0){
+      list.innerHTML = `<div class="col-empty">Nothing here</div>`;
+    } else {
+      list.innerHTML = rows.map(buildCardHTML).join('');
+    }
+  });
+
+  applyFilterUI();
+  boardStatus.style.display = 'none';
+}
+
+// Escape a value for use inside an attribute selector.
+function cssAttr(v){ return String(v).replace(/"/g, '\\"'); }
+
+function setBoardStatus(msg, isError){
+  boardStatus.textContent = msg;
+  boardStatus.className = 'board-status' + (isError ? ' error' : '');
+  boardStatus.style.display = 'block';
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Fetch
+// ────────────────────────────────────────────────────────────────────
+let fetchInFlight = false;
+
+async function refresh(){
+  if(fetchInFlight) return;
+  if(state.modalOpen) return; // pause refetch while modal is open
+  fetchInFlight = true;
+  try {
+    const rows = await db.listContent();
+    state.items = rows;
+    state.loaded = true;
+    render();
+  } catch(e){
+    console.error('listContent failed', e);
+    if(!state.loaded){
+      setBoardStatus('Could not load content. Check your connection and refresh.', true);
+    }
+  } finally {
+    fetchInFlight = false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Filters (URL-synced)
+// ────────────────────────────────────────────────────────────────────
+const filterRow = document.getElementById('filterRow');
+const filterClear = document.getElementById('filterClear');
+const filterChips = filterRow.querySelectorAll('.filter-chip');
+
+function applyFilterUI(){
+  filterChips.forEach(chip => {
+    const key = chip.dataset.fkey;
+    const val = chip.dataset.fval;
+    const on = (key === 'vertical' && state.filterVertical === val) ||
+               (key === 'owner' && state.filterOwner === val);
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  filterClear.classList.toggle('show', !!(state.filterVertical || state.filterOwner));
+}
+
+function syncFilterUrl(){
+  const url = new URL(location.href);
+  if(state.filterVertical) url.searchParams.set('vertical', state.filterVertical);
+  else url.searchParams.delete('vertical');
+  if(state.filterOwner) url.searchParams.set('owner', state.filterOwner);
+  else url.searchParams.delete('owner');
+  history.replaceState(null, '', url.toString());
+}
+
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const key = chip.dataset.fkey;
+    const val = chip.dataset.fval;
+    if(key === 'vertical'){
+      state.filterVertical = (state.filterVertical === val) ? null : val;
+    } else if(key === 'owner'){
+      state.filterOwner = (state.filterOwner === val) ? null : val;
+    }
+    syncFilterUrl();
+    if(state.loaded) render(); else applyFilterUI();
+  });
+});
+filterClear.addEventListener('click', () => {
+  state.filterVertical = null;
+  state.filterOwner = null;
+  syncFilterUrl();
+  if(state.loaded) render(); else applyFilterUI();
+});
+
+// Initial filters from URL
+(function initFiltersFromUrl(){
+  const u = new URL(location.href);
+  const v = u.searchParams.get('vertical');
+  const o = u.searchParams.get('owner');
+  if(v && VERTICALS.includes(v)) state.filterVertical = v;
+  if(o && OWNERS.includes(o)) state.filterOwner = o;
+  applyFilterUI();
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Modal: create + edit
+// ────────────────────────────────────────────────────────────────────
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalDot = document.getElementById('modalDot');
+const modalEyebrowLabel = document.getElementById('modalEyebrowLabel');
+const modalTitle = document.getElementById('modalTitle');
+const modalError = document.getElementById('modalError');
+const modalCancel = document.getElementById('modalCancel');
+const modalSave = document.getElementById('modalSave');
+const modalDelete = document.getElementById('modalDelete');
+
+const fTitle = document.getElementById('fTitle');
+const fVertical = document.getElementById('fVertical');
+const fFormat = document.getElementById('fFormat');
+const fChannelGroup = document.getElementById('fChannelGroup');
+const fOwner = document.getElementById('fOwner');
+const fStatus = document.getElementById('fStatus');
+const fReshare = document.getElementById('fReshare');
+const fPostDate = document.getElementById('fPostDate');
+const fPerformance = document.getElementById('fPerformance');
+const fNotes = document.getElementById('fNotes');
+
+// Channel chips reflect their checkbox state visually.
+fChannelGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.channel-opt').classList.toggle('checked', cb.checked);
+  });
+});
+function setChannels(channels){
+  const set = new Set(channels);
+  fChannelGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = set.has(cb.value);
+    cb.closest('.channel-opt').classList.toggle('checked', cb.checked);
+  });
+}
+function getChannels(){
+  return [...fChannelGroup.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
+}
+
+function resetDeleteConfirm(){
+  modalDelete.classList.remove('confirm');
+  modalDelete.textContent = 'Archive';
+  modalDelete._armed = false;
+}
+
+function openModal(status){
+  status = normStatus(status);
+  state.modalOpen = true;
+  state.modalStatus = status;
+  state.editId = null;
+  modalDot.className = 'dot ' + STATUS_SLUG[status];
+  modalEyebrowLabel.textContent = `New · ${status}`;
+  modalTitle.textContent = 'Add a content piece';
+  modalSave.textContent = 'Add piece';
+  modalDelete.style.display = 'none';
+  resetDeleteConfirm();
+  // Defaults
+  fTitle.value = '';
+  fVertical.value = 'RunRec lifestyle';
+  fFormat.value = 'Reel';
+  setChannels(['IG']);
+  fOwner.value = 'RunRec';
+  fStatus.value = status;
+  fReshare.value = 'N/A';
+  fPostDate.value = '';
+  fPerformance.value = '';
+  fNotes.value = '';
+  modalError.classList.remove('show'); modalError.textContent = '';
+  modalSave.disabled = false;
+  modalBackdrop.classList.add('open');
+  setTimeout(() => fTitle.focus(), 0);
+}
+
+function openEditModal(id){
+  const row = state.items.find(t => String(t.id) === String(id));
+  if(!row) return;
+  const status = normStatus(row.status);
+  state.modalOpen = true;
+  state.modalStatus = null;
+  state.editId = row.id;
+  modalDot.className = 'dot ' + STATUS_SLUG[status];
+  modalEyebrowLabel.textContent = `Edit · ${status}`;
+  modalTitle.textContent = 'Edit content piece';
+  modalSave.textContent = 'Save changes';
+  modalDelete.style.display = '';
+  resetDeleteConfirm();
+  fTitle.value = row.title || '';
+  fVertical.value = normVertical(row.vertical);
+  fFormat.value = (row.format && ['Reel','Carousel','Text','Story'].includes(row.format)) ? row.format : 'Reel';
+  setChannels(channelArray(row.channel));
+  fOwner.value = OWNERS.includes(row.owner) ? row.owner : 'RunRec';
+  fStatus.value = status;
+  fReshare.value = normReshare(row.reshare_status);
+  fPostDate.value = row.post_date ? String(row.post_date).slice(0,10) : '';
+  fPerformance.value = row.performance || '';
+  fNotes.value = row.notes || '';
+  modalError.classList.remove('show'); modalError.textContent = '';
+  modalSave.disabled = false;
+  modalBackdrop.classList.add('open');
+  setTimeout(() => fTitle.focus(), 0);
+}
+
+function closeModal(){
+  state.modalOpen = false;
+  state.modalStatus = null;
+  state.editId = null;
+  modalBackdrop.classList.remove('open');
+  resetDeleteConfirm();
+}
+
+function collectForm(){
+  return {
+    title: (fTitle.value || '').trim(),
+    vertical: fVertical.value,
+    format: fFormat.value,
+    channel: getChannels().join(', '),
+    owner: fOwner.value,
+    status: fStatus.value,
+    reshare_status: fReshare.value,
+    post_date: fPostDate.value || null,
+    performance: (fPerformance.value || '').trim() || null,
+    notes: (fNotes.value || '').trim() || null
+  };
+}
+
+async function submitModal(){
+  const data = collectForm();
+  if(!data.title){
+    modalError.textContent = 'Title is required.';
+    modalError.classList.add('show');
+    fTitle.focus();
+    return;
+  }
+  modalError.classList.remove('show');
+  modalSave.disabled = true;
+  const savingLabel = state.editId ? 'Saving…' : 'Adding…';
+  const restoreLabel = state.editId ? 'Save changes' : 'Add piece';
+  modalSave.textContent = savingLabel;
+  try {
+    if(state.editId){
+      const patched = await db.patchContentById(state.editId, data);
+      const idx = state.items.findIndex(t => String(t.id) === String(state.editId));
+      if(idx >= 0) state.items[idx] = { ...state.items[idx], ...(patched || data) };
+      closeModal();
+      render();
+      showToast('Changes saved.');
+    } else {
+      const targetStatus = normStatus(data.status);
+      // Land at the bottom of its column. Falls back to 1000 if no peers.
+      const peerPositions = state.items
+        .filter(t => normStatus(t.status) === targetStatus && typeof t.position === 'number')
+        .map(t => t.position);
+      const newPosition = peerPositions.length ? Math.max(...peerPositions) + 1000 : 1000;
+      const newRow = { ...data, position: newPosition, archived: false };
+      let row;
+      try {
+        row = await db.insertContent(newRow);
+      } catch(err){
+        // If position column doesn't exist yet, retry without it.
+        if(String(err.message || '').includes('position')){
+          delete newRow.position;
+          row = await db.insertContent(newRow);
+        } else {
+          throw err;
+        }
+      }
+      if(row) state.items.push(row);
+      closeModal();
+      render();
+      showToast('Piece added.');
+    }
+  } catch(e){
+    console.error('save failed', e);
+    modalError.textContent = 'Could not save. Please try again.';
+    modalError.classList.add('show');
+    modalSave.disabled = false;
+    modalSave.textContent = restoreLabel;
+  }
+}
+
+// Archive (soft-delete): two-click confirm, mirrors kanban's archive intent.
+async function archiveCurrent(){
+  if(!state.editId) return;
+  if(!modalDelete._armed){
+    modalDelete._armed = true;
+    modalDelete.classList.add('confirm');
+    modalDelete.textContent = 'Click again to archive';
+    setTimeout(() => { if(modalDelete._armed) resetDeleteConfirm(); }, 3500);
+    return;
+  }
+  const id = state.editId;
+  modalDelete.disabled = true;
+  try {
+    await db.patchContentById(id, { archived: true });
+    const idx = state.items.findIndex(t => String(t.id) === String(id));
+    if(idx >= 0) state.items[idx].archived = true;
+    modalDelete.disabled = false;
+    closeModal();
+    render();
+    showToast('Piece archived.');
+  } catch(e){
+    console.error('archive failed', e);
+    modalDelete.disabled = false;
+    modalError.textContent = 'Could not archive. Try again.';
+    modalError.classList.add('show');
+    resetDeleteConfirm();
+  }
+}
+
+// open create modal from add-card buttons
+board.addEventListener('click', (e) => {
+  const addBtn = e.target.closest('.add-card');
+  if(addBtn){ openModal(addBtn.dataset.add); return; }
+  // open edit modal from a card body (unless a drag just happened)
+  const open = e.target.closest('.card-open');
+  if(open){
+    if(dragState.moved){ e.preventDefault(); e.stopPropagation(); return; }
+    openEditModal(open.dataset.open);
+  }
+});
+// keyboard: Enter/Space on a focused card opens its editor
+board.addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.content-card');
+  if(!card) return;
+  e.preventDefault();
+  openEditModal(card.dataset.id);
+});
+
+modalCancel.addEventListener('click', closeModal);
+modalSave.addEventListener('click', submitModal);
+modalDelete.addEventListener('click', archiveCurrent);
+fTitle.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); submitModal(); }
+});
+modalBackdrop.addEventListener('click', e => {
+  if(e.target === modalBackdrop) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && state.modalOpen) closeModal();
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Toast
+// ────────────────────────────────────────────────────────────────────
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, ms = 3500){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Drag-and-drop between columns (mirrors /kanban/)
+// ────────────────────────────────────────────────────────────────────
+const dragState = {
+  card: null,
+  fromStatus: null,
+  pressX: 0, pressY: 0,
+  moved: false,
+  pressed: false,
+  suppress: false
+};
+
+function clearDragHighlights(){
+  board.querySelectorAll('.column.drag-active').forEach(c => c.classList.remove('drag-active'));
+  clearDropIndicator();
+}
+function clearDropIndicator(){
+  board.querySelectorAll('.drop-indicator').forEach(d => d.remove());
+}
+function findInsertTargetCard(list, clientY){
+  const cards = [...list.querySelectorAll('.content-card:not(.dragging)')];
+  for(const card of cards){
+    const rect = card.getBoundingClientRect();
+    if(clientY < rect.top + rect.height / 2) return card;
+  }
+  return null;
+}
+function showDropIndicator(list, beforeCard){
+  clearDropIndicator();
+  const indicator = document.createElement('div');
+  indicator.className = 'drop-indicator';
+  if(beforeCard) list.insertBefore(indicator, beforeCard);
+  else {
+    const empty = list.querySelector('.col-empty');
+    if(empty) list.insertBefore(indicator, empty);
+    else list.appendChild(indicator);
+  }
+}
+
+// Renumber a column's positions in steps of 1000, PATCH only changed rows.
+async function persistColumnOrder(statusValue){
+  const col = board.querySelector(`.column[data-status="${cssAttr(statusValue)}"]`);
+  if(!col) return;
+  const list = col.querySelector('[data-list]');
+  if(!list) return;
+  const cards = [...list.querySelectorAll('.content-card')];
+  const updates = [];
+  cards.forEach((card, idx) => {
+    const id = card.dataset.id;
+    if(!id) return;
+    const row = state.items.find(t => String(t.id) === String(id));
+    if(!row) return;
+    const expected = (idx + 1) * 1000;
+    if(row.position !== expected){
+      row.position = expected;
+      updates.push({ id, position: expected });
+    }
+  });
+  for(const u of updates){
+    try {
+      await db.patchContentById(u.id, { position: u.position });
+    } catch(err){
+      if(!persistColumnOrder._warned){
+        console.info('[content] position column not present, within-column order will not persist until migration runs');
+        persistColumnOrder._warned = true;
+      }
+    }
+  }
+}
+
+function updateColumnCounts(){
+  STATUS_ORDER.forEach(status => {
+    const col = board.querySelector(`.column[data-status="${cssAttr(status)}"]`);
+    if(!col) return;
+    const list = col.querySelector('[data-list]');
+    const count = col.querySelector('[data-count]');
+    const n = list.querySelectorAll('.content-card').length;
+    count.textContent = n;
+    const emptyEl = list.querySelector('.col-empty');
+    if(n === 0){
+      if(!emptyEl) list.innerHTML = `<div class="col-empty">Nothing here</div>`;
+    } else {
+      if(emptyEl) emptyEl.remove();
+    }
+  });
+}
+
+function findCardEl(t){
+  if(!t) return null;
+  if(t.classList && t.classList.contains('content-card')) return t;
+  return t.closest ? t.closest('.content-card') : null;
+}
+
+board.addEventListener('mousedown', (e) => {
+  const card = findCardEl(e.target);
+  if(!card) return;
+  dragState.pressed = true;
+  dragState.moved = false;
+  dragState.pressX = e.clientX;
+  dragState.pressY = e.clientY;
+});
+board.addEventListener('mousemove', (e) => {
+  if(!dragState.pressed) return;
+  const dx = Math.abs(e.clientX - dragState.pressX);
+  const dy = Math.abs(e.clientY - dragState.pressY);
+  if(dx > 5 || dy > 5) dragState.moved = true;
+});
+window.addEventListener('mouseup', () => {
+  setTimeout(() => { dragState.pressed = false; dragState.moved = false; dragState.suppress = false; }, 0);
+});
+
+board.addEventListener('dragstart', (e) => {
+  if(dragState.suppress){ e.preventDefault(); return; }
+  const card = findCardEl(e.target);
+  if(!card){ return; }
+  dragState.card = card;
+  dragState.fromStatus = card.dataset.status || null;
+  card.classList.add('dragging');
+  STATUS_ORDER.forEach(s => {
+    if(s === dragState.fromStatus) return;
+    const c = board.querySelector(`.column[data-status="${cssAttr(s)}"]`);
+    if(c) c.classList.add('drag-active');
+  });
+  if(e.dataTransfer){
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', card.dataset.id || ''); } catch(_){}
+  }
+});
+
+board.addEventListener('dragend', () => {
+  if(dragState.card) dragState.card.classList.remove('dragging');
+  clearDragHighlights();
+  dragState.card = null;
+  dragState.fromStatus = null;
+});
+
+async function performDrop(card, col, oldStatus, clientY){
+  const newStatus = col.dataset.status;
+  if(!STATUS_ORDER.includes(newStatus)){ clearDragHighlights(); return; }
+  const id = card.dataset.id;
+  if(!id){ card.classList.remove('dragging'); clearDragHighlights(); return; }
+  const oldList = board.querySelector(`.column[data-status="${cssAttr(oldStatus)}"] [data-list]`);
+  const newList = col.querySelector('[data-list]');
+  if(!newList){ card.classList.remove('dragging'); clearDragHighlights(); return; }
+
+  const beforeCard = findInsertTargetCard(newList, clientY);
+  const oldNextSibling = card.nextSibling;
+
+  if(newStatus !== oldStatus){
+    card.classList.remove(STATUS_SLUG[oldStatus]);
+    card.classList.add(STATUS_SLUG[newStatus]);
+    card.dataset.status = newStatus;
+  }
+  if(beforeCard) newList.insertBefore(card, beforeCard);
+  else {
+    const empty = newList.querySelector('.col-empty');
+    if(empty) newList.insertBefore(card, empty);
+    else newList.appendChild(card);
+  }
+  card.classList.remove('dragging');
+  clearDragHighlights();
+  dragState.card = null;
+  updateColumnCounts();
+
+  const row = state.items.find(t => String(t.id) === String(id));
+  if(row && newStatus !== oldStatus) row.status = newStatus;
+
+  if(newStatus !== oldStatus){
+    try {
+      const updated = await db.patchContentById(id, { status: newStatus });
+      if(updated && updated.updated_at && row) row.updated_at = updated.updated_at;
+    } catch(err){
+      console.warn('drag patch failed', err);
+      card.classList.remove(STATUS_SLUG[newStatus]);
+      card.classList.add(STATUS_SLUG[oldStatus]);
+      card.dataset.status = oldStatus;
+      if(oldList) oldList.insertBefore(card, oldNextSibling);
+      if(row) row.status = oldStatus;
+      updateColumnCounts();
+      showToast('Could not update. Reverted.');
+      return;
+    }
+  }
+
+  await persistColumnOrder(newStatus);
+  if(newStatus !== oldStatus) await persistColumnOrder(oldStatus);
+}
+
+function wireColumnDnd(){
+  board.querySelectorAll('.column').forEach(col => {
+    const list = col.querySelector('[data-list]');
+    col.addEventListener('dragover', (e) => {
+      if(!dragState.card) return;
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      if(list){
+        const beforeCard = findInsertTargetCard(list, e.clientY);
+        showDropIndicator(list, beforeCard);
+      }
+    });
+    col.addEventListener('dragenter', (e) => {
+      if(!dragState.card) return;
+      e.preventDefault();
+    });
+    col.addEventListener('dragleave', (e) => {
+      if(!col.contains(e.relatedTarget)) clearDropIndicator();
+    });
+    col.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      const card = dragState.card;
+      if(!card) return;
+      await performDrop(card, col, dragState.fromStatus, e.clientY);
+    });
+  });
+}
+wireColumnDnd();
+
+// Suppress click navigation if a drag actually happened
+board.addEventListener('click', (e) => {
+  if(dragState.moved){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+// ────────────────────────────────────────────────────────────────────
+// Touch drag fallback (mirrors /kanban/)
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  let tCard = null, tFromStatus = null, tDragging = false;
+  let startX = 0, startY = 0, holdTimer = null, lastCol = null;
+  const HOLD_MS = 220;
+  const MOVE_CANCEL = 12;
+
+  function cancelHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } }
+  function cleanup(){
+    cancelHold();
+    if(tCard) tCard.classList.remove('dragging');
+    clearDragHighlights();
+    tCard = null; tFromStatus = null; tDragging = false; lastCol = null;
+  }
+  function begin(){
+    if(!tCard) return;
+    tDragging = true;
+    dragState.card = tCard;
+    dragState.fromStatus = tFromStatus;
+    tCard.classList.add('dragging');
+    STATUS_ORDER.forEach(s => {
+      if(s === tFromStatus) return;
+      const c = board.querySelector(`.column[data-status="${cssAttr(s)}"]`);
+      if(c) c.classList.add('drag-active');
+    });
+  }
+
+  board.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    const card = findCardEl(e.target);
+    if(!card) return;
+    tCard = card;
+    tFromStatus = card.dataset.status || null;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    cancelHold();
+    holdTimer = setTimeout(begin, HOLD_MS);
+  }, { passive: true });
+
+  board.addEventListener('touchmove', (e) => {
+    if(!tCard) return;
+    const t = e.touches[0];
+    if(!tDragging){
+      if(Math.abs(t.clientX - startX) > MOVE_CANCEL || Math.abs(t.clientY - startY) > MOVE_CANCEL){
+        cancelHold();
+        tCard = null;
+      }
+      return;
+    }
+    e.preventDefault();
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const col = (el && el.closest) ? el.closest('.column') : null;
+    if(col) lastCol = col;
+    if(col){
+      const list = col.querySelector('[data-list]');
+      if(list) showDropIndicator(list, findInsertTargetCard(list, t.clientY));
+    } else {
+      clearDropIndicator();
+    }
+  }, { passive: false });
+
+  board.addEventListener('touchend', async (e) => {
+    if(!tCard || !tDragging){ cleanup(); return; }
+    const card = tCard, fromStatus = tFromStatus;
+    const t = (e.changedTouches && e.changedTouches[0]) || null;
+    const clientY = t ? t.clientY : 0;
+    let col = lastCol;
+    if(t){
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      col = (el && el.closest && el.closest('.column')) || lastCol;
+    }
+    cancelHold();
+    tCard = null; tDragging = false; lastCol = null;
+    if(col){
+      await performDrop(card, col, fromStatus, clientY);
+    } else {
+      card.classList.remove('dragging');
+      clearDragHighlights();
+      dragState.card = null;
+    }
+  });
+
+  board.addEventListener('touchcancel', cleanup);
+})();
+
+// ────────────────────────────────────────────────────────────────────
+// Visibility refetch
+// ────────────────────────────────────────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !state.modalOpen){
+    refresh();
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Boot
+// ────────────────────────────────────────────────────────────────────
+(function bootWhenReady(){
+  // Wait for auth so the first fetch carries the signed-in user's token
+  // (required by RLS). Falls back to an immediate load so nothing breaks if
+  // auth never initializes.
+  let booted = false;
+  const go = () => { if(booted) return; booted = true; refresh(); };
+  if(document.documentElement.classList.contains('runrec-auth-ready')) go();
+  else { document.addEventListener('runrec:auth-ready', go, { once:true }); setTimeout(go, 4000); }
+})();
+</script>
+</body>
+</html>

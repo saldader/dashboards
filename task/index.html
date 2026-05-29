@@ -891,8 +891,11 @@ function showToast(msg, ms = 4000){
       }
     }catch(_){ /* fallback handled below */ }
   }
-  document.addEventListener('runrec:auth-ready', loadMe);
-  loadMe();
+  // Resolve identity only once auth is ready (so the session token is present).
+  // Calling loadMe() eagerly would run before the session exists; and if
+  // auth-ready already fired, a plain listener would never run — so handle both.
+  if(document.documentElement.classList.contains('runrec-auth-ready')) loadMe();
+  else document.addEventListener('runrec:auth-ready', loadMe, { once:true });
 
   function selectedOwners(){
     return Array.from(ownerOpts)
@@ -1260,7 +1263,13 @@ const HTML_SENTINEL = '<!--rr:html-->';
 function renderDescription(stored){
   const raw = stored || '';
   if(raw.startsWith(HTML_SENTINEL)){
-    editor.innerHTML = raw.slice(HTML_SENTINEL.length);
+    // Parse into an inert <template> first (images don't fetch, nothing runs),
+    // sanitize, THEN move into the live editor — so stored HTML can never execute.
+    const tpl = document.createElement('template');
+    tpl.innerHTML = raw.slice(HTML_SENTINEL.length);
+    sanitizeFragment(tpl.content);
+    editor.innerHTML = '';
+    editor.appendChild(tpl.content);
     hydrateEditor();
   } else {
     renderMarkdown(raw);
@@ -1338,13 +1347,37 @@ function stripCosmeticStyling(root){
   });
 }
 
+// Strip executable / dangerous nodes and attributes from a DOM subtree, in place.
+// Used on BOTH the load path (stored HTML from the DB) and the paste path. While
+// innerHTML won't run <script>, it WILL fire <img onerror> / <svg onload>, so we
+// remove event-handler attributes, javascript:/data:text/html URLs, and risky
+// tags outright. Any HTML that reaches the editor from an untrusted source (a
+// crafted row, a hostile paste) is therefore inert.
+const UNSAFE_TAGS = 'script,style,iframe,object,embed,form,noscript,link,meta,base,svg,math';
+function sanitizeFragment(root){
+  if(!root || !root.querySelectorAll) return;
+  root.querySelectorAll(UNSAFE_TAGS).forEach(n => n.remove());
+  root.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(attr => {
+      const name = attr.name.toLowerCase();
+      const val = (attr.value || '').replace(/\s+/g,'').toLowerCase();
+      if(name.startsWith('on')) el.removeAttribute(attr.name);
+      else if((name === 'href' || name === 'src' || name === 'xlink:href') &&
+              (val.startsWith('javascript:') || val.startsWith('data:text/html'))){
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+}
+
 // Clean clipboard HTML for a "paste and match style" insert: keep structure
-// and spacing, drop cosmetic styling.
+// and spacing, drop cosmetic styling, and strip anything executable.
 function cleanPastedHtml(html){
   const tpl = document.createElement('template');
   tpl.innerHTML = html;
   tpl.content.querySelectorAll('style, script, meta, link, title').forEach(n => n.remove());
   stripCosmeticStyling(tpl.content);
+  sanitizeFragment(tpl.content);
   return tpl.innerHTML;
 }
 
@@ -1658,19 +1691,17 @@ function relativeTime(ms){
   const s = Math.round(ms / 1000);
   if(s < 5) return 'just now';
   if(s < 60) return `${s}s ago`;
-  return '1m ago';
+  const m = Math.round(s / 60);
+  if(m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  return `${h}h ago`;
 }
 
 function refreshIndicator(){
   if(state.isStale) return;
   if(state.saveInFlight){ setIndicator('Saving…', 'saving'); return; }
   if(state.lastSavedAt){
-    const age = Date.now() - state.lastSavedAt;
-    if(age >= 60000){
-      setIndicator('Saved', 'saved');
-    } else {
-      setIndicator(`Saved · ${relativeTime(age)}`, 'saved');
-    }
+    setIndicator(`Saved · ${relativeTime(Date.now() - state.lastSavedAt)}`, 'saved');
   }
 }
 
@@ -2003,11 +2034,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('beforeunload', (e) => {
-  // If there's a pending debounced save OR a save currently in flight,
-  // (1) fire a best-effort keepalive flush so we don't lose data, and
-  // (2) ask the browser to show the native "Leave site?" confirmation.
+  // If there's a pending debounced save, a save in flight, or a queued save,
+  // (1) fire a best-effort keepalive flush so we don't lose data — a normal
+  // in-flight fetch would be aborted on unload, so we re-send via keepalive —
+  // and (2) ask the browser to show the native "Leave site?" confirmation.
   const hasPendingChanges = !!state.saveTimer || !!state.saveInFlight || !!state.pendingSave;
-  if(state.saveTimer){
+  if(hasPendingChanges && !state.isStale){
     try {
       const payload = serializeForStore();
       const url = `${SUPABASE.url}/rest/v1/tasks?slug=eq.${encodeURIComponent(SUPABASE.slug)}&updated_at=eq.${encodeURIComponent(state.lastUpdatedAt)}`;
@@ -2018,8 +2050,6 @@ window.addEventListener('beforeunload', (e) => {
         keepalive: true,
       }).catch(()=>{});
     } catch(_){}
-  }
-  if(hasPendingChanges){
     // Modern browsers ignore the custom message and show their own generic
     // "Changes you made may not be saved" dialog. Both lines are required
     // for cross-browser support.
@@ -2631,7 +2661,23 @@ editor.addEventListener('drop', async (e) => {
     sel.addRange(r);
   }
 
-  function beginEdit(){
+  function placeCaretFromPoint(x, y){
+    let range = null;
+    if(document.caretRangeFromPoint) range = document.caretRangeFromPoint(x, y);
+    else if(document.caretPositionFromPoint){
+      const p = document.caretPositionFromPoint(x, y);
+      if(p){ range = document.createRange(); range.setStart(p.offsetNode, p.offset); range.collapse(true); }
+    }
+    if(range && titleEl.contains(range.startContainer)){
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return true;
+    }
+    return false;
+  }
+
+  function beginEdit(evt){
     if(editing) return;
     editing = true;
     savedBefore = titleEl.textContent || '';
@@ -2642,7 +2688,11 @@ editor.addEventListener('drop', async (e) => {
     }
     titleEl.classList.add('editing');
     titleEl.focus();
-    placeCaretAtEnd(titleEl);
+    // Drop the caret where the user clicked; fall back to end-of-title (e.g.
+    // keyboard activation, or browsers that can't resolve the point).
+    if(!(evt && typeof evt.clientX === 'number' && placeCaretFromPoint(evt.clientX, evt.clientY))){
+      placeCaretAtEnd(titleEl);
+    }
   }
 
   function endEdit(commit){
@@ -2681,7 +2731,7 @@ editor.addEventListener('drop', async (e) => {
 
   titleEl.addEventListener('click', (e) => {
     if(editing) return;
-    beginEdit();
+    beginEdit(e);
   });
   titleEl.addEventListener('keydown', (e) => {
     if(!editing) return;

@@ -868,6 +868,16 @@ function render(){
     const list = col.querySelector('[data-list]');
     const count = col.querySelector('[data-count]');
     const rows = groups[status];
+    // Sort by position (nulls last), then newest-first — mirrors listTasks()'s
+    // DB ordering. Without this, a re-render that isn't backed by a fresh fetch
+    // (filter toggle, archive, tab switch) would show stale array order and a
+    // just-dragged card would snap back to its old slot.
+    rows.sort((a,b) => {
+      const pa = typeof a.position === 'number' ? a.position : Infinity;
+      const pb = typeof b.position === 'number' ? b.position : Infinity;
+      if(pa !== pb) return pa - pb;
+      return String(b.updated_at||'').localeCompare(String(a.updated_at||''));
+    });
     count.textContent = rows.length;
     if(rows.length === 0){
       list.innerHTML = `<div class="col-empty">No tasks</div>`;
@@ -1391,6 +1401,69 @@ board.addEventListener('dragend', () => {
   dragState.fromStatus = null;
 });
 
+// Core drop logic, shared by native (mouse) drag-and-drop and the touch
+// fallback below. Moves `card` into `col` at the vertical position `clientY`,
+// updates local state, and persists status + within-column order.
+async function performDrop(card, col, oldStatus, clientY){
+  const newStatus = col.dataset.status;
+  if(!STATUS_ORDER.includes(newStatus)){ clearDragHighlights(); return; }
+  const slug = card.dataset.slug;
+  if(!slug){ card.classList.remove('dragging'); clearDragHighlights(); return; }
+  const oldList = board.querySelector(`.column[data-status="${oldStatus}"] [data-list]`);
+  const newList = col.querySelector('[data-list]');
+  if(!newList){ card.classList.remove('dragging'); clearDragHighlights(); return; }
+
+  // Where in the new list should the card land?
+  const beforeCard = findInsertTargetCard(newList, clientY);
+  // Capture old DOM neighbor so we can revert if persist fails.
+  const oldNextSibling = card.nextSibling;
+
+  // Optimistic move: update classes and insert at target position
+  if(newStatus !== oldStatus){
+    card.classList.remove(oldStatus);
+    card.classList.add(newStatus);
+    card.dataset.status = newStatus;
+  }
+  if(beforeCard) newList.insertBefore(card, beforeCard);
+  else {
+    const empty = newList.querySelector('.col-empty');
+    if(empty) newList.insertBefore(card, empty);
+    else newList.appendChild(card);
+  }
+  card.classList.remove('dragging');
+  clearDragHighlights();
+  dragState.card = null;
+  updateColumnCounts();
+
+  // Update local state row
+  const row = state.tasks.find(t => t.slug === slug);
+  if(row && newStatus !== oldStatus) row.status = newStatus;
+
+  // Persist status change (only if it changed)
+  if(newStatus !== oldStatus){
+    try {
+      const updated = await db.patchTaskBySlug(slug, { status: newStatus });
+      if(updated && updated.updated_at && row) row.updated_at = updated.updated_at;
+    } catch(err){
+      console.warn('drag patch failed', err);
+      // Revert status + DOM position
+      card.classList.remove(newStatus);
+      card.classList.add(oldStatus);
+      card.dataset.status = oldStatus;
+      if(oldList) oldList.insertBefore(card, oldNextSibling);
+      if(row) row.status = oldStatus;
+      updateColumnCounts();
+      showToast('Could not update task. Reverted.');
+      return;
+    }
+  }
+
+  // Persist new order (within-column reorder). Affects both source and target
+  // columns when crossing columns, since source compacts after the card leaves.
+  await persistColumnOrder(newStatus);
+  if(newStatus !== oldStatus) await persistColumnOrder(oldStatus);
+}
+
 // Allow dropping on columns (handles both cross-column status change and within-column reorder)
 board.querySelectorAll('.column').forEach(col => {
   const list = col.querySelector('[data-list]');
@@ -1417,78 +1490,103 @@ board.querySelectorAll('.column').forEach(col => {
     e.preventDefault();
     const card = dragState.card;
     if(!card) return;
-    const newStatus = col.dataset.status;
-    const oldStatus = dragState.fromStatus;
-    if(!STATUS_ORDER.includes(newStatus)){
-      clearDragHighlights();
-      return;
-    }
-    const slug = card.dataset.slug;
-    if(!slug){
-      card.classList.remove('dragging');
-      clearDragHighlights();
-      return;
-    }
-    const oldList = board.querySelector(`.column[data-status="${oldStatus}"] [data-list]`);
-    const newList = col.querySelector('[data-list]');
-    if(!newList){
-      card.classList.remove('dragging');
-      clearDragHighlights();
-      return;
-    }
-
-    // Where in the new list should the card land?
-    const beforeCard = findInsertTargetCard(newList, e.clientY);
-
-    // Capture old DOM neighbor so we can revert if persist fails.
-    const oldNextSibling = card.nextSibling;
-
-    // Optimistic move: update classes and insert at target position
-    if(newStatus !== oldStatus){
-      card.classList.remove(oldStatus);
-      card.classList.add(newStatus);
-      card.dataset.status = newStatus;
-    }
-    if(beforeCard) newList.insertBefore(card, beforeCard);
-    else {
-      const empty = newList.querySelector('.col-empty');
-      if(empty) newList.insertBefore(card, empty);
-      else newList.appendChild(card);
-    }
-    card.classList.remove('dragging');
-    clearDragHighlights();
-    dragState.card = null;
-    updateColumnCounts();
-
-    // Update local state row
-    const row = state.tasks.find(t => t.slug === slug);
-    if(row && newStatus !== oldStatus) row.status = newStatus;
-
-    // Persist status change (only if it changed)
-    if(newStatus !== oldStatus){
-      try {
-        const updated = await db.patchTaskBySlug(slug, { status: newStatus });
-        if(updated && updated.updated_at && row) row.updated_at = updated.updated_at;
-      } catch(err){
-        console.warn('drag patch failed', err);
-        // Revert status + DOM position
-        card.classList.remove(newStatus);
-        card.classList.add(oldStatus);
-        card.dataset.status = oldStatus;
-        if(oldList) oldList.insertBefore(card, oldNextSibling);
-        if(row) row.status = oldStatus;
-        updateColumnCounts();
-        showToast('Could not update task. Reverted.');
-        return;
-      }
-    }
-
-    // Persist new order (within-column reorder). Affects both source and target columns
-    // when crossing columns, since source compacts after the card leaves.
-    await persistColumnOrder(newStatus);
-    if(newStatus !== oldStatus) await persistColumnOrder(oldStatus);
+    await performDrop(card, col, dragState.fromStatus, e.clientY);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────
+// Touch drag fallback — native HTML5 drag-and-drop never fires on touch
+// devices, so on a phone/tablet you otherwise can't move a card between
+// columns. Long-press a card to pick it up, drag over a column, lift to drop.
+// ────────────────────────────────────────────────────────────────────
+(function(){
+  let tCard = null, tFromStatus = null, tDragging = false;
+  let startX = 0, startY = 0, holdTimer = null, lastCol = null;
+  const HOLD_MS = 220;       // press-and-hold before a drag begins
+  const MOVE_CANCEL = 12;    // px of movement before the hold fires = it's a scroll
+
+  function cancelHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } }
+  function cleanup(){
+    cancelHold();
+    if(tCard) tCard.classList.remove('dragging');
+    clearDragHighlights();
+    tCard = null; tFromStatus = null; tDragging = false; lastCol = null;
+  }
+
+  function begin(){
+    if(!tCard) return;
+    tDragging = true;
+    // Share dragState so performDrop()/clearDragHighlights() behave identically.
+    dragState.card = tCard;
+    dragState.fromStatus = tFromStatus;
+    tCard.classList.add('dragging');
+    STATUS_ORDER.forEach(s => {
+      if(s === tFromStatus) return;
+      const c = board.querySelector(`.column[data-status="${s}"]`);
+      if(c) c.classList.add('drag-active');
+    });
+  }
+
+  board.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    if(e.target.closest && e.target.closest('.card-archive')) return; // let the Archive button work
+    const card = findCardEl(e.target);
+    if(!card) return;
+    tCard = card;
+    tFromStatus = card.dataset.status || null;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    cancelHold();
+    holdTimer = setTimeout(begin, HOLD_MS);
+  }, { passive: true });
+
+  board.addEventListener('touchmove', (e) => {
+    if(!tCard) return;
+    const t = e.touches[0];
+    if(!tDragging){
+      // Moved before the hold fired → treat as a scroll/tap, not a drag.
+      if(Math.abs(t.clientX - startX) > MOVE_CANCEL || Math.abs(t.clientY - startY) > MOVE_CANCEL){
+        cancelHold();
+        tCard = null;
+      }
+      return;
+    }
+    e.preventDefault(); // we own the gesture now — stop the page scrolling
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const col = (el && el.closest) ? el.closest('.column') : null;
+    if(col) lastCol = col;
+    if(col){
+      const list = col.querySelector('[data-list]');
+      if(list) showDropIndicator(list, findInsertTargetCard(list, t.clientY));
+    } else {
+      clearDropIndicator();
+    }
+  }, { passive: false });
+
+  board.addEventListener('touchend', async (e) => {
+    if(!tCard || !tDragging){ cleanup(); return; }
+    const card = tCard, fromStatus = tFromStatus;
+    const t = (e.changedTouches && e.changedTouches[0]) || null;
+    const clientY = t ? t.clientY : 0;
+    let col = lastCol;
+    if(t){
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      col = (el && el.closest && el.closest('.column')) || lastCol;
+    }
+    // Reset local touch state; performDrop owns dragState from here.
+    cancelHold();
+    tCard = null; tDragging = false; lastCol = null;
+    if(col){
+      await performDrop(card, col, fromStatus, clientY);
+    } else {
+      card.classList.remove('dragging');
+      clearDragHighlights();
+      dragState.card = null;
+    }
+  });
+
+  board.addEventListener('touchcancel', cleanup);
+})();
 
 // ────────────────────────────────────────────────────────────────────
 // Visibility refetch

@@ -427,6 +427,95 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 /* Footer (matches /kanban/) */
 .foot{margin-top:80px;padding-top:32px;border-top:1px solid var(--border);color:var(--t4);font-size:12px;line-height:1.7}
 .foot code{background:var(--card);padding:1px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:var(--t3)}
+
+/* View toggle (segmented control, matches filter-row tokens) */
+.view-toggle{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:999px;padding:4px;margin-bottom:24px;
+}
+.view-tab{
+  background:none;border:none;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--t3);
+  padding:6px 16px;border-radius:999px;
+  transition:background .15s, color .15s;outline:none;
+}
+.view-tab:hover{color:var(--text)}
+.view-tab:focus-visible{box-shadow:0 0 0 2px rgba(255,107,53,0.45)}
+.view-tab[aria-selected="true"]{
+  background:rgba(255,107,53,0.12);
+  color:var(--text);
+}
+
+/* Stage badge (used inside the Categories view where there are no columns) */
+.badge.stage{
+  background:rgba(255,255,255,0.05);color:var(--t3);
+  border-color:var(--border-strong);
+}
+.badge.stage .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.badge.stage .dot.idea{background:#b0b0b8}
+.badge.stage .dot.scripting{background:#60a5fa}
+.badge.stage .dot.shooting{background:#a855f7}
+.badge.stage .dot.editing{background:#f59e0b}
+.badge.stage .dot.approval{background:#fbbf24}
+.badge.stage .dot.scheduled{background:#38bdf8}
+.badge.stage .dot.posted{background:#22c55e}
+
+/* Categories (vertical accordion) view */
+.categories{display:flex;flex-direction:column;gap:12px}
+.cat-section{
+  background:#131318;
+  border:1px solid rgba(255,255,255,0.20);
+  border-radius:14px;
+  overflow:hidden;
+}
+.cat-section.v-franchise{border-left:3px solid var(--purple)}
+.cat-section.v-basketball{border-left:3px solid var(--amber)}
+.cat-section.v-lifestyle{border-left:3px solid var(--green)}
+.cat-header{
+  display:flex;align-items:center;gap:12px;width:100%;
+  background:none;border:none;cursor:pointer;
+  padding:16px 18px;text-align:left;
+  transition:background .15s;outline:none;
+}
+.cat-header:hover{background:rgba(255,255,255,0.02)}
+.cat-header:focus-visible{box-shadow:inset 0 0 0 2px rgba(255,107,53,0.40)}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cat-dot.v-franchise{background:var(--purple)}
+.cat-dot.v-basketball{background:var(--amber)}
+.cat-dot.v-lifestyle{background:var(--green)}
+.cat-name{
+  font-size:15px;font-weight:600;color:var(--text);letter-spacing:-0.01em;
+}
+.cat-count{
+  font-size:11px;font-weight:600;color:#6C6C74;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;min-width:22px;height:20px;padding:0 7px;
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;font-variant-numeric:tabular-nums;
+}
+.cat-chevron{
+  margin-left:auto;width:16px;height:16px;color:var(--t4);
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .2s ease;
+}
+.cat-header[aria-expanded="true"] .cat-chevron{transform:rotate(180deg)}
+.cat-body{
+  display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .22s ease;
+}
+.cat-section.open .cat-body{grid-template-rows:1fr}
+.cat-body-inner{overflow:hidden;min-height:0}
+.cat-grid{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:12px;padding:4px 18px 18px 18px;
+}
+.cat-empty{
+  font-size:12.5px;color:var(--t4);font-style:italic;
+  padding:0 18px 18px 18px;
+}
+/* In the categories grid, cards are click-to-edit (no drag). */
+.cat-grid .content-card{cursor:pointer}
 </style>
 </head>
 <body>
@@ -447,7 +536,13 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
   <!-- Page header -->
   <div class="page-head">
     <h1>RunRec Content</h1>
-    <p class="lead">RunRec x PGC social content pipeline. Drag a card to move it through the stages.</p>
+    <p class="lead">RunRec x PGC social content pipeline. Browse by category, or open the board to drag a piece through the stages.</p>
+  </div>
+
+  <!-- View toggle -->
+  <div class="view-toggle" id="viewToggle" role="tablist" aria-label="Switch view">
+    <button type="button" class="view-tab" data-view="categories" role="tab" aria-selected="true">Categories</button>
+    <button type="button" class="view-tab" data-view="board" role="tab" aria-selected="false">Board</button>
   </div>
 
   <!-- Filter row -->
@@ -471,6 +566,11 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
     <button type="button" class="filter-chip" data-fkey="owner" data-fval="PGC" aria-pressed="false"><span>PGC</span></button>
 
     <button type="button" class="filter-clear" id="filterClear" aria-label="Clear filters">× Clear</button>
+  </div>
+
+  <!-- Categories view (vertical accordion, default) -->
+  <div class="categories" id="categories" aria-live="polite">
+    <!-- sections injected by buildCategoriesShell() -->
   </div>
 
   <!-- Board -->
@@ -727,6 +827,29 @@ function channelArray(raw){
 // ────────────────────────────────────────────────────────────────────
 // State
 // ────────────────────────────────────────────────────────────────────
+// Persisted UI keys (localStorage)
+const LS_VIEW = 'aos-content-view';
+const LS_CATS = 'aos-content-cats';
+
+function loadView(){
+  try {
+    const v = localStorage.getItem(LS_VIEW);
+    return (v === 'board') ? 'board' : 'categories'; // default = categories
+  } catch(_){ return 'categories'; }
+}
+function loadCatsOpen(){
+  // Default: all collapsed. Stored as a map of vertical -> true (open).
+  try {
+    const raw = localStorage.getItem(LS_CATS);
+    const obj = raw ? JSON.parse(raw) : {};
+    const out = {};
+    VERTICALS.forEach(v => { out[v] = obj && obj[v] === true; });
+    return out;
+  } catch(_){
+    const out = {}; VERTICALS.forEach(v => { out[v] = false; }); return out;
+  }
+}
+
 const state = {
   items: [],            // raw rows from DB
   filterVertical: null, // null | one of VERTICALS
@@ -734,7 +857,9 @@ const state = {
   loaded: false,
   modalOpen: false,
   modalStatus: null,    // status for a NEW piece
-  editId: null          // id when editing an existing piece, else null
+  editId: null,         // id when editing an existing piece, else null
+  view: loadView(),     // 'categories' (default) | 'board'
+  catsOpen: loadCatsOpen() // { [vertical]: bool } collapsed/expanded per section
 };
 
 // ────────────────────────────────────────────────────────────────────
@@ -742,6 +867,32 @@ const state = {
 // ────────────────────────────────────────────────────────────────────
 const board = document.getElementById('board');
 const boardStatus = document.getElementById('boardStatus');
+const categoriesEl = document.getElementById('categories');
+
+// Chevron icon shared by every category header.
+const CHEVRON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+function buildCategoriesShell(){
+  categoriesEl.innerHTML = VERTICALS.map(vertical => {
+    const vClass = VERTICAL_CLASS[vertical];
+    const open = state.catsOpen[vertical] === true;
+    return `
+    <div class="cat-section ${vClass}${open ? ' open' : ''}" data-vertical="${escapeHtml(vertical)}">
+      <button type="button" class="cat-header" data-cat="${escapeHtml(vertical)}" aria-expanded="${open ? 'true' : 'false'}">
+        <span class="cat-dot ${vClass}"></span>
+        <span class="cat-name">${escapeHtml(vertical)}</span>
+        <span class="cat-count" data-cat-count>0</span>
+        <span class="cat-chevron" aria-hidden="true">${CHEVRON_SVG}</span>
+      </button>
+      <div class="cat-body">
+        <div class="cat-body-inner">
+          <div class="cat-grid" data-cat-grid></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+buildCategoriesShell();
 
 function buildBoardShell(){
   board.innerHTML = STATUS_ORDER.map(status => {
@@ -774,7 +925,10 @@ function fmtDate(iso){
   return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
 }
 
-function buildCardHTML(t){
+// opts.showStage  -> prepend a neutral stage pill (Categories view has no columns)
+// opts.draggable  -> set draggable attr (Board view = true, Categories = false)
+function buildCardHTML(t, opts){
+  opts = opts || {};
   const status = normStatus(t.status);
   const slug = STATUS_SLUG[status];
   const vertical = normVertical(t.vertical);
@@ -786,9 +940,11 @@ function buildCardHTML(t){
   const synopsisHTML = synopsis ? `<div class="card-synopsis">${escapeHtml(synopsis)}</div>` : '';
   const channels = channelArray(t.channel);
 
-  const badges = [
-    `<span class="badge ${vClass}"><span class="dot ${vClass}"></span>${escapeHtml(VERTICAL_SHORT[vertical] || vertical)}</span>`
-  ];
+  const badges = [];
+  if(opts.showStage){
+    badges.push(`<span class="badge stage"><span class="dot ${slug}"></span>${escapeHtml(status)}</span>`);
+  }
+  badges.push(`<span class="badge ${vClass}"><span class="dot ${vClass}"></span>${escapeHtml(VERTICAL_SHORT[vertical] || vertical)}</span>`);
   if(t.format) badges.push(`<span class="badge format">${escapeHtml(t.format)}</span>`);
   // Only show a reshare pill when it's meaningful (skip the noisy default "N/A").
   if(reshare !== 'N/A') badges.push(`<span class="reshare ${rClass}">${escapeHtml(reshare)}</span>`);
@@ -805,8 +961,12 @@ function buildCardHTML(t){
   const ownerHTML = t.owner
     ? `<div class="card-meta"><span class="card-owner-tag">${escapeHtml(t.owner)}</span></div>` : '';
 
+  const isDraggable = opts.draggable !== false;
+  const aria = isDraggable
+    ? `Content: ${title}. Drag to a different column to change stage.`
+    : `Content: ${title}. Click to edit.`;
   return `
-    <div class="content-card ${slug}" draggable="true" data-id="${escapeHtml(t.id)}" data-status="${escapeHtml(status)}" tabindex="0" aria-label="Content: ${title}. Drag to a different column to change stage.">
+    <div class="content-card ${slug}" draggable="${isDraggable ? 'true' : 'false'}" data-id="${escapeHtml(t.id)}" data-status="${escapeHtml(status)}" tabindex="0" aria-label="${aria}">
       <div class="card-open" data-open="${escapeHtml(t.id)}" role="button" aria-label="Edit: ${title}"></div>
       <div class="card-title">${title}</div>
       ${synopsisHTML}
@@ -823,9 +983,27 @@ function passesFilter(t){
   return true;
 }
 
+// Shared sort: position (nulls last), then newest-first.
+function sortRows(rows){
+  rows.sort((a,b) => {
+    const pa = typeof a.position === 'number' ? a.position : Infinity;
+    const pb = typeof b.position === 'number' ? b.position : Infinity;
+    if(pa !== pb) return pa - pb;
+    return String(b.updated_at||'').localeCompare(String(a.updated_at||''));
+  });
+  return rows;
+}
+
 function render(){
   if(!state.loaded) return;
+  if(state.view === 'board') renderBoard();
+  else renderCategories();
+  applyFilterUI();
+  applyViewVisibility();
+  boardStatus.style.display = 'none';
+}
 
+function renderBoard(){
   // Archived pieces never appear on the board.
   const active = state.items.filter(t => t.archived !== true).filter(passesFilter);
 
@@ -838,25 +1016,59 @@ function render(){
     if(!col) return;
     const list = col.querySelector('[data-list]');
     const count = col.querySelector('[data-count]');
-    const rows = groups[status];
-    // Sort by position (nulls last), then newest-first, mirrors listContent()'s
-    // DB ordering so a just-dragged card doesn't snap back on a filter re-render.
-    rows.sort((a,b) => {
-      const pa = typeof a.position === 'number' ? a.position : Infinity;
-      const pb = typeof b.position === 'number' ? b.position : Infinity;
-      if(pa !== pb) return pa - pb;
-      return String(b.updated_at||'').localeCompare(String(a.updated_at||''));
-    });
+    const rows = sortRows(groups[status]);
     count.textContent = rows.length;
     if(rows.length === 0){
       list.innerHTML = `<div class="col-empty">Nothing here</div>`;
     } else {
-      list.innerHTML = rows.map(buildCardHTML).join('');
+      list.innerHTML = rows.map(t => buildCardHTML(t)).join('');
     }
   });
+}
 
-  applyFilterUI();
-  boardStatus.style.display = 'none';
+function renderCategories(){
+  // Archived pieces never appear. Owner filter narrows within each section;
+  // the vertical filter, if set, narrows which sections show any cards too.
+  const active = state.items.filter(t => t.archived !== true).filter(passesFilter);
+
+  const byVertical = {};
+  VERTICALS.forEach(v => { byVertical[v] = []; });
+  active.forEach(t => { byVertical[normVertical(t.vertical)].push(t); });
+
+  VERTICALS.forEach(vertical => {
+    const section = categoriesEl.querySelector(`.cat-section[data-vertical="${cssAttr(vertical)}"]`);
+    if(!section) return;
+    const grid = section.querySelector('[data-cat-grid]');
+    const count = section.querySelector('[data-cat-count]');
+    const rows = sortRows(byVertical[vertical]);
+    count.textContent = rows.length;
+    if(rows.length === 0){
+      grid.innerHTML = '';
+      let empty = section.querySelector('.cat-empty');
+      if(!empty){
+        empty = document.createElement('div');
+        empty.className = 'cat-empty';
+        grid.parentElement.appendChild(empty);
+      }
+      empty.textContent = state.filterOwner ? 'No pieces for this owner here.' : 'Nothing in this category yet.';
+    } else {
+      const empty = section.querySelector('.cat-empty');
+      if(empty) empty.remove();
+      // Categories cards: show the stage badge, no drag.
+      grid.innerHTML = rows.map(t => buildCardHTML(t, { showStage:true, draggable:false })).join('');
+    }
+  });
+}
+
+// Toggle which view container is visible + sync the toggle tabs.
+function applyViewVisibility(){
+  const isBoard = state.view === 'board';
+  board.style.display = isBoard ? '' : 'none';
+  categoriesEl.style.display = isBoard ? 'none' : '';
+  viewTabs.forEach(tab => {
+    const on = tab.dataset.view === state.view;
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
 }
 
 // Escape a value for use inside an attribute selector.
@@ -948,6 +1160,57 @@ filterClear.addEventListener('click', () => {
   if(o && OWNERS.includes(o)) state.filterOwner = o;
   applyFilterUI();
 })();
+
+// ────────────────────────────────────────────────────────────────────
+// View toggle (Categories | Board) + category accordion
+// ────────────────────────────────────────────────────────────────────
+const viewToggle = document.getElementById('viewToggle');
+const viewTabs = viewToggle.querySelectorAll('.view-tab');
+
+function saveView(){ try { localStorage.setItem(LS_VIEW, state.view); } catch(_){} }
+function saveCatsOpen(){ try { localStorage.setItem(LS_CATS, JSON.stringify(state.catsOpen)); } catch(_){} }
+
+function setView(v){
+  const next = (v === 'board') ? 'board' : 'categories';
+  if(state.view === next){ return; }
+  state.view = next;
+  saveView();
+  if(state.loaded) render(); else applyViewVisibility();
+}
+
+viewTabs.forEach(tab => {
+  tab.addEventListener('click', () => setView(tab.dataset.view));
+});
+
+// Accordion: expand/collapse a category section, persist its open state.
+function toggleCategory(vertical){
+  if(!VERTICALS.includes(vertical)) return;
+  const open = !(state.catsOpen[vertical] === true);
+  state.catsOpen[vertical] = open;
+  saveCatsOpen();
+  const section = categoriesEl.querySelector(`.cat-section[data-vertical="${cssAttr(vertical)}"]`);
+  if(section){
+    section.classList.toggle('open', open);
+    const header = section.querySelector('.cat-header');
+    if(header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+}
+
+categoriesEl.addEventListener('click', (e) => {
+  const header = e.target.closest('.cat-header');
+  if(header){ toggleCategory(header.dataset.cat); return; }
+  // Clicking a card (or its open overlay) in the categories grid opens the editor.
+  const open = e.target.closest('.card-open');
+  if(open){ openEditModal(open.dataset.open); return; }
+});
+categoriesEl.addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.content-card');
+  if(card){ e.preventDefault(); openEditModal(card.dataset.id); }
+});
+
+// Sync the toggle's initial aria state to the persisted view.
+applyViewVisibility();
 
 // ────────────────────────────────────────────────────────────────────
 // Modal: create + edit

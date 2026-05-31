@@ -239,6 +239,15 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 .badge.v-basketball{background:rgba(245,158,11,0.14);color:#fbbf24;border-color:rgba(245,158,11,0.30)}
 .badge.v-lifestyle{background:rgba(34,197,94,0.14);color:#4ade80;border-color:rgba(34,197,94,0.30)}
 .badge.format{background:rgba(255,255,255,0.05);color:var(--t2);border-color:var(--border)}
+/* Subcategory: neutral, slightly quieter than format. */
+.badge.subcat{background:rgba(255,255,255,0.03);color:var(--t3);border-color:var(--border);font-weight:500}
+/* Theme tag: tiny muted "wk: ..." marker. */
+.card-theme{
+  margin-top:8px;
+  font-size:11px;font-weight:500;color:var(--t4);
+  letter-spacing:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 
 /* Reshare pill */
 .reshare{
@@ -639,6 +648,19 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
       </div>
     </div>
 
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="fSubcategory">Subcategory</label>
+        <select class="modal-select" id="fSubcategory">
+          <option value="">None</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="fTheme">Theme (week)</label>
+        <input type="text" class="modal-input" id="fTheme" placeholder="Weekly theme that ties the platforms together" autocomplete="off" maxlength="300">
+      </div>
+    </div>
+
     <div class="field">
       <label class="field-label">Channel</label>
       <div class="channel-group" id="fChannelGroup">
@@ -676,6 +698,17 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
 
     <div class="field-row">
       <div class="field">
+        <label class="field-label" for="fPostDate">Post date (Mon)</label>
+        <input type="date" class="modal-input" id="fPostDate">
+      </div>
+      <div class="field">
+        <label class="field-label" for="fShootDate">Shoot date (Fri)</label>
+        <input type="date" class="modal-input" id="fShootDate">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
         <label class="field-label" for="fReshare">Reshare status</label>
         <select class="modal-select" id="fReshare">
           <option value="N/A">N/A</option>
@@ -685,19 +718,19 @@ h1{font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.15;margi
         </select>
       </div>
       <div class="field">
-        <label class="field-label" for="fPostDate">Post date</label>
-        <input type="date" class="modal-input" id="fPostDate">
+        <label class="field-label" for="fPerformance">Performance</label>
+        <input type="text" class="modal-input" id="fPerformance" placeholder="e.g. 12k views, 340 saves" autocomplete="off" maxlength="300">
       </div>
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="fPerformance">Performance</label>
-      <input type="text" class="modal-input" id="fPerformance" placeholder="e.g. 12k views, 340 saves" autocomplete="off" maxlength="300">
     </div>
 
     <div class="field">
       <label class="field-label" for="fNotes">Notes</label>
       <textarea class="modal-textarea" id="fNotes" placeholder="Hook, script notes, references…" maxlength="2000"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="fScript">Script</label>
+      <textarea class="modal-textarea" id="fScript" placeholder="The full post script (filled in later)" rows="6" maxlength="8000" style="min-height:120px"></textarea>
     </div>
 
     <span class="modal-error" id="modalError"></span>
@@ -736,6 +769,13 @@ const VERTICAL_SHORT = {
   'Franchise ownership':'Franchise',
   'Basketball culture':'Basketball',
   'RunRec lifestyle':'Lifestyle'
+};
+
+// Subcategory options depend on the selected vertical.
+const SUBCATEGORIES = {
+  'Franchise ownership': ['What it looks like','Who should own','Who you become','Why now','Does your city need one'],
+  'Basketball culture': ['Pro sports','Sports business','RunRec insight'],
+  'RunRec lifestyle': ['Work culture','Franchise launches','Events','Community initiatives','Day in the life','The club','Products']
 };
 
 const RESHARE_VALUES = ['N/A','Asked','Reshared','Declined'];
@@ -945,6 +985,9 @@ function buildCardHTML(t, opts){
     badges.push(`<span class="badge stage"><span class="dot ${slug}"></span>${escapeHtml(status)}</span>`);
   }
   badges.push(`<span class="badge ${vClass}"><span class="dot ${vClass}"></span>${escapeHtml(VERTICAL_SHORT[vertical] || vertical)}</span>`);
+  // Subcategory sits next to the vertical as a quiet neutral label, only when set.
+  const subcat = (t.subcategory || '').trim();
+  if(subcat) badges.push(`<span class="badge subcat">${escapeHtml(subcat)}</span>`);
   if(t.format) badges.push(`<span class="badge format">${escapeHtml(t.format)}</span>`);
   // Only show a reshare pill when it's meaningful (skip the noisy default "N/A").
   if(reshare !== 'N/A') badges.push(`<span class="reshare ${rClass}">${escapeHtml(reshare)}</span>`);
@@ -961,6 +1004,9 @@ function buildCardHTML(t, opts){
   const ownerHTML = t.owner
     ? `<div class="card-meta"><span class="card-owner-tag">${escapeHtml(t.owner)}</span></div>` : '';
 
+  const theme = (t.theme || '').trim();
+  const themeHTML = theme ? `<div class="card-theme">wk: ${escapeHtml(theme)}</div>` : '';
+
   const isDraggable = opts.draggable !== false;
   const aria = isDraggable
     ? `Content: ${title}. Drag to a different column to change stage.`
@@ -973,6 +1019,7 @@ function buildCardHTML(t, opts){
       <div class="card-badges">${badges.join('')}</div>
       ${metaHTML}
       ${ownerHTML}
+      ${themeHTML}
     </div>
   `;
 }
@@ -1230,13 +1277,36 @@ const fHook = document.getElementById('fHook');
 const fCta = document.getElementById('fCta');
 const fVertical = document.getElementById('fVertical');
 const fFormat = document.getElementById('fFormat');
+const fSubcategory = document.getElementById('fSubcategory');
+const fTheme = document.getElementById('fTheme');
 const fChannelGroup = document.getElementById('fChannelGroup');
 const fOwner = document.getElementById('fOwner');
 const fStatus = document.getElementById('fStatus');
 const fReshare = document.getElementById('fReshare');
 const fPostDate = document.getElementById('fPostDate');
+const fShootDate = document.getElementById('fShootDate');
 const fPerformance = document.getElementById('fPerformance');
 const fNotes = document.getElementById('fNotes');
+const fScript = document.getElementById('fScript');
+
+// Populate the Subcategory dropdown from the currently selected vertical.
+// Preserves the current value if it is still valid; otherwise falls back to
+// blank ("None"). Always offers a blank option first.
+function populateSubcategories(vertical, desired){
+  const opts = SUBCATEGORIES[vertical] || [];
+  const prev = (desired != null) ? desired : fSubcategory.value;
+  let html = '<option value="">None</option>';
+  opts.forEach(o => {
+    html += `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`;
+  });
+  fSubcategory.innerHTML = html;
+  fSubcategory.value = opts.includes(prev) ? prev : '';
+}
+
+// Repopulate subcategory options when the vertical changes.
+fVertical.addEventListener('change', () => {
+  populateSubcategories(fVertical.value);
+});
 
 // Channel chips reflect their checkbox state visually.
 fChannelGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -1279,13 +1349,17 @@ function openModal(status){
   fCta.value = '';
   fVertical.value = 'RunRec lifestyle';
   fFormat.value = 'Reel';
+  populateSubcategories(fVertical.value, '');
+  fTheme.value = '';
   setChannels(['IG']);
   fOwner.value = 'RunRec';
   fStatus.value = status;
   fReshare.value = 'N/A';
   fPostDate.value = '';
+  fShootDate.value = '';
   fPerformance.value = '';
   fNotes.value = '';
+  fScript.value = '';
   modalError.classList.remove('show'); modalError.textContent = '';
   modalSave.disabled = false;
   modalBackdrop.classList.add('open');
@@ -1311,13 +1385,17 @@ function openEditModal(id){
   fCta.value = row.cta || '';
   fVertical.value = normVertical(row.vertical);
   fFormat.value = (row.format && ['Reel','Carousel','Text','Story'].includes(row.format)) ? row.format : 'Reel';
+  populateSubcategories(fVertical.value, row.subcategory || '');
+  fTheme.value = row.theme || '';
   setChannels(channelArray(row.channel));
   fOwner.value = OWNERS.includes(row.owner) ? row.owner : 'RunRec';
   fStatus.value = status;
   fReshare.value = normReshare(row.reshare_status);
   fPostDate.value = row.post_date ? String(row.post_date).slice(0,10) : '';
+  fShootDate.value = row.shoot_date ? String(row.shoot_date).slice(0,10) : '';
   fPerformance.value = row.performance || '';
   fNotes.value = row.notes || '';
+  fScript.value = row.script || '';
   modalError.classList.remove('show'); modalError.textContent = '';
   modalSave.disabled = false;
   modalBackdrop.classList.add('open');
@@ -1340,13 +1418,17 @@ function collectForm(){
     cta: (fCta.value || '').trim() || null,
     vertical: fVertical.value,
     format: fFormat.value,
+    subcategory: (fSubcategory.value || '').trim() || null,
+    theme: (fTheme.value || '').trim() || null,
     channel: getChannels().join(', '),
     owner: fOwner.value,
     status: fStatus.value,
     reshare_status: fReshare.value,
     post_date: fPostDate.value || null,
+    shoot_date: fShootDate.value || null,
     performance: (fPerformance.value || '').trim() || null,
-    notes: (fNotes.value || '').trim() || null
+    notes: (fNotes.value || '').trim() || null,
+    script: (fScript.value || '').trim() || null
   };
 }
 

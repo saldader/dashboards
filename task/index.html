@@ -935,12 +935,31 @@ function showToast(msg, ms = 4000){
     busy = true; btn.disabled = true; btn.classList.remove('confirming'); btn.textContent = 'Pinging…';
     const title = (document.getElementById('taskTitle')?.textContent || 'a task').trim();
     const actor = me ? me.first : 'A teammate';
-    const rows = recips.map(r => ({ task_slug: SUPABASE.slug, task_title: title, owner_key: r.key, kind: 'nudge', actor }));
     try{
-      const r = await fetch(`${SUPABASE.url}/rest/v1/slack_notification_queue`, {
+      // Always send with a GUARANTEED-fresh token. getSession() transparently
+      // refreshes an expired access token; the old code reused a stale snapshot
+      // and the nudge insert 401'd silently. If there is genuinely no session,
+      // say so instead of firing a doomed anon write.
+      let token = null;
+      try{
+        const { data:{ session } } = await window.RUNREC.supabase.auth.getSession();
+        token = session && session.access_token ? session.access_token : null;
+      }catch(_){ /* handled below */ }
+      if(!token){
+        showToast('Your session expired — reload the page to sign back in, then ping.');
+        busy = false; reset(); return;
+      }
+      // Enqueue via the SECURITY DEFINER RPC so a client-side RLS edge case can
+      // never block a nudge again. The function validates the caller server-side.
+      const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/enqueue_nudge`, {
         method: 'POST',
-        headers: { ...db.headers(), 'Prefer': 'return=minimal' },
-        body: JSON.stringify(rows),
+        headers: { apikey: SUPABASE.key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_task_slug: SUPABASE.slug,
+          p_task_title: title,
+          p_owner_keys: recips.map(r => r.key),
+          p_actor: actor,
+        }),
       });
       if(!r.ok) throw new Error(`${r.status} ${await r.text().catch(() => '')}`);
       btn.classList.add('sent');

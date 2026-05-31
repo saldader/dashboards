@@ -111,11 +111,11 @@ async function processOne(row: {
   if (mErr) throw new Error(`team_members lookup: ${mErr.message}`);
   const member = members?.[0];
   if (!member || !member.slack_id) {
-    // No slack_id yet (user hasn't signed in once). Mark as error and skip.
-    await sb.from("slack_notification_queue")
-      .update({ sent_at: new Date().toISOString(), error: "no slack_id mapped" })
-      .eq("id", row.id);
-    return;
+    // No slack_id mapped (member never signed in / not yet linked). This is a
+    // retryable condition, NOT a success: throw so the caller increments
+    // attempts and leaves sent_at NULL. After N attempts it lands in the
+    // dead-letter view and the operator is alerted to map the slack_id.
+    throw new Error(`no slack_id mapped for owner_key=${row.owner_key}`);
   }
 
   // Open a DM channel with the user.
@@ -258,10 +258,12 @@ async function processOne(row: {
 }
 
 Deno.serve(async (_req: Request) => {
+  const MAX_ATTEMPTS = 5;
   const { data: rows, error } = await sb
     .from("slack_notification_queue")
-    .select("id, task_slug, task_title, owner_key, kind, actor")
+    .select("id, task_slug, task_title, owner_key, kind, actor, attempts")
     .is("sent_at", null)
+    .lt("attempts", MAX_ATTEMPTS)
     .order("created_at", { ascending: true })
     .limit(25);
 
@@ -275,10 +277,15 @@ Deno.serve(async (_req: Request) => {
       results.push({ id: row.id, ok: true });
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
+      // Failure: record the attempt and the error, but do NOT set sent_at.
+      // The row stays eligible for retry (webhook + cron drain) until it either
+      // succeeds or exhausts MAX_ATTEMPTS, at which point it surfaces in the
+      // dead-letter view. A transient Slack/network blip is no longer fatal.
+      const nextAttempts = (row.attempts ?? 0) + 1;
       await sb.from("slack_notification_queue")
-        .update({ sent_at: new Date().toISOString(), error: msg })
+        .update({ attempts: nextAttempts, error: msg })
         .eq("id", row.id);
-      results.push({ id: row.id, ok: false, error: msg });
+      results.push({ id: row.id, ok: false, error: `${msg} (attempt ${nextAttempts}/${MAX_ATTEMPTS})` });
     }
   }
 

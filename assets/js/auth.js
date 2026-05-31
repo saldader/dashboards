@@ -58,6 +58,17 @@
     window.RUNREC = window.RUNREC || {};
     window.RUNREC.supabase = client;
 
+    // Keep window.RUNREC.session FRESH for the life of the page. Without this,
+    // the snapshot taken once at load goes stale after the access token's ~1h
+    // lifetime — and every DB write (nudge, status/owner/due saves) then goes
+    // out with an expired JWT and is silently rejected (401). autoRefreshToken
+    // refreshes the token in the background; this listener propagates each new
+    // session to the snapshot that db.headers() reads.
+    client.auth.onAuthStateChange((_event, newSession) => {
+      window.RUNREC.session = newSession || null;
+      window.RUNREC.user = newSession ? newSession.user : null;
+    });
+
     const { data: { session } } = await client.auth.getSession();
     const isPublic = !!window.__RUNREC_PUBLIC;
 
